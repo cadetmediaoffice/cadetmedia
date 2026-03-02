@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cadet Media Ghana – Live Leaderboard 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="Cadet Media Ghana – Live Leaderboard 2026">
+<meta property="og:description" content="See the top cadets, schools and regions in Ghana's national public safety quiz.">
+<meta name="theme-color" content="#FFD700">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#FFD700; --gold2:#e6a800; --gold3:#fff3b0;
+  --bg:#04090f; --card:rgba(255,255,255,0.04);
+  --card-border:rgba(255,215,0,0.12);
+  --text:#f0f4ff; --muted:rgba(240,244,255,0.5);
+  --male:#4fc3f7; --female:#f48fb1;
+  --green:#00e676;
+  --r1:#FFD700; --r2:#e0e0e0; --r3:#cd7f32;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+
+/* ── BODY & BACKGROUND ── */
+body{
+  font-family:'Barlow',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+}
+.bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,215,0,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,215,0,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.bg-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%,rgba(255,215,0,0.06) 0%,transparent 70%),
+    radial-gradient(ellipse 50% 50% at 80% 80%,rgba(79,195,247,0.04) 0%,transparent 70%);
+}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 16px 60px;}
+
+/* ── HERO HEADER ── */
+.hero{
+  text-align:center;padding:40px 20px 30px;
+  position:relative;
+}
+.hero-badge{
+  display:inline-block;
+  background:linear-gradient(90deg,rgba(255,215,0,0.1),rgba(255,215,0,0.2),rgba(255,215,0,0.1));
+  border:1px solid rgba(255,215,0,0.3);border-radius:30px;
+  padding:6px 20px;font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:16px;
+  animation:fadeDown .6s ease both;
+}
+.hero h1{
+  font-family:'Orbitron',monospace;font-size:clamp(22px,5vw,42px);
+  font-weight:900;line-height:1.1;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--gold) 0%,#fff 50%,var(--gold) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:fadeDown .6s .1s ease both;
+}
+.hero .sub{
+  font-family:'Barlow Condensed',sans-serif;font-size:16px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  animation:fadeDown .6s .2s ease both;
+}
+.live-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:14px;padding:6px 16px;
+  background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);
+  border-radius:20px;font-size:12px;color:var(--green);
+  animation:fadeDown .6s .3s ease both;
+}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:none;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* ── SETUP BOX ── */
+.setup-box{
+  background:rgba(255,215,0,0.05);border:1.5px solid rgba(255,215,0,0.25);
+  border-radius:16px;padding:22px 24px;margin:20px 0 28px;
+  animation:fadeUp .5s .3s ease both;
+}
+.setup-box h3{font-family:'Orbitron',monospace;font-size:13px;color:var(--gold);margin-bottom:10px;}
+.setup-box p{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:12px;}
+.url-row{display:flex;gap:8px;flex-wrap:wrap;}
+.url-row input{
+  flex:1;min-width:200px;padding:11px 14px;border-radius:10px;
+  border:1.5px solid rgba(255,215,0,0.2);background:rgba(255,255,255,0.04);
+  color:#fff;font-size:14px;outline:none;font-family:'Barlow',sans-serif;
+  transition:border-color .2s;
+}
+.url-row input:focus{border-color:var(--gold);}
+.url-row input::placeholder{opacity:.4;}
+.url-row button{
+  padding:11px 22px;border:none;border-radius:10px;
+  background:linear-gradient(45deg,var(--gold),var(--gold2));
+  color:#000;font-weight:700;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:15px;letter-spacing:.5px;
+  transition:transform .15s;
+}
+.url-row button:hover{transform:scale(1.04);}
+
+/* ── STATS ROW ── */
+.stats-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  margin-bottom:28px;animation:fadeUp .5s .2s ease both;
+}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+.stat{
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:14px;padding:16px 12px;text-align:center;
+  position:relative;overflow:hidden;transition:transform .2s;
+}
+.stat::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,215,0,0.03),transparent);
+  pointer-events:none;}
+.stat:hover{transform:translateY(-3px);}
+.stat .s-icon{font-size:24px;margin-bottom:6px;}
+.stat .s-val{
+  font-family:'Orbitron',monospace;font-size:28px;font-weight:900;
+  color:var(--gold);line-height:1;
+}
+.stat .s-lbl{font-size:11px;color:var(--muted);letter-spacing:1px;
+  text-transform:uppercase;margin-top:4px;}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;
+  animation:fadeUp .5s .3s ease both;
+}
+.tab{
+  padding:9px 20px;border-radius:10px;
+  border:1.5px solid rgba(255,255,255,0.08);
+  background:transparent;color:var(--muted);
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;
+}
+.tab.active{
+  border-color:var(--gold);background:rgba(255,215,0,0.1);
+  color:var(--gold);
+}
+.tab:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--text);}
+
+/* ── SECTION PANELS ── */
+.panel{display:none;animation:fadeIn .35s ease;}
+.panel.active{display:block;}
+
+/* ── PODIUM (Top 3) ── */
+.podium{
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:12px;margin-bottom:28px;padding:0 10px;
+}
+.podium-slot{
+  flex:1;max-width:200px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+}
+.podium-avatar{
+  width:64px;height:64px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin-bottom:8px;position:relative;
+}
+.podium-slot.p1 .podium-avatar{
+  width:80px;height:80px;font-size:32px;
+  background:radial-gradient(circle,rgba(255,215,0,0.25),rgba(255,215,0,0.05));
+  border:3px solid var(--gold);
+  box-shadow:0 0 24px rgba(255,215,0,0.4);
+}
+.podium-slot.p2 .podium-avatar{
+  background:radial-gradient(circle,rgba(192,192,192,0.2),rgba(192,192,192,0.04));
+  border:2px solid #c0c0c0;
+}
+.podium-slot.p3 .podium-avatar{
+  background:radial-gradient(circle,rgba(205,127,50,0.2),rgba(205,127,50,0.04));
+  border:2px solid #cd7f32;
+}
+.podium-crown{
+  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  font-size:20px;animation:floatCrown 2s ease-in-out infinite;
+}
+@keyframes floatCrown{0%,100%{transform:translateX(-50%) translateY(0);}
+  50%{transform:translateX(-50%) translateY(-5px);}}
+.podium-name{
+  font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+  line-height:1.2;margin-bottom:3px;
+}
+.podium-slot.p1 .podium-name{font-size:17px;color:var(--gold);}
+.podium-school{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.podium-score{
+  font-family:'Orbitron',monospace;font-size:16px;font-weight:900;
+  padding:5px 14px;border-radius:20px;
+}
+.podium-slot.p1 .podium-score{background:rgba(255,215,0,0.15);color:var(--gold);}
+.podium-slot.p2 .podium-score{background:rgba(192,192,192,0.1);color:#e0e0e0;}
+.podium-slot.p3 .podium-score{background:rgba(205,127,50,0.1);color:#cd7f32;}
+.podium-base{
+  width:100%;border-radius:10px 10px 0 0;margin-top:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:22px;font-weight:900;padding:10px 0;
+}
+.podium-slot.p1 .podium-base{height:70px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));border:1px solid rgba(255,215,0,0.3);color:var(--gold);}
+.podium-slot.p2 .podium-base{height:50px;background:linear-gradient(180deg,rgba(192,192,192,0.15),rgba(192,192,192,0.03));border:1px solid rgba(192,192,192,0.2);color:#c0c0c0;}
+.podium-slot.p3 .podium-base{height:36px;background:linear-gradient(180deg,rgba(205,127,50,0.15),rgba(205,127,50,0.03));border:1px solid rgba(205,127,50,0.2);color:#cd7f32;}
+
+/* ── LEADERBOARD LIST ── */
+.lb-title{
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+  margin:20px 0 10px;padding-left:4px;
+}
+.lb-list{display:flex;flex-direction:column;gap:6px;}
+.lb-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-radius:12px;
+  background:var(--card);border:1px solid var(--card-border);
+  transition:all .2s;cursor:default;
+  animation:fadeUp .4s ease both;
+}
+.lb-row:hover{background:rgba(255,215,0,0.05);border-color:rgba(255,215,0,0.2);transform:translateX(4px);}
+.lb-rank{
+  font-family:'Orbitron',monospace;font-size:14px;font-weight:900;
+  width:32px;text-align:center;flex-shrink:0;color:var(--muted);
+}
+.lb-row.top3 .lb-rank{color:var(--gold);}
+.lb-avatar{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+}
+.lb-info{flex:1;min-width:0;}
+.lb-name{
+  font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.lb-meta{font-size:11px;color:var(--muted);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.lb-score{
+  font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--gold);
+}
+.lb-badge-pill{
+  font-size:11px;padding:2px 9px;border-radius:10px;font-weight:700;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px;
+}
+.pill-gold{background:rgba(255,215,0,0.15);color:var(--gold);}
+.pill-silver{background:rgba(192,192,192,0.12);color:#e0e0e0;}
+.pill-bronze{background:rgba(205,127,50,0.12);color:#cd7f32;}
+.pill-part{background:rgba(255,255,255,0.06);color:var(--muted);}
+
+/* ── SCHOOL / REGION CARDS ── */
+.rank-grid{display:flex;flex-direction:column;gap:8px;}
+.rank-card{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;border-radius:13px;
+  background:var(--card);border:1px solid var(--card-border);
+  transition:all .2s;animation:fadeUp .4s ease both;
+}
+.rank-card:hover{background:rgba(255,215,0,0.04);border-color:rgba(255,215,0,0.18);transform:translateX(4px);}
+.rank-card.top1{border-color:rgba(255,215,0,0.4);background:rgba(255,215,0,0.06);}
+.rank-card.top2{border-color:rgba(192,192,192,0.3);}
+.rank-card.top3{border-color:rgba(205,127,50,0.3);}
+.rc-rank{
+  font-family:'Orbitron',monospace;font-size:20px;font-weight:900;
+  width:36px;text-align:center;flex-shrink:0;
+}
+.rc-info{flex:1;min-width:0;}
+.rc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rc-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.rc-bar-wrap{width:120px;flex-shrink:0;}
+.rc-bar-bg{height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.rc-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width 1.2s ease;}
+.rc-score{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold);flex-shrink:0;min-width:54px;text-align:right;}
+
+/* ── GENDER SECTION ── */
+.gender-section{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;
+}
+@media(max-width:500px){.gender-section{grid-template-columns:1fr;}}
+.gender-card{
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:16px;padding:22px;text-align:center;
+  animation:fadeUp .4s ease both;
+}
+.gender-card.male-card{border-color:rgba(79,195,247,0.25);}
+.gender-card.female-card{border-color:rgba(244,143,177,0.25);}
+.gc-icon{font-size:44px;margin-bottom:8px;}
+.gc-count{font-family:'Orbitron',monospace;font-size:42px;font-weight:900;line-height:1;}
+.gc-count.male-c{color:var(--male);}
+.gc-count.female-c{color:var(--female);}
+.gc-label{font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.gc-pct{font-size:13px;margin-top:8px;opacity:.6;}
+.gender-bar-wrap{
+  background:var(--card);border:1px solid var(--card-border);
+  border-radius:16px;padding:20px;margin-bottom:14px;
+  animation:fadeUp .4s .1s ease both;
+}
+.gender-bar-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;
+  letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.split-bar{display:flex;height:44px;border-radius:10px;overflow:hidden;}
+.split-male{background:linear-gradient(90deg,#1565c0,var(--male));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  color:#fff;transition:width 1.2s ease;min-width:0;overflow:hidden;}
+.split-female{background:linear-gradient(90deg,#880e4f,var(--female));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  color:#fff;transition:width 1.2s ease;min-width:0;overflow:hidden;}
+
+/* ── FOOTER ── */
+.footer{
+  text-align:center;padding:30px 20px 0;
+  font-size:12px;color:var(--muted);
+  border-top:1px solid rgba(255,255,255,0.06);margin-top:40px;
+  animation:fadeIn .6s .5s ease both;
+}
+.footer strong{color:var(--gold);}
+.refresh-info{font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* ── LOADING / EMPTY ── */
+.loading{text-align:center;padding:60px 20px;}
+.loading .spin{font-size:40px;animation:spin 1s linear infinite;display:block;margin-bottom:14px;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+.loading p{font-size:14px;color:var(--muted);}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty .eicon{font-size:40px;margin-bottom:10px;}
+
+/* ── SCROLL ANIMATION DELAYS ── */
+.lb-row:nth-child(1){animation-delay:.05s;}
+.lb-row:nth-child(2){animation-delay:.10s;}
+.lb-row:nth-child(3){animation-delay:.15s;}
+.lb-row:nth-child(4){animation-delay:.20s;}
+.lb-row:nth-child(5){animation-delay:.25s;}
+.lb-row:nth-child(6){animation-delay:.30s;}
+.lb-row:nth-child(7){animation-delay:.35s;}
+.lb-row:nth-child(8){animation-delay:.40s;}
+.lb-row:nth-child(9){animation-delay:.45s;}
+.lb-row:nth-child(10){animation-delay:.50s;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-badge">🇬🇭 Ghana · 2026</div>
+    <h1>CADET MEDIA GHANA<br>LIVE LEADERBOARD</h1>
+    <div class="sub">National Public Safety Quiz · Annual Rankings</div>
+    <div class="live-pill">
+      <span class="live-dot"></span>
+      <span id="liveStatus">Loading data…</span>
+    </div>
+  </div>
+
+  <!-- ── SETUP BOX (hidden once connected) ── -->
+  <div class="setup-box" id="setupBox">
+    <h3>⚙️ Connect Live Data</h3>
+    <p>
+      Paste your <strong>Google Apps Script Web App URL</strong> below to display live results.<br>
+      This is the same URL used in the Admin Dashboard — no extra setup needed.
+    </p>
+    <div class="url-row">
+      <input type="text" id="appsScriptUrl"
+        placeholder="Paste Apps Script Web App URL here…">
+      <button onclick="connectData()">Connect</button>
+    </div>
+  </div>
+
+  <!-- ── STATS ── -->
+  <div class="stats-row" id="statsRow" style="opacity:0;">
+    <div class="stat"><div class="s-icon">👥</div><div class="s-val" id="sTotalCadets">—</div><div class="s-lbl">Total Cadets</div></div>
+    <div class="stat"><div class="s-icon">🏫</div><div class="s-val" id="sTotalSchools">—</div><div class="s-lbl">Schools</div></div>
+    <div class="stat"><div class="s-icon">🌍</div><div class="s-val" id="sTotalRegions">—</div><div class="s-lbl">Regions</div></div>
+    <div class="stat"><div class="s-icon">🏅</div><div class="s-val" id="sTotalGold">—</div><div class="s-lbl">Gold Cadets</div></div>
+  </div>
+
+  <!-- ── TABS ── -->
+  <div class="tabs" id="tabsRow" style="opacity:0;">
+    <button class="tab active" onclick="switchTab('individuals')">🏆 Top Cadets</button>
+    <button class="tab" onclick="switchTab('schools')">🏫 Schools</button>
+    <button class="tab" onclick="switchTab('regions')">🌍 Regions</button>
+    <button class="tab" onclick="switchTab('gender')">👥 Gender</button>
+  </div>
+
+  <!-- ── INDIVIDUALS PANEL ── -->
+  <div class="panel active" id="panel-individuals">
+    <div id="podiumWrap"></div>
+    <div class="lb-title">🎖️ Full Rankings — Top 50 Cadets</div>
+    <div class="lb-list" id="lbList">
+      <div class="loading"><span class="spin">⏳</span><p>Loading rankings…</p></div>
+    </div>
+  </div>
+
+  <!-- ── SCHOOLS PANEL ── -->
+  <div class="panel" id="panel-schools">
+    <div class="lb-title">🏫 School Rankings — Ranked by Average Score</div>
+    <div class="rank-grid" id="schoolGrid">
+      <div class="loading"><span class="spin">⏳</span><p>Loading schools…</p></div>
+    </div>
+  </div>
+
+  <!-- ── REGIONS PANEL ── -->
+  <div class="panel" id="panel-regions">
+    <div class="lb-title">🌍 Regional Rankings — Ranked by Average Score</div>
+    <div class="rank-grid" id="regionGrid">
+      <div class="loading"><span class="spin">⏳</span><p>Loading regions…</p></div>
+    </div>
+  </div>
+
+  <!-- ── GENDER PANEL ── -->
+  <div class="panel" id="panel-gender">
+    <div class="lb-title">👥 Gender Participation</div>
+    <div class="gender-bar-wrap">
+      <div class="gender-bar-label">Male vs Female Split</div>
+      <div class="split-bar">
+        <div class="split-male" id="splitMale" style="width:50%">👦</div>
+        <div class="split-female" id="splitFemale" style="width:50%">👧</div>
+      </div>
+    </div>
+    <div class="gender-section">
+      <div class="gender-card male-card">
+        <div class="gc-icon">👦</div>
+        <div class="gc-count male-c" id="gMaleCount">—</div>
+        <div class="gc-label">Male Cadets</div>
+        <div class="gc-pct" id="gMalePct"></div>
+      </div>
+      <div class="gender-card female-card">
+        <div class="gc-icon">👧</div>
+        <div class="gc-count female-c" id="gFemaleCount">—</div>
+        <div class="gc-label">Female Cadets</div>
+        <div class="gc-pct" id="gFemalePct"></div>
+      </div>
+    </div>
+    <div class="lb-title">🏆 Top Male Cadet</div>
+    <div id="topMaleWrap" class="rank-grid"></div>
+    <div class="lb-title" style="margin-top:16px;">🏆 Top Female Cadet</div>
+    <div id="topFemaleWrap" class="rank-grid"></div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <strong>Cadet Media Ghana</strong> · Annual Cadet Personality Awards<br>
+    Fire Academy & Training Centre · Ghana 🇬🇭<br>
+    <div class="refresh-info" id="lastRefresh"></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+
+// ══════════════════════════════
+// EXACT column mapping (verified)
+// ══════════════════════════════
+const COL = {
+  name:2, gender:3, school:4, phone:5, email:6,
+  modules:[7,8,9,10,11,12,13,14,15,16,17,18],
+  totalScore:19, badge:20, region:21, district:22, date:23,
+};
+
+let allData = [];
+let activeTab = 'individuals';
+let confettiFired = false;
+
+// ── Connect ──
+function connectData(){
+  const url = document.getElementById('appsScriptUrl').value.trim();
+  if(!url){ alert('Please paste your Apps Script URL.'); return; }
+  localStorage.setItem('cmg_lb_url', url);
+  loadData(url);
+}
+
+// ── Auto-load on page open ──
+window.addEventListener('DOMContentLoaded', ()=>{
+  // Check both keys — admin dashboard uses cmg_sheet_url, leaderboard uses cmg_lb_url
+  const saved = localStorage.getItem('cmg_lb_url') || localStorage.getItem('cmg_sheet_url');
+  if(saved){
+    document.getElementById('appsScriptUrl').value = saved;
+    localStorage.setItem('cmg_lb_url', saved); // save under leaderboard key too
+    document.getElementById('setupBox').style.display = 'none';
+    loadData(saved);
+  } else {
+    document.getElementById('liveStatus').textContent = 'Paste your Apps Script URL below to connect';
+  }
+});
+
+// ── Load Data ──
+async function loadData(url){
+  document.getElementById('liveStatus').textContent = 'Syncing…';
+  try {
+    const res  = await fetch(url, {mode:'cors'});
+    if(!res.ok) throw new Error(`Server returned ${res.status}`);
+    const text = await res.text();
+    if(!text || text.trim().length < 10) throw new Error('Empty response from Apps Script');
+    allData = parseCSV(text);
+    if(!allData.length) throw new Error('No cadet data found yet — data will appear once students start submitting');
+    document.getElementById('setupBox').style.display = 'none';
+    document.getElementById('statsRow').style.opacity = '1';
+    document.getElementById('tabsRow').style.opacity  = '1';
+    const t = new Date().toLocaleTimeString();
+    document.getElementById('liveStatus').textContent = `Live · Last updated ${t}`;
+    document.getElementById('lastRefresh').textContent = `Data last refreshed at ${t}`;
+    renderAll();
+    // Auto-refresh every 3 minutes
+    setTimeout(()=> loadData(url), 3 * 60 * 1000);
+  } catch(e){
+    document.getElementById('liveStatus').textContent = '⚠️ ' + e.message;
+    document.getElementById('lbList').innerHTML = `
+      <div class="empty">
+        <div class="eicon">⚠️</div>
+        <p style="color:#ff9070;">${e.message}</p>
+        <p style="margin-top:10px;font-size:12px;opacity:.6;">
+          Make sure your Apps Script is deployed as a Web App<br>
+          with access set to <strong>"Anyone"</strong>
+        </p>
+      </div>`;
+    console.error('Leaderboard load error:', e);
+  }
+}
+
+// ── Parse CSV ──
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  function parseLine(line){
+    const cols=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cols.push(cur.replace(/^"|"$/g,'').trim());cur='';}
+      else cur+=line[i];
+    }
+    cols.push(cur.replace(/^"|"$/g,'').trim());
+    return cols;
+  }
+  return lines.slice(1)
+    .map(l=>parseLine(l))
+    .filter(r=>r.length>3 && r[COL.name] && r[COL.name].trim()!=='');
+}
+
+// ── Score ──
+function getScorePct(row){
+  const ts = String(row[COL.totalScore]||'').trim();
+  if(ts){ const m=ts.match(/(\d+)/); if(m){const v=parseInt(m[1]);if(v>=0&&v<=100)return v;} }
+  let sum=0,max=0;
+  COL.modules.forEach(ci=>{
+    const s=String(row[ci]||'').trim(); if(!s)return;
+    const parts=s.split('/');
+    if(parts.length===2){const g=parseInt(parts[0])||0,t=parseInt(parts[1])||30;if(t>0){sum+=g;max+=t;}}
+    else{const v=parseInt(s)||0;if(v>0&&v<=30){sum+=v;max+=30;}}
+  });
+  return max>0?Math.round(sum/max*100):0;
+}
+
+function getTitle(g){ return (g||'').toLowerCase()==='female'?'Cadetess':'Cadet'; }
+function getMedal(pct){ return pct>=85?'🏅':pct>=70?'🥈':pct>=50?'🥉':'🎓'; }
+function getPillClass(pct){ return pct>=85?'pill-gold':pct>=70?'pill-silver':pct>=50?'pill-bronze':'pill-part'; }
+function getPillLabel(pct){ return pct>=85?'GOLD':pct>=70?'SILVER':pct>=50?'BRONZE':'PARTICIPANT'; }
+function getAvatar(name){ return name?name.charAt(0).toUpperCase():'?'; }
+
+// ── Tab switch ──
+function switchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ── Render All ──
+function renderAll(){
+  if(!allData.length) return;
+  const ranked = allData.map(r=>({
+    name:(r[COL.name]||'').trim(),
+    gender:(r[COL.gender]||'').trim(),
+    school:(r[COL.school]||'Unknown').trim(),
+    region:(r[COL.region]||'Unknown').trim(),
+    pct:getScorePct(r),
+  })).sort((a,b)=>b.pct-a.pct);
+
+  renderStats(ranked);
+  renderPodium(ranked);
+  renderIndividuals(ranked);
+  renderSchools(ranked);
+  renderRegions(ranked);
+  renderGender(ranked);
+
+  if(!confettiFired && ranked[0]?.pct>=85){
+    confettiFired=true;
+    setTimeout(()=>confetti({particleCount:120,spread:100,origin:{y:0.3}}),600);
+  }
+}
+
+// ── Stats ──
+function renderStats(ranked){
+  const schools = new Set(ranked.map(r=>r.school.toLowerCase())).size;
+  const regions = new Set(ranked.map(r=>r.region.toLowerCase()).filter(r=>r&&r!=='unknown')).size;
+  const gold    = ranked.filter(r=>r.pct>=85).length;
+  document.getElementById('sTotalCadets').textContent  = ranked.length;
+  document.getElementById('sTotalSchools').textContent = schools;
+  document.getElementById('sTotalRegions').textContent = regions||'—';
+  document.getElementById('sTotalGold').textContent    = gold;
+}
+
+// ── Podium ──
+function renderPodium(ranked){
+  const top3 = ranked.slice(0,3);
+  if(top3.length<1){ document.getElementById('podiumWrap').innerHTML=''; return; }
+  const order = top3.length>=3 ? [top3[1],top3[0],top3[2]] : [top3[0]];
+  const classes = top3.length>=3 ? ['p2','p1','p3'] : ['p1'];
+  const crowns  = top3.length>=3 ? ['🥈','👑','🥉'] : ['👑'];
+  let html='<div class="podium">';
+  order.forEach((c,i)=>{
+    const title = getTitle(c.gender);
+    const cls   = classes[i];
+    const orig  = top3.indexOf(c)+1;
+    html+=`<div class="podium-slot ${cls}">
+      <div class="podium-avatar">
+        <span class="podium-crown">${crowns[i]}</span>
+        ${getAvatar(c.name)}
+      </div>
+      <div class="podium-name">${title} ${c.name}</div>
+      <div class="podium-school">${c.school}</div>
+      <div class="podium-score">${c.pct}%</div>
+      <div class="podium-base">${orig}</div>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('podiumWrap').innerHTML=html;
+}
+
+// ── Individuals ──
+function renderIndividuals(ranked){
+  const top50=ranked.slice(0,50);
+  if(!top50.length){
+    document.getElementById('lbList').innerHTML='<div class="empty"><div class="eicon">🏆</div><p>No results yet. Be the first cadet!</p></div>';
+    return;
+  }
+  document.getElementById('lbList').innerHTML = top50.map((c,i)=>{
+    const title=getTitle(c.gender);
+    const medal=getMedal(c.pct);
+    const pillCls=getPillClass(c.pct);
+    const pillLbl=getPillLabel(c.pct);
+    const top3cls=i<3?'top3':'';
+    return `<div class="lb-row ${top3cls}">
+      <span class="lb-rank">${i+1}</span>
+      <div class="lb-avatar">${getAvatar(c.name)}</div>
+      <div class="lb-info">
+        <div class="lb-name">${medal} ${title} ${c.name}</div>
+        <div class="lb-meta">${c.school} · ${c.region}</div>
+      </div>
+      <div class="lb-right">
+        <span class="lb-score">${c.pct}%</span>
+        <span class="lb-badge-pill ${pillCls}">${pillLbl}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Schools ──
+function renderSchools(ranked){
+  const map={};
+  ranked.forEach(r=>{
+    const s=r.school||'Unknown';
+    if(!map[s])map[s]={total:0,count:0,gold:0};
+    map[s].total+=r.pct; map[s].count++;
+    if(r.pct>=85)map[s].gold++;
+  });
+  const sorted=Object.entries(map)
+    .map(([name,d])=>({name,avg:Math.round(d.total/d.count),count:d.count,gold:d.gold}))
+    .sort((a,b)=>b.avg-a.avg);
+  const maxAvg=sorted[0]?.avg||1;
+  document.getElementById('schoolGrid').innerHTML = sorted.map((s,i)=>{
+    const topCls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    return `<div class="rank-card ${topCls}">
+      <div class="rc-rank">${medal}</div>
+      <div class="rc-info">
+        <div class="rc-name">🏫 ${s.name}</div>
+        <div class="rc-sub">${s.count} cadet${s.count>1?'s':''} · ${s.gold} gold 🏅</div>
+      </div>
+      <div class="rc-bar-wrap">
+        <div class="rc-bar-bg"><div class="rc-bar" style="width:${Math.round(s.avg/maxAvg*100)}%"></div></div>
+      </div>
+      <div class="rc-score">${s.avg}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Regions ──
+function renderRegions(ranked){
+  const map={};
+  ranked.forEach(r=>{
+    const reg=(r.region||'Unknown').trim();
+    if(!map[reg])map[reg]={total:0,count:0};
+    map[reg].total+=r.pct; map[reg].count++;
+  });
+  const sorted=Object.entries(map)
+    .filter(([n])=>n&&n.toLowerCase()!=='unknown')
+    .map(([name,d])=>({name,avg:Math.round(d.total/d.count),count:d.count}))
+    .sort((a,b)=>b.avg-a.avg);
+  const maxAvg=sorted[0]?.avg||1;
+  document.getElementById('regionGrid').innerHTML = sorted.map((r,i)=>{
+    const topCls=i===0?'top1':i===1?'top2':i===2?'top3':'';
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+    return `<div class="rank-card ${topCls}">
+      <div class="rc-rank">${medal}</div>
+      <div class="rc-info">
+        <div class="rc-name">🌍 ${r.name}</div>
+        <div class="rc-sub">${r.count} cadet${r.count>1?'s':''} from this region</div>
+      </div>
+      <div class="rc-bar-wrap">
+        <div class="rc-bar-bg"><div class="rc-bar" style="width:${Math.round(r.avg/maxAvg*100)}%"></div></div>
+      </div>
+      <div class="rc-score">${r.avg}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Gender ──
+function renderGender(ranked){
+  let male=0,female=0;
+  ranked.forEach(r=>{
+    const g=r.gender.toLowerCase();
+    if(g==='male'||g==='m')male++;
+    else if(g==='female'||g==='f')female++;
+  });
+  const total=male+female||1;
+  const mp=Math.round(male/total*100), fp=100-mp;
+
+  document.getElementById('gMaleCount').textContent   = male;
+  document.getElementById('gFemaleCount').textContent = female;
+  document.getElementById('gMalePct').textContent     = `${mp}% of all cadets`;
+  document.getElementById('gFemalePct').textContent   = `${fp}% of all cadets`;
+  document.getElementById('splitMale').style.width    = mp+'%';
+  document.getElementById('splitFemale').style.width  = fp+'%';
+  document.getElementById('splitMale').textContent    = mp>15?`👦 ${mp}%`:'';
+  document.getElementById('splitFemale').textContent  = fp>15?`👧 ${fp}%`:'';
+
+  // Top male
+  const topMale = ranked.filter(r=>r.gender.toLowerCase()==='male')[0];
+  document.getElementById('topMaleWrap').innerHTML = topMale
+    ? `<div class="rank-card top1">
+        <div class="rc-rank">🥇</div>
+        <div class="rc-info">
+          <div class="rc-name">👦 Cadet ${topMale.name}</div>
+          <div class="rc-sub">${topMale.school} · ${topMale.region}</div>
+        </div>
+        <div class="rc-score">${topMale.pct}%</div>
+      </div>`
+    : '<div class="empty"><p>No male results yet</p></div>';
+
+  // Top female
+  const topFemale = ranked.filter(r=>r.gender.toLowerCase()==='female')[0];
+  document.getElementById('topFemaleWrap').innerHTML = topFemale
+    ? `<div class="rank-card top1">
+        <div class="rc-rank">🥇</div>
+        <div class="rc-info">
+          <div class="rc-name">👧 Cadetess ${topFemale.name}</div>
+          <div class="rc-sub">${topFemale.school} · ${topFemale.region}</div>
+        </div>
+        <div class="rc-score">${topFemale.pct}%</div>
+      </div>`
+    : '<div class="empty"><p>No female results yet</p></div>';
+}
+</script>
+</body>
+</html>
