@@ -414,7 +414,7 @@ body{
     <div class="sub">National Public Safety Quiz · Annual Rankings</div>
     <div class="live-pill">
       <span class="live-dot"></span>
-      <span id="liveStatus">Loading data…</span>
+      <button onclick="debugRaw()" style="background:rgba(255,100,0,.15);border:1px solid rgba(255,100,0,.3);color:#ff9070;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;margin-right:8px;">🔍 Debug</button><span id="liveStatus">Loading data…</span>
     </div>
   </div>
 
@@ -596,6 +596,25 @@ async function loadData(url){
         </p>
       </div>`;
     console.error('Leaderboard load error:', e);
+  }
+}
+
+// ── Debug: fetch raw and show in console ──
+async function debugRaw(){
+  const url = 'https://script.google.com/macros/s/AKfycbyNEpo4W0-hlPaHWIa75IOZldCtmRUHvu77ZQ9NDUv0RUhnJ0OQQ3DkfWjTtZAepgDA/exec';
+  try {
+    const res = await fetch(url, {mode:'cors'});
+    const text = await res.text();
+    console.log('=== RAW RESPONSE (first 2000 chars) ===');
+    console.log(text.substring(0,2000));
+    console.log('=== RESPONSE LENGTH:', text.length);
+    // Show on screen
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#111;color:#0f0;padding:16px;border-radius:8px;z-index:9999;font-size:11px;max-height:60vh;overflow:auto;white-space:pre;border:1px solid #0f0;';
+    div.innerHTML = '<b style="color:#ff0">RAW RESPONSE (first 1500 chars)</b><br><br>' + text.substring(0,1500).replace(/</g,'&lt;') + '<br><br><button onclick="this.parentNode.remove()" style="background:#f00;color:#fff;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;">Close</button>';
+    document.body.appendChild(div);
+  } catch(err){
+    alert('Fetch error: ' + err.message);
   }
 }
 
