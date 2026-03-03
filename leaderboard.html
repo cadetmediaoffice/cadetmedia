@@ -389,6 +389,15 @@ body{
   border-radius:12px;color:#fff;font-family:'Orbitron',monospace;
   font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .2s;}
 .cd-close:hover{background:rgba(255,255,255,0.14);}
+.cd-cert-btn{
+  width:100%;margin-top:14px;padding:13px;
+  background:linear-gradient(45deg,#FFD700,#e6a800);
+  border:none;border-radius:12px;color:#000;
+  font-family:'Orbitron',monospace;font-size:13px;
+  font-weight:900;cursor:pointer;letter-spacing:.5px;
+  transition:all .2s;box-shadow:0 4px 20px rgba(255,215,0,0.25);
+}
+.cd-cert-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(255,215,0,0.45);}
 .lb-row{cursor:pointer;}
 </style>
 </head>
@@ -528,6 +537,7 @@ body{
 </div><!-- /wrap -->
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 
 // Column mapping now auto-detected from header names — no fixed indexes needed
@@ -958,6 +968,7 @@ function renderGender(ranked){
     </div>
     <div class="cd-modules-title">📊 Score per Module</div>
     <div class="cd-modules" id="cdModules"></div>
+    <button class="cd-cert-btn" id="cdCertBtn" onclick="downloadCertFromModal()">🏅 Download Certificate</button>
     <button class="cd-close" onclick="closeDetail()">✕ Close</button>
   </div>
 </div>
@@ -985,6 +996,7 @@ function getModuleScores(row){
 function showDetail(rowIdx){
   const row = allData[rowIdx];
   if(!row) return;
+  _currentCertRow = row;
   const name   = getField(row,['full name','name'])||'Unknown';
   const gender = getField(row,['sex','gender']);
   const school = getField(row,['school','institution'])||'—';
@@ -1022,6 +1034,226 @@ function showDetail(rowIdx){
   document.body.style.overflow = 'hidden';
 }
 
+
+// ── Certificate Generator ────────────────────────
+let _currentCertRow = null;
+
+const BADGE_CFG = {
+  GOLD:        {label:'GOLD DISTINCTION',  color:'#FFD700',color2:'#e6a800',glow:'rgba(255,215,0,0.6)', star:'★',bg:'rgba(255,215,0,0.08)'},
+  SILVER:      {label:'SILVER MERIT',      color:'#E0E0E0',color2:'#9E9E9E',glow:'rgba(220,220,220,0.5)',star:'✦',bg:'rgba(200,200,200,0.06)'},
+  BRONZE:      {label:'BRONZE AWARD',      color:'#CD7F32',color2:'#A0522D',glow:'rgba(205,127,50,0.5)',star:'◆',bg:'rgba(205,127,50,0.06)'},
+  PARTICIPANT: {label:'PARTICIPANT',        color:'#81D4FA',color2:'#4FC3F7',glow:'rgba(79,195,247,0.4)',star:'◉',bg:'rgba(79,195,247,0.05)'},
+};
+
+const MOD_NAMES = [
+  'General Safety','Fire Safety','Police / Community',
+  'Health & Ambulance','Prisons Service','NADMO',
+  'Immigration','Customs / GRA','Tourism & Arts',
+  'Forest Conservation','Armed Forces (GAF)','NACOC'
+];
+
+function getBadgeKey(pct){
+  return pct>=85?'GOLD':pct>=70?'SILVER':pct>=50?'BRONZE':'PARTICIPANT';
+}
+
+function downloadCertFromModal(){
+  if(!_currentCertRow) return;
+  const row    = _currentCertRow;
+  const name   = getField(row,['full name','name'])||'Unknown';
+  const gender = getField(row,['sex','gender']);
+  const school = getField(row,['school','institution'])||'—';
+  const region = findRegion(row);
+  const pct    = getScorePct(row);
+  const title  = getTitle(gender);
+  const badge  = getBadgeKey(pct);
+  const cfg    = BADGE_CFG[badge];
+  const date   = getField(row,['date completed','date'])||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const serial = 'CMG-2026-'+([...name+school].reduce((h,c)=>Math.imul(31,h)+c.charCodeAt(0)|0,0)>>>0).toString(36).toUpperCase().substring(0,6);
+  const modScores = getModuleScores(row);
+
+  // Build canvas 1200×850
+  const W=1200,H=850;
+  const cv = document.createElement('canvas');
+  cv.width=W; cv.height=H;
+  const c = cv.getContext('2d');
+
+  // Background
+  const bg=c.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#06091a');bg.addColorStop(.5,'#0c1128');bg.addColorStop(1,'#06091a');
+  c.fillStyle=bg;c.fillRect(0,0,W,H);
+
+  // Grid
+  c.strokeStyle='rgba(255,215,0,0.03)';c.lineWidth=1;
+  for(let x=0;x<W;x+=40){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke();}
+  for(let y=0;y<H;y+=40){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();}
+
+  // Glows
+  const o1=c.createRadialGradient(200,150,0,200,150,400);
+  o1.addColorStop(0,cfg.bg);o1.addColorStop(1,'transparent');
+  c.fillStyle=o1;c.fillRect(0,0,W,H);
+  const o2=c.createRadialGradient(W-200,H-150,0,W-200,H-150,350);
+  o2.addColorStop(0,'rgba(79,195,247,0.04)');o2.addColorStop(1,'transparent');
+  c.fillStyle=o2;c.fillRect(0,0,W,H);
+
+  function rr(cx,cy,cw,ch,r){
+    c.beginPath();c.moveTo(cx+r,cy);c.lineTo(cx+cw-r,cy);c.arcTo(cx+cw,cy,cx+cw,cy+r,r);
+    c.lineTo(cx+cw,cy+ch-r);c.arcTo(cx+cw,cy+ch,cx+cw-r,cy+ch,r);
+    c.lineTo(cx+r,cy+ch);c.arcTo(cx,cy+ch,cx,cy+ch-r,r);
+    c.lineTo(cx,cy+r);c.arcTo(cx,cy,cx+r,cy,r);c.closePath();
+  }
+
+  // Borders
+  c.strokeStyle=cfg.color;c.lineWidth=2;rr(16,16,W-32,H-32,12);c.stroke();
+  c.strokeStyle='rgba(255,215,0,0.12)';c.lineWidth=1;rr(28,28,W-56,H-56,8);c.stroke();
+
+  // Corners
+  function corner(x,y,sx,sy){
+    c.strokeStyle=cfg.color;c.lineWidth=2;
+    c.beginPath();c.moveTo(x,y+sy*40);c.lineTo(x,y);c.lineTo(x+sx*40,y);c.stroke();
+    c.strokeStyle='rgba(255,215,0,0.3)';c.lineWidth=1;
+    c.beginPath();c.moveTo(x+sx*8,y+sy*20);c.lineTo(x+sx*8,y+sy*8);c.lineTo(x+sx*20,y+sy*8);c.stroke();
+  }
+  corner(28,28,1,1);corner(W-28,28,-1,1);corner(28,H-28,1,-1);corner(W-28,H-28,-1,-1);
+
+  // ── LEFT PANEL ──
+  const lx=52,ly=80,lw=310;
+
+  // Ghana flag
+  ['#006B3F','#FCD116','#CE1126'].forEach((col,i)=>{c.fillStyle=col;c.fillRect(lx,ly+i*6,lw,5);});
+
+  c.font='700 11px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.5)';
+  c.textAlign='left';c.fillText('CADET MEDIA GHANA',lx,ly+30);
+  c.font='400 10px Orbitron,monospace';c.fillStyle='rgba(255,255,255,0.3)';
+  c.fillText('National Public Safety Quiz · 2026',lx,ly+46);
+  c.strokeStyle='rgba(255,215,0,0.15)';c.lineWidth=1;
+  c.beginPath();c.moveTo(lx,ly+56);c.lineTo(lx+lw,ly+56);c.stroke();
+
+  c.font='600 10px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.5)';
+  c.fillText('📊 MODULE SCORES',lx,ly+74);
+
+  const msy=ly+90,mh=44;
+  modScores.forEach((ms,i)=>{
+    const mx=lx+(i%2)*160,my=msy+Math.floor(i/2)*mh;
+    const bw=130,bc=ms?ms.pct>=85?'#00e676':ms.pct>=70?'#FFD700':ms.pct>=50?'#ff9100':'#ff5252':'#333';
+    const got=ms?ms.got:0,tot=ms?ms.tot:30,pct=ms?ms.pct:0;
+    c.font='400 9px Georgia,serif';c.fillStyle='rgba(255,255,255,0.55)';c.textAlign='left';
+    c.fillText(MOD_NAMES[i].substring(0,18),mx,my+11);
+    c.font='700 10px Orbitron,monospace';c.fillStyle=bc;
+    c.fillText(got+'/'+tot,mx+bw-28,my+11);
+    rr(mx,my+16,bw,5,3);c.fillStyle='rgba(255,255,255,0.07)';c.fill();
+    if(pct>0){rr(mx,my+16,Math.round(pct/100*bw),5,3);c.fillStyle=bc;c.fill();}
+  });
+
+  // Serial box
+  const qrY=msy+6*mh+10;
+  rr(lx,qrY,lw,90,6);c.strokeStyle='rgba(255,215,0,0.1)';c.lineWidth=1;c.stroke();
+  c.font='400 9px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.4)';c.textAlign='left';
+  c.fillText('CERTIFICATE ID',lx+8,qrY+14);
+  c.font='700 11px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.8)';
+  c.fillText(serial,lx+8,qrY+30);
+  c.font='400 8px Georgia,serif';c.fillStyle='rgba(255,255,255,0.3)';
+  c.fillText('Scan QR to verify authenticity',lx+8,qrY+46);
+
+  // ── RIGHT PANEL ──
+  function drawRight(){
+    const rx=lx+lw+40,rw=W-rx-52,cy=90;
+    // Badge ribbon
+    const rbg=c.createLinearGradient(rx,cy,rx+rw,cy);
+    rbg.addColorStop(0,'transparent');rbg.addColorStop(.3,cfg.bg);
+    rbg.addColorStop(.7,cfg.bg);rbg.addColorStop(1,'transparent');
+    c.fillStyle=rbg;c.fillRect(rx,cy,rw,32);
+    c.font='700 11px Orbitron,monospace';c.fillStyle=cfg.color;c.textAlign='center';
+    c.fillText(cfg.star+' '+cfg.label+' '+cfg.star,rx+rw/2,cy+20);
+
+    c.font='400 13px Georgia,serif';c.fillStyle='rgba(255,255,255,0.5)';
+    c.fillText('C E R T I F I C A T E   O F',rx+rw/2,cy+58);
+
+    // ACHIEVEMENT title
+    c.font='900 42px Georgia,serif';
+    const tg=c.createLinearGradient(rx,0,rx+rw,0);
+    tg.addColorStop(0,cfg.color2);tg.addColorStop(.5,'#fff');tg.addColorStop(1,cfg.color2);
+    c.fillStyle=tg;c.fillText('ACHIEVEMENT',rx+rw/2,cy+100);
+
+    const lineY=cy+118;
+    c.strokeStyle=cfg.color;c.lineWidth=1.5;
+    c.beginPath();c.moveTo(rx+20,lineY);c.lineTo(rx+rw-20,lineY);c.stroke();
+    c.strokeStyle='rgba(255,215,0,0.2)';c.lineWidth=1;
+    c.beginPath();c.moveTo(rx+20,lineY+4);c.lineTo(rx+rw-20,lineY+4);c.stroke();
+
+    c.font='italic 400 15px Georgia,serif';c.fillStyle='rgba(255,255,255,0.45)';
+    c.fillText('This is to certify that',rx+rw/2,lineY+30);
+
+    // Name
+    c.save();
+    c.shadowColor=cfg.glow;c.shadowBlur=20;
+    c.font='600 44px Georgia,serif';
+    const ng=c.createLinearGradient(rx,0,rx+rw,0);
+    ng.addColorStop(0,cfg.color2);ng.addColorStop(.5,'#fff');ng.addColorStop(1,cfg.color2);
+    c.fillStyle=ng;c.fillText(title+' '+name,rx+rw/2,lineY+88);
+    c.restore();
+
+    // Underline
+    const nw=c.measureText(title+' '+name).width;
+    c.strokeStyle=cfg.color;c.lineWidth=1;
+    c.beginPath();c.moveTo(rx+rw/2-nw/2,lineY+94);c.lineTo(rx+rw/2+nw/2,lineY+94);c.stroke();
+
+    c.font='400 15px Georgia,serif';c.fillStyle='rgba(255,255,255,0.5)';
+    c.fillText('of  '+school+'  ·  '+region+',  Ghana',rx+rw/2,lineY+120);
+    c.font='italic 400 14px Georgia,serif';c.fillStyle='rgba(255,255,255,0.38)';
+    c.fillText('has successfully completed the',rx+rw/2,lineY+146);
+    c.font='600 15px Georgia,serif';c.fillStyle='rgba(255,255,255,0.7)';
+    c.fillText('CADET MEDIA GHANA NATIONAL PUBLIC SAFETY QUIZ',rx+rw/2,lineY+170);
+    c.font='italic 400 13px Georgia,serif';c.fillStyle='rgba(255,255,255,0.35)';
+    c.fillText('covering all 12 Ghana Public Safety Service Modules',rx+rw/2,lineY+190);
+
+    // Score box
+    const scoreY=lineY+238;
+    rr(rx+rw/2-80,scoreY-44,160,56,10);
+    c.fillStyle=cfg.bg;c.fill();
+    c.strokeStyle=cfg.color;c.lineWidth=1.5;c.stroke();
+    c.font='900 36px Orbitron,monospace';c.fillStyle=cfg.color;
+    c.fillText(pct+'%',rx+rw/2,scoreY-4);
+    c.font='400 9px Orbitron,monospace';c.fillStyle='rgba(255,255,255,0.3)';
+    c.fillText('TOTAL SCORE',rx+rw/2,scoreY+12);
+
+    const bEmoji=badge==='GOLD'?'🏅':badge==='SILVER'?'🥈':badge==='BRONZE'?'🥉':'🎓';
+    c.font='36px serif';c.fillText(bEmoji,rx+rw/2-126,scoreY-10);
+    c.fillText(bEmoji,rx+rw/2+126,scoreY-10);
+
+    // Footer
+    const sigY=H-80;
+    c.strokeStyle='rgba(255,215,0,0.2)';c.lineWidth=1;
+    c.beginPath();c.moveTo(rx+20,sigY-20);c.lineTo(rx+rw-20,sigY-20);c.stroke();
+
+    c.textAlign='left';c.font='400 10px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.4)';
+    c.fillText('DATE AWARDED',rx+20,sigY);
+    c.font='italic 400 13px Georgia,serif';c.fillStyle='rgba(255,255,255,0.6)';
+    c.fillText(date,rx+20,sigY+16);
+
+    c.textAlign='center';c.font='400 9px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.35)';
+    c.fillText('FIRE ACADEMY & TRAINING CENTRE',rx+rw/2,sigY);
+    c.fillText('GHANA  🇬🇭',rx+rw/2,sigY+15);
+
+    c.textAlign='right';c.font='400 10px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.4)';
+    c.fillText('AUTHORISED BY',rx+rw-20,sigY);
+    c.font='italic 400 13px Georgia,serif';c.fillStyle='rgba(255,255,255,0.6)';
+    c.fillText('Cadet Media Ghana',rx+rw-20,sigY+16);
+
+    // Download!
+    const link=document.createElement('a');
+    link.download='CMG_Certificate_'+name.replace(/\s+/g,'_')+'.png';
+    link.href=cv.toDataURL('image/png');
+    link.click();
+  }
+
+  // Add QR then draw right panel
+  try{
+    const qc=document.createElement('canvas');
+    QRCode.toCanvas(qc,'https://cadetmediaoffice.github.io/cadetmedia/verify?id='+serial+'&name='+encodeURIComponent(name),
+      {width:60,margin:1,color:{dark:'#FFD700',light:'#06091a'}},
+      function(){c.drawImage(qc,lx+lw-68,qrY+10,60,60);drawRight();});
+  }catch(e){drawRight();}
+}
 function closeDetail(){
   document.getElementById('cdOverlay').classList.remove('show');
   document.body.style.overflow = '';
