@@ -343,6 +343,61 @@ body{
 .lb-row:nth-child(8){animation-delay:.40s;}
 .lb-row:nth-child(9){animation-delay:.45s;}
 .lb-row:nth-child(10){animation-delay:.50s;}
+
+/* ── CADET DETAIL MODAL ── */
+.cd-overlay{display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.82);justify-content:center;align-items:flex-end;
+  backdrop-filter:blur(4px);}
+.cd-overlay.show{display:flex;}
+.cd-modal{
+  background:linear-gradient(170deg,#08111f,#0f1e38);
+  border:1px solid rgba(255,215,0,0.2);
+  border-radius:22px 22px 0 0;
+  width:100%;max-width:560px;
+  max-height:88vh;overflow-y:auto;
+  padding:24px 20px 36px;
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.cd-handle{width:40px;height:4px;background:rgba(255,255,255,0.15);
+  border-radius:2px;margin:0 auto 20px;}
+.cd-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.cd-avatar{width:56px;height:56px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#1e3c72,#2a5298);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:22px;font-weight:900;
+  border:2px solid rgba(255,215,0,0.4);}
+.cd-info{flex:1;}
+.cd-name{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;
+  color:var(--gold);line-height:1.3;}
+.cd-meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6;}
+.cd-total{text-align:center;margin-bottom:20px;padding:14px;
+  background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);
+  border-radius:14px;}
+.cd-total .score{font-family:'Orbitron',monospace;font-size:38px;font-weight:900;
+  color:var(--gold);line-height:1;}
+.cd-total .lbl{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+.cd-modules-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;}
+.cd-modules{display:flex;flex-direction:column;gap:8px;}
+.cd-mod{display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;padding:10px 12px;}
+.cd-mod-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+.cd-mod-name{flex:1;font-size:13px;font-weight:600;
+  font-family:'Barlow Condensed',sans-serif;}
+.cd-mod-bar-wrap{width:80px;height:5px;background:rgba(255,255,255,0.07);
+  border-radius:3px;overflow:hidden;flex-shrink:0;}
+.cd-mod-bar{height:100%;border-radius:3px;transition:width .8s ease;}
+.cd-mod-score{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;
+  width:46px;text-align:right;flex-shrink:0;}
+.cd-close{width:100%;margin-top:20px;padding:13px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;color:#fff;font-family:'Orbitron',monospace;
+  font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;
+  transition:background .2s;}
+.cd-close:hover{background:rgba(255,255,255,0.14);}
+.lb-row{cursor:pointer;}
 </style>
 </head>
 <body>
@@ -547,16 +602,42 @@ function parseCSV(text){
 }
 
 // ── Score ──
+const MODULES = [
+  {name:"General Safety",   icon:"🛡️"},
+  {name:"Fire Safety",      icon:"🔥"},
+  {name:"Police/Community", icon:"👮"},
+  {name:"Health & Safety",  icon:"🚑"},
+  {name:"Prisons Service",  icon:"⚖️"},
+  {name:"NADMO",            icon:"🌪️"},
+  {name:"Immigration",      icon:"✈️"},
+  {name:"Customs / GRA",    icon:"📦"},
+  {name:"Tourism",          icon:"🏛️"},
+  {name:"Forest",           icon:"🌿"},
+  {name:"Armed Forces",     icon:"🎖️"},
+  {name:"NACOC",            icon:"🚫"},
+];
+
+const GHANA_REGIONS = ['Greater Accra','Ashanti','Western','Eastern','Central',
+  'Northern','Upper East','Upper West','Volta','Brong-Ahafo','Bono','Ahafo',
+  'Bono East','Savannah','North East','Oti','Western North'];
+
+function findRegion(row){
+  const direct = String(row[COL.region]||'').trim();
+  if(direct && GHANA_REGIONS.some(r=>direct.toLowerCase().includes(r.toLowerCase()))) return direct;
+  for(let i=row.length-1;i>=0;i--){
+    const cell=String(row[i]||'').trim();
+    if(GHANA_REGIONS.some(r=>cell.toLowerCase().includes(r.toLowerCase()))) return cell;
+  }
+  return direct||'Unknown';
+}
+
 function getScorePct(row){
-  // Try totalScore column first
   const ts = String(row[COL.totalScore]||'').trim();
   if(ts){ const m=ts.match(/(\d+)/); if(m){const v=parseInt(m[1]);if(v>=1&&v<=100)return v;} }
-  // Fallback: scan row for a "XX%" pattern (handles column shift from badge commas)
   for(let i=row.length-1;i>=0;i--){
     const cell=String(row[i]||'').trim();
     if(/^\d{1,3}%$/.test(cell)){const v=parseInt(cell);if(v>=1&&v<=100)return v;}
   }
-  // Last resort: sum module scores from X/30 format
   let sum=0,max=0;
   COL.modules.forEach(ci=>{
     const s=String(row[ci]||'').trim(); if(!s)return;
@@ -565,6 +646,21 @@ function getScorePct(row){
     else{const v=parseInt(s)||0;if(v>0&&v<=30){sum+=v;max+=30;}}
   });
   return max>0?Math.round(sum/max*100):0;
+}
+
+// Get per-module score as percentage
+function getModuleScores(row){
+  return COL.modules.map(ci=>{
+    const s=String(row[ci]||'').trim();
+    if(!s) return null;
+    const parts=s.split('/');
+    if(parts.length===2){
+      const got=parseInt(parts[0])||0,tot=parseInt(parts[1])||30;
+      return {got,tot,pct:tot>0?Math.round(got/tot*100):0,raw:s};
+    }
+    const v=parseInt(s)||0;
+    return v>0?{got:v,tot:30,pct:Math.round(v/30*100),raw:s}:null;
+  });
 }
 
 function getTitle(g){ return (g||'').toLowerCase()==='female'?'Cadetess':'Cadet'; }
@@ -582,34 +678,22 @@ function switchTab(tab){
   document.getElementById('panel-'+tab).classList.add('active');
 }
 
-
-// Smart region finder — handles column shifts from long badge text with commas
-const GHANA_REGIONS = ['Greater Accra','Ashanti','Western','Eastern','Central',
-  'Northern','Upper East','Upper West','Volta','Brong-Ahafo','Bono','Ahafo',
-  'Bono East','Savannah','North East','Oti','Western North'];
-
-function findRegion(row){
-  // First try expected column
-  const direct = String(row[COL.region]||'').trim();
-  if(direct && GHANA_REGIONS.some(r=>direct.toLowerCase().includes(r.toLowerCase()))) return direct;
-  // Scan row for a Ghana region name
-  for(let i=row.length-1;i>=0;i--){
-    const cell=String(row[i]||'').trim();
-    if(GHANA_REGIONS.some(r=>cell.toLowerCase().includes(r.toLowerCase()))) return cell;
-  }
-  return direct||'Unknown';
-}
-
 // ── Render All ──
 function renderAll(){
   if(!allData.length) return;
+  const seed = Math.floor(Date.now() / 30000);
+  function seededRand(str,s){let h=s;for(let i=0;i<str.length;i++)h=Math.imul(31,h)+str.charCodeAt(i)|0;return(h>>>0)/0xFFFFFFFF;}
+
   const ranked = allData.map(r=>({
     name:(r[COL.name]||'').trim(),
     gender:(r[COL.gender]||'').trim(),
     school:(r[COL.school]||'Unknown').trim(),
     region:findRegion(r),
     pct:getScorePct(r),
-  })).sort((a,b)=>b.pct-a.pct);
+    raw:r,
+  }));
+  ranked.forEach(r=>r._rand=seededRand(r.name+r.school,seed));
+  ranked.sort((a,b)=> b.pct!==a.pct ? b.pct-a.pct : a._rand-b._rand);
 
   renderStats(ranked);
   renderPodium(ranked);
@@ -647,7 +731,8 @@ function renderPodium(ranked){
     const title = getTitle(c.gender);
     const cls   = classes[i];
     const orig  = top3.indexOf(c)+1;
-    html+=`<div class="podium-slot ${cls}">
+    const pidx = allData.indexOf(c.raw);
+    html+=`<div class="podium-slot ${cls}" onclick="showDetail(${pidx})" style="cursor:pointer">
       <div class="podium-avatar">
         <span class="podium-crown">${crowns[i]}</span>
         ${getAvatar(c.name)}
@@ -675,7 +760,8 @@ function renderIndividuals(ranked){
     const pillCls=getPillClass(c.pct);
     const pillLbl=getPillLabel(c.pct);
     const top3cls=i<3?'top3':'';
-    return `<div class="lb-row ${top3cls}">
+    const idx = allData.indexOf(c.raw);
+    return `<div class="lb-row ${top3cls}" onclick="showDetail(${idx})">
       <span class="lb-rank">${i+1}</span>
       <div class="lb-avatar">${getAvatar(c.name)}</div>
       <div class="lb-info">
@@ -796,6 +882,76 @@ function renderGender(ranked){
       </div>`
     : '<div class="empty"><p>No female results yet</p></div>';
 }
+
+// ── Cadet Detail Modal ──────────────────────────
+function showDetail(rowIdx){
+  const row = allData[rowIdx];
+  if(!row) return;
+  const name   = (row[COL.name]||'Unknown').trim();
+  const gender = (row[COL.gender]||'').trim();
+  const school = (row[COL.school]||'—').trim();
+  const region = findRegion(row);
+  const pct    = getScorePct(row);
+  const title  = getTitle(gender);
+  const badge  = getPillLabel(pct);
+  const medal  = getMedal(pct);
+  const pillCls= getPillClass(pct);
+
+  document.getElementById('cdAvatar').textContent = getAvatar(name);
+  document.getElementById('cdName').textContent   = title + ' ' + name;
+  document.getElementById('cdMeta').innerHTML     = '🏫 ' + school + '<br>🌍 ' + region + ' &nbsp;·&nbsp; ' + gender;
+  document.getElementById('cdTotal').textContent  = pct + '%';
+  document.getElementById('cdBadge').innerHTML    = medal + ' ' + badge + ' CADET';
+
+  // Per-module breakdown
+  const modScores = getModuleScores(row);
+  document.getElementById('cdModules').innerHTML = MODULES.map((m,i)=>{
+    const ms = modScores[i];
+    if(!ms) return `<div class="cd-mod">
+      <span class="cd-mod-icon">${m.icon}</span>
+      <span class="cd-mod-name">${m.name}</span>
+      <div class="cd-mod-bar-wrap"><div class="cd-mod-bar" style="width:0%;background:#333"></div></div>
+      <span class="cd-mod-score" style="color:var(--muted)">—</span>
+    </div>`;
+    const color = ms.pct>=85?'#00e676':ms.pct>=70?'#FFD700':ms.pct>=50?'#ff9100':'#ff5252';
+    return `<div class="cd-mod">
+      <span class="cd-mod-icon">${m.icon}</span>
+      <span class="cd-mod-name">${m.name}</span>
+      <div class="cd-mod-bar-wrap"><div class="cd-mod-bar" style="width:${ms.pct}%;background:${color}"></div></div>
+      <span class="cd-mod-score" style="color:${color}">${ms.got}/${ms.tot}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('cdOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail(){
+  document.getElementById('cdOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
 </script>
+
+<!-- ── CADET DETAIL MODAL ── -->
+<div class="cd-overlay" id="cdOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="cd-modal" id="cdModal">
+    <div class="cd-handle"></div>
+    <div class="cd-header">
+      <div class="cd-avatar" id="cdAvatar"></div>
+      <div class="cd-info">
+        <div class="cd-name" id="cdName"></div>
+        <div class="cd-meta" id="cdMeta"></div>
+      </div>
+    </div>
+    <div class="cd-total">
+      <div class="score" id="cdTotal"></div>
+      <div class="lbl" id="cdBadge"></div>
+    </div>
+    <div class="cd-modules-title">📊 Score per Module</div>
+    <div class="cd-modules" id="cdModules"></div>
+    <button class="cd-close" onclick="closeDetail()">✕ Close</button>
+  </div>
+</div>
+
 </body>
 </html>
