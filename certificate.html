@@ -347,7 +347,7 @@ function generate(){
   // QR code (drawn via temp canvas)
   try {
     const qrCanvas = document.createElement('canvas');
-    QRCode.toCanvas(qrCanvas, 'https://cadetmediaoffice.github.io/cadetmedia/verify?id='+serial+'&name='+encodeURIComponent(name), {
+    QRCode.toCanvas(qrCanvas, 'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet='+encodeURIComponent(name), {
       width:60, margin:1,
       color:{dark:'#FFD700',light:'#06091a'}
     }, function(){
