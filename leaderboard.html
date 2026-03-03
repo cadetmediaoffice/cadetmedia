@@ -557,16 +557,11 @@ function connectData(){
 
 // ── Auto-load on page open ──
 window.addEventListener('DOMContentLoaded', ()=>{
-  // Check both keys — admin dashboard uses cmg_sheet_url, leaderboard uses cmg_lb_url
-  const saved = localStorage.getItem('cmg_lb_url') || localStorage.getItem('cmg_sheet_url');
-  if(saved){
-    document.getElementById('appsScriptUrl').value = saved;
-    localStorage.setItem('cmg_lb_url', saved); // save under leaderboard key too
-    document.getElementById('setupBox').style.display = 'none';
-    loadData(saved);
-  } else {
-    document.getElementById('liveStatus').textContent = 'Paste your Apps Script URL below to connect';
-  }
+  // URL is hardcoded — loads automatically on any browser
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyNEpo4W0-hlPaHWIa75IOZldCtmRUHvu77ZQ9NDUv0RUhnJ0OQQ3DkfWjTtZAepgDA/exec';
+  document.getElementById('appsScriptUrl').value = SHEET_URL;
+  document.getElementById('setupBox').style.display = 'none';
+  loadData(SHEET_URL);
 });
 
 // ── Load Data ──
