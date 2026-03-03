@@ -584,21 +584,64 @@ async function loadData(url){
 }
 
 // ── Parse CSV ──
+function parseLine(line){
+  const cols=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){inQ=!inQ;}
+    else if(line[i]===','&&!inQ){cols.push(cur.replace(/^"|"$/g,'').trim());cur='';}
+    else cur+=line[i];
+  }
+  cols.push(cur.replace(/^"|"$/g,'').trim());
+  return cols;
+}
+
 function parseCSV(text){
   const lines = text.trim().split('\n');
-  function parseLine(line){
-    const cols=[];let cur='',inQ=false;
-    for(let i=0;i<line.length;i++){
-      if(line[i]==='"'){inQ=!inQ;}
-      else if(line[i]===','&&!inQ){cols.push(cur.replace(/^"|"$/g,'').trim());cur='';}
-      else cur+=line[i];
-    }
-    cols.push(cur.replace(/^"|"$/g,'').trim());
-    return cols;
+  const headers = parseLine(lines[0]);
+
+  // ── Detect columns from header names ──
+  function findCol(keywords){
+    const idx = headers.findIndex(h =>
+      keywords.some(k => h.toLowerCase().includes(k.toLowerCase()))
+    );
+    return idx === -1 ? null : idx;
   }
+
+  // Core columns
+  COL.name       = findCol(['full name','name']) ?? 2;
+  COL.gender     = findCol(['sex','gender']) ?? 3;
+  COL.school     = findCol(['school','institution']) ?? 4;
+  COL.phone      = findCol(['phone']) ?? 5;
+  COL.email      = findCol(['email']) ?? 6;
+  COL.totalScore = findCol(['total score','total %','score (%)','score(%)']) ?? 19;
+  COL.badge      = findCol(['badge','award']) ?? 20;
+  COL.region     = findCol(['region']) ?? 21;
+  COL.district   = findCol(['district']) ?? 22;
+  COL.date       = findCol(['date']) ?? 23;
+
+  // Module columns — find each one by keyword
+  const moduleKeywords = [
+    ['general safety'],
+    ['fire safety','gnfs','fire'],
+    ['community safety','police'],
+    ['health','ambulance'],
+    ['prisons','discipline'],
+    ['nadmo','disaster'],
+    ['immigration'],
+    ['customs','gra','division'],
+    ['tourism','creative arts'],
+    ['forest'],
+    ['national defence','armed forces','gaf'],
+    ['narcotics','nacoc','drug'],
+  ];
+  COL.modules = moduleKeywords.map(kw => findCol(kw) ?? -1);
+
+  console.log('Detected columns:', COL);
+  console.log('Headers:', headers);
+
   return lines.slice(1)
-    .map(l=>parseLine(l))
-    .filter(r=>r.length>3 && r[COL.name] && r[COL.name].trim()!=='');
+    .map(l => parseLine(l))
+    .filter(r => r.length > 3 && r[COL.name] && r[COL.name].trim() !== '');
 }
 
 // ── Score ──
