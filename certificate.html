@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cadet Media Ghana — Certificate</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'EB Garamond',serif;
+  background:linear-gradient(135deg,#0a0f1e 0%,#111827 50%,#0a0f1e 100%);
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;padding:30px 16px 60px;
+}
+
+/* ── PREVIEW CARD ── */
+.preview-wrap{
+  width:100%;max-width:860px;margin-bottom:24px;
+  border-radius:4px;overflow:hidden;
+  box-shadow:0 0 80px rgba(255,215,0,0.15), 0 0 0 1px rgba(255,215,0,0.2);
+}
+
+canvas#cert{width:100%;display:block;}
+
+/* ── CONTROLS ── */
+.controls{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  width:100%;max-width:860px;
+}
+.input-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;
+}
+@media(max-width:600px){.input-row{grid-template-columns:1fr;}}
+
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,215,0,0.6);font-family:'Orbitron',monospace;}
+.field input, .field select{
+  padding:11px 14px;border-radius:8px;
+  border:1px solid rgba(255,215,0,0.2);
+  background:rgba(255,255,255,0.04);color:#fff;
+  font-size:14px;font-family:'EB Garamond',serif;outline:none;
+  transition:border-color .2s;
+}
+.field input:focus, .field select:focus{border-color:rgba(255,215,0,0.6);}
+.field select option{background:#111827;color:#fff;}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.btn{
+  padding:13px 32px;border:none;border-radius:10px;
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;transition:all .2s;
+}
+.btn-generate{
+  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;
+  box-shadow:0 4px 20px rgba(255,215,0,0.3);
+}
+.btn-generate:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(255,215,0,0.45);}
+.btn-download{
+  background:rgba(255,215,0,0.1);color:#FFD700;
+  border:1.5px solid rgba(255,215,0,0.3);
+}
+.btn-download:hover{background:rgba(255,215,0,0.2);}
+.btn-download:disabled{opacity:.3;cursor:not-allowed;}
+
+.module-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;
+}
+@media(max-width:600px){.module-grid{grid-template-columns:repeat(2,1fr);}}
+.mod-field{display:flex;flex-direction:column;gap:4px;}
+.mod-field label{font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(255,255,255,0.4);font-family:'Orbitron',monospace;}
+.mod-field input{
+  padding:8px 10px;border-radius:6px;font-size:13px;
+  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);color:#fff;
+  font-family:'EB Garamond',serif;outline:none;
+}
+.mod-field input:focus{border-color:rgba(255,215,0,0.4);}
+
+.section-title{
+  font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(255,215,0,0.5);
+  align-self:flex-start;margin-top:6px;
+}
+
+.hint{font-size:12px;color:rgba(255,255,255,0.3);text-align:center;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<canvas id="cert" width="1200" height="850"></canvas>
+
+<div class="controls">
+  <div class="input-row">
+    <div class="field">
+      <label>Full Name</label>
+      <input id="iName" type="text" placeholder="e.g. Victoria Abena" value="Victoria Abena">
+    </div>
+    <div class="field">
+      <label>Gender (for title)</label>
+      <select id="iGender">
+        <option value="Male">Male → Cadet</option>
+        <option value="Female" selected>Female → Cadetess</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>School / Institution</label>
+      <input id="iSchool" type="text" placeholder="e.g. Ola Girls SHS" value="Ola Girls SHS">
+    </div>
+    <div class="field">
+      <label>Region</label>
+      <input id="iRegion" type="text" placeholder="e.g. Bono East" value="Bono East">
+    </div>
+    <div class="field">
+      <label>Total Score (%)</label>
+      <input id="iScore" type="number" min="0" max="100" placeholder="e.g. 49" value="49">
+    </div>
+    <div class="field">
+      <label>Badge</label>
+      <select id="iBadge">
+        <option value="GOLD">🏅 Gold Distinction</option>
+        <option value="SILVER">🥈 Silver Merit</option>
+        <option value="BRONZE">🥉 Bronze</option>
+        <option value="PARTICIPANT" selected>🎓 Participant</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Date Completed</label>
+      <input id="iDate" type="text" placeholder="e.g. 3rd March 2026" value="3rd March 2026">
+    </div>
+    <div class="field">
+      <label>Serial / ID</label>
+      <input id="iSerial" type="text" placeholder="Auto-generated" id="iSerial">
+    </div>
+  </div>
+
+  <div class="section-title">📊 Module Scores (format: 27/30)</div>
+  <div class="module-grid">
+    <div class="mod-field"><label>🛡️ General</label><input id="m0" value="16/30"></div>
+    <div class="mod-field"><label>🔥 Fire</label><input id="m1" value="11/30"></div>
+    <div class="mod-field"><label>👮 Police</label><input id="m2" value="13/30"></div>
+    <div class="mod-field"><label>🚑 Health</label><input id="m3" value="14/30"></div>
+    <div class="mod-field"><label>⚖️ Prisons</label><input id="m4" value="10/30"></div>
+    <div class="mod-field"><label>🌪️ NADMO</label><input id="m5" value="25/30"></div>
+    <div class="mod-field"><label>✈️ Immigration</label><input id="m6" value="13/30"></div>
+    <div class="mod-field"><label>📦 Customs</label><input id="m7" value="14/30"></div>
+    <div class="mod-field"><label>🏛️ Tourism</label><input id="m8" value="24/30"></div>
+    <div class="mod-field"><label>🌿 Forest</label><input id="m9" value="1/30"></div>
+    <div class="mod-field"><label>🎖️ GAF</label><input id="m10" value="24/30"></div>
+    <div class="mod-field"><label>🚫 NACOC</label><input id="m11" value="12/30"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-generate" onclick="generate()">🎨 Generate Certificate</button>
+    <button class="btn btn-download" id="btnDownload" onclick="download()" disabled>⬇️ Download PNG</button>
+  </div>
+  <p class="hint">Fill in the cadet's details above then click Generate.<br>The certificate will appear as a preview — click Download to save it.</p>
+</div>
+
+<script>
+const canvas = document.getElementById('cert');
+const ctx = canvas.getContext('2d');
+const W = 1200, H = 850;
+
+const BADGE_CONFIG = {
+  GOLD:        {label:'GOLD DISTINCTION',  color:'#FFD700', color2:'#e6a800', glow:'rgba(255,215,0,0.6)',  star:'★', bg:'rgba(255,215,0,0.08)'},
+  SILVER:      {label:'SILVER MERIT',      color:'#E0E0E0', color2:'#9E9E9E', glow:'rgba(220,220,220,0.5)',star:'✦', bg:'rgba(200,200,200,0.06)'},
+  BRONZE:      {label:'BRONZE AWARD',      color:'#CD7F32', color2:'#A0522D', glow:'rgba(205,127,50,0.5)', star:'◆', bg:'rgba(205,127,50,0.06)'},
+  PARTICIPANT: {label:'PARTICIPANT',        color:'#81D4FA', color2:'#4FC3F7', glow:'rgba(79,195,247,0.4)', star:'◉', bg:'rgba(79,195,247,0.05)'},
+};
+
+const MODULES = [
+  'General Safety','Fire Safety','Police / Community',
+  'Health & Ambulance','Prisons Service','NADMO',
+  'Immigration','Customs / GRA','Tourism & Arts',
+  'Forest Conservation','Armed Forces (GAF)','NACOC'
+];
+
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function generate(){
+  const name    = document.getElementById('iName').value.trim() || 'Unknown Cadet';
+  const gender  = document.getElementById('iGender').value;
+  const school  = document.getElementById('iSchool').value.trim() || '—';
+  const region  = document.getElementById('iRegion').value.trim() || '—';
+  const score   = parseInt(document.getElementById('iScore').value)||0;
+  const badge   = document.getElementById('iBadge').value;
+  const date    = document.getElementById('iDate').value.trim() || new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const title   = gender==='Female' ? 'Cadetess' : 'Cadet';
+  const cfg     = BADGE_CONFIG[badge];
+
+  // Serial number
+  let serial = document.getElementById('iSerial').value.trim();
+  if(!serial){
+    serial = 'CMG-2026-' + Math.random().toString(36).substring(2,8).toUpperCase();
+    document.getElementById('iSerial').value = serial;
+  }
+
+  const modules = Array.from({length:12},(_,i)=>{
+    const v = document.getElementById('m'+i).value.trim();
+    const parts = v.split('/');
+    if(parts.length===2){
+      const got=parseInt(parts[0])||0, tot=parseInt(parts[1])||30;
+      return {label:MODULES[i], got, tot, pct:tot>0?Math.round(got/tot*100):0};
+    }
+    return {label:MODULES[i], got:0, tot:30, pct:0};
+  });
+
+  // ── DRAW ──
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  const bgGrad = ctx.createLinearGradient(0,0,W,H);
+  bgGrad.addColorStop(0,'#06091a');
+  bgGrad.addColorStop(0.5,'#0c1128');
+  bgGrad.addColorStop(1,'#06091a');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Subtle grid
+  ctx.strokeStyle = 'rgba(255,215,0,0.03)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Glow orbs
+  const orb1 = ctx.createRadialGradient(200,150,0,200,150,400);
+  orb1.addColorStop(0,cfg.bg); orb1.addColorStop(1,'transparent');
+  ctx.fillStyle=orb1; ctx.fillRect(0,0,W,H);
+  const orb2 = ctx.createRadialGradient(W-200,H-150,0,W-200,H-150,350);
+  orb2.addColorStop(0,'rgba(79,195,247,0.04)'); orb2.addColorStop(1,'transparent');
+  ctx.fillStyle=orb2; ctx.fillRect(0,0,W,H);
+
+  // Outer border
+  ctx.strokeStyle = cfg.color;
+  ctx.lineWidth = 2;
+  roundRect(ctx,16,16,W-32,H-32,12);
+  ctx.stroke();
+
+  // Inner border
+  ctx.strokeStyle = 'rgba(255,215,0,0.12)';
+  ctx.lineWidth = 1;
+  roundRect(ctx,28,28,W-56,H-56,8);
+  ctx.stroke();
+
+  // Corner ornaments
+  function corner(x,y,sx,sy){
+    ctx.strokeStyle=cfg.color; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x,y+sy*40); ctx.lineTo(x,y); ctx.lineTo(x+sx*40,y); ctx.stroke();
+    ctx.strokeStyle='rgba(255,215,0,0.3)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x+sx*8,y+sy*20); ctx.lineTo(x+sx*8,y+sy*8); ctx.lineTo(x+sx*20,y+sy*8); ctx.stroke();
+  }
+  corner(28,28,1,1); corner(W-28,28,-1,1); corner(28,H-28,1,-1); corner(W-28,H-28,-1,-1);
+
+  // ── LEFT PANEL (modules) ──
+  const lx = 52, ly = 80, lw = 310;
+
+  // Ghana flag stripe
+  const flagH = 5;
+  const flagW = lw;
+  const flagColors = ['#006B3F','#FCD116','#CE1126'];
+  flagColors.forEach((c,i)=>{
+    ctx.fillStyle=c;
+    ctx.fillRect(lx, ly+i*(flagH+1), flagW, flagH);
+  });
+
+  // "CADET MEDIA GHANA" small header
+  ctx.font = '700 11px "Orbitron", monospace';
+  ctx.fillStyle = 'rgba(255,215,0,0.5)';
+  ctx.letterSpacing = '3px';
+  ctx.textAlign = 'left';
+  ctx.fillText('CADET MEDIA GHANA', lx, ly+30);
+
+  ctx.font = '400 10px "Orbitron", monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillText('National Public Safety Quiz · 2026', lx, ly+46);
+
+  // Divider
+  ctx.strokeStyle='rgba(255,215,0,0.15)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(lx,ly+56); ctx.lineTo(lx+lw,ly+56); ctx.stroke();
+
+  // Module scores
+  ctx.font = '600 10px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,215,0,0.5)';
+  ctx.fillText('📊 MODULE SCORES', lx, ly+74);
+
+  const modStartY = ly+90;
+  const modH = 44;
+  modules.forEach((m,i)=>{
+    const mx = lx + (i%2)*160;
+    const my = modStartY + Math.floor(i/2)*modH;
+    const barW = 130;
+    const filledW = Math.round(m.pct/100*barW);
+    const barColor = m.pct>=85?'#00e676':m.pct>=70?'#FFD700':m.pct>=50?'#ff9100':'#ff5252';
+
+    // Module name
+    ctx.font = '400 9px "EB Garamond", serif';
+    ctx.fillStyle='rgba(255,255,255,0.55)';
+    ctx.textAlign='left';
+    const shortName = m.label.replace('Conservation','').replace('& Arts','').replace('Community','').trim();
+    ctx.fillText(shortName.substring(0,18), mx, my+11);
+
+    // Score text
+    ctx.font = '700 10px "Orbitron", monospace';
+    ctx.fillStyle = barColor;
+    ctx.fillText(m.got+'/'+m.tot, mx+barW-28, my+11);
+
+    // Bar background
+    roundRect(ctx, mx, my+16, barW, 5, 3);
+    ctx.fillStyle='rgba(255,255,255,0.07)'; ctx.fill();
+
+    // Bar fill
+    if(filledW>0){
+      roundRect(ctx, mx, my+16, filledW, 5, 3);
+      ctx.fillStyle=barColor; ctx.fill();
+    }
+  });
+
+  // Serial & QR placeholder area
+  const qrY = modStartY + 6*modH + 10;
+  ctx.strokeStyle='rgba(255,215,0,0.1)'; ctx.lineWidth=1;
+  roundRect(ctx,lx,qrY,lw,90,6); ctx.stroke();
+
+  ctx.font='400 9px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,215,0,0.4)';
+  ctx.textAlign='left';
+  ctx.fillText('CERTIFICATE ID', lx+8, qrY+14);
+  ctx.font='700 11px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,215,0,0.8)';
+  ctx.fillText(serial, lx+8, qrY+30);
+
+  ctx.font='400 8px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.fillText('Scan QR to verify authenticity', lx+8, qrY+46);
+
+  // QR code (drawn via temp canvas)
+  try {
+    const qrCanvas = document.createElement('canvas');
+    QRCode.toCanvas(qrCanvas, 'https://cadetmediaoffice.github.io/cadetmedia/verify?id='+serial+'&name='+encodeURIComponent(name), {
+      width:60, margin:1,
+      color:{dark:'#FFD700',light:'#06091a'}
+    }, function(){
+      ctx.drawImage(qrCanvas, lx+lw-68, qrY+10, 60, 60);
+      finalizeCert(name,title,school,region,score,badge,date,cfg,serial,lx,lw);
+    });
+  } catch(e){
+    finalizeCert(name,title,school,region,score,badge,date,cfg,serial,lx,lw);
+  }
+}
+
+function finalizeCert(name,title,school,region,score,badge,date,cfg,serial,lx,lw){
+  // ── RIGHT PANEL (main cert content) ──
+  const rx = lx+lw+40;
+  const rw = W-rx-52;
+  const cy = 90;
+
+  // Badge ribbon at top
+  const ribbonGrad = ctx.createLinearGradient(rx,cy,rx+rw,cy);
+  ribbonGrad.addColorStop(0,'transparent');
+  ribbonGrad.addColorStop(0.3,cfg.bg);
+  ribbonGrad.addColorStop(0.7,cfg.bg);
+  ribbonGrad.addColorStop(1,'transparent');
+  ctx.fillStyle=ribbonGrad;
+  ctx.fillRect(rx,cy,rw,32);
+
+  ctx.font='700 11px "Orbitron", monospace';
+  ctx.fillStyle=cfg.color;
+  ctx.textAlign='center';
+  ctx.fillText(cfg.star+' '+cfg.label+' '+cfg.star, rx+rw/2, cy+20);
+
+  // "CERTIFICATE OF" 
+  ctx.font='400 13px "Cinzel", serif';
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.fillText('C E R T I F I C A T E   O F', rx+rw/2, cy+58);
+
+  // "ACHIEVEMENT"
+  ctx.font='900 42px "Cinzel Decorative", serif';
+  const titleGrad = ctx.createLinearGradient(rx,cy+60,rx+rw,cy+100);
+  titleGrad.addColorStop(0,cfg.color2);
+  titleGrad.addColorStop(0.5,'#fff');
+  titleGrad.addColorStop(1,cfg.color2);
+  ctx.fillStyle=titleGrad;
+  ctx.fillText('ACHIEVEMENT', rx+rw/2, cy+100);
+
+  // Decorative line
+  const lineY = cy+118;
+  ctx.strokeStyle=cfg.color; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(rx+20,lineY); ctx.lineTo(rx+rw-20,lineY); ctx.stroke();
+  ctx.strokeStyle='rgba(255,215,0,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(rx+20,lineY+4); ctx.lineTo(rx+rw-20,lineY+4); ctx.stroke();
+
+  // "This certifies that"
+  ctx.font='italic 400 15px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.45)';
+  ctx.fillText('This is to certify that', rx+rw/2, lineY+30);
+
+  // Cadet name — big and glowing
+  ctx.save();
+  ctx.shadowColor = cfg.glow;
+  ctx.shadowBlur = 20;
+  ctx.font='600 46px "Cinzel", serif';
+  const nameGrad = ctx.createLinearGradient(rx,0,rx+rw,0);
+  nameGrad.addColorStop(0,cfg.color2);
+  nameGrad.addColorStop(0.5,'#ffffff');
+  nameGrad.addColorStop(1,cfg.color2);
+  ctx.fillStyle=nameGrad;
+  ctx.fillText(title+' '+name, rx+rw/2, lineY+90);
+  ctx.restore();
+
+  // Name underline
+  const nmW = ctx.measureText(title+' '+name).width;
+  ctx.strokeStyle=cfg.color; ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(rx+rw/2-nmW/2,lineY+96);
+  ctx.lineTo(rx+rw/2+nmW/2,lineY+96);
+  ctx.stroke();
+
+  // School & Region
+  ctx.font='400 15px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.fillText('of  '+school+'  ·  '+region+',  Ghana', rx+rw/2, lineY+122);
+
+  // Body text
+  ctx.font='italic 400 14px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.38)';
+  ctx.fillText('has successfully completed the', rx+rw/2, lineY+148);
+
+  ctx.font='600 15px "Cinzel", serif';
+  ctx.fillStyle='rgba(255,255,255,0.7)';
+  ctx.fillText('CADET MEDIA GHANA NATIONAL PUBLIC SAFETY QUIZ', rx+rw/2, lineY+172);
+
+  ctx.font='italic 400 13px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.fillText('covering all 12 Ghana Public Safety Service Modules', rx+rw/2, lineY+192);
+
+  // Score display
+  const scoreY = lineY+240;
+  roundRect(ctx,rx+rw/2-80,scoreY-44,160,56,10);
+  ctx.fillStyle=cfg.bg; ctx.fill();
+  ctx.strokeStyle=cfg.color; ctx.lineWidth=1.5; ctx.stroke();
+
+  ctx.font='900 36px "Orbitron", monospace';
+  ctx.fillStyle=cfg.color;
+  ctx.fillText(score+'%', rx+rw/2, scoreY-4);
+  ctx.font='400 9px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.fillText('TOTAL SCORE', rx+rw/2, scoreY+12);
+
+  // Badge icon large
+  const badgeEmoji = badge==='GOLD'?'🏅':badge==='SILVER'?'🥈':badge==='BRONZE'?'🥉':'🎓';
+  ctx.font='38px serif';
+  ctx.fillText(badgeEmoji, rx+rw/2-130, scoreY-8);
+  ctx.fillText(badgeEmoji, rx+rw/2+130, scoreY-8);
+
+  // Date & signature line
+  const sigY = H-80;
+  ctx.strokeStyle='rgba(255,215,0,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(rx+20,sigY-20); ctx.lineTo(rx+rw-20,sigY-20); ctx.stroke();
+
+  // Left: date
+  ctx.textAlign='left';
+  ctx.font='400 10px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,215,0,0.4)';
+  ctx.fillText('DATE AWARDED', rx+20, sigY);
+  ctx.font='italic 400 13px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText(date, rx+20, sigY+16);
+
+  // Center: Fire Academy seal text
+  ctx.textAlign='center';
+  ctx.font='400 9px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,215,0,0.35)';
+  ctx.fillText('FIRE ACADEMY & TRAINING CENTRE', rx+rw/2, sigY);
+  ctx.fillText('GHANA  🇬🇭', rx+rw/2, sigY+15);
+
+  // Right: authorised
+  ctx.textAlign='right';
+  ctx.font='400 10px "Orbitron", monospace';
+  ctx.fillStyle='rgba(255,215,0,0.4)';
+  ctx.fillText('AUTHORISED BY', rx+rw-20, sigY);
+  ctx.font='italic 400 13px "EB Garamond", serif';
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText('Cadet Media Ghana', rx+rw-20, sigY+16);
+
+  document.getElementById('btnDownload').disabled = false;
+}
+
+function download(){
+  const name = document.getElementById('iName').value.trim()||'cadet';
+  const link = document.createElement('a');
+  link.download = 'CMG_Certificate_'+name.replace(/\s+/g,'_')+'.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Auto-generate on load with default values
+window.addEventListener('DOMContentLoaded', ()=>{
+  // Set today's date
+  const today = new Date();
+  const d = today.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('iDate').value = d;
+  // Auto serial
+  document.getElementById('iSerial').value = 'CMG-2026-'+Math.random().toString(36).substring(2,8).toUpperCase();
+  generate();
+});
+</script>
+</body>
+</html>
