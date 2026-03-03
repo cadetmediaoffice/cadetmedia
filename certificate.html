@@ -483,8 +483,12 @@ function finalizeCert(name,title,school,region,score,badge,date,cfg,serial,lx,lw
   ctx.stroke();
 
   // Draw banner image scaled to fit
+  // Draw banner — wait for load if needed
+  const _drawBanner = () => ctx.drawImage(BANNER_IMG, bannerX+4, bannerY, bannerW-8, bannerH);
   if(BANNER_IMG.complete && BANNER_IMG.naturalWidth > 0){
-    ctx.drawImage(BANNER_IMG, bannerX+4, bannerY, bannerW-8, bannerH);
+    _drawBanner();
+  } else {
+    BANNER_IMG.onload = _drawBanner;
   }
 
   // Date & signature line
