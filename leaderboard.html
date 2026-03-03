@@ -586,6 +586,7 @@ async function loadData(url){
     document.getElementById('liveStatus').textContent = `Live · Last updated ${t}`;
     document.getElementById('lastRefresh').textContent = `Data last refreshed at ${t}`;
     renderAll();
+    highlightFromURL();
     // Auto-refresh every 3 minutes
     setTimeout(()=> loadData(url), 3 * 60 * 1000);
   } catch(e){
@@ -1249,10 +1250,42 @@ function downloadCertFromModal(){
   // Add QR then draw right panel
   try{
     const qc=document.createElement('canvas');
-    QRCode.toCanvas(qc,'https://cadetmediaoffice.github.io/cadetmedia/verify?id='+serial+'&name='+encodeURIComponent(name),
+    QRCode.toCanvas(qc,'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet='+encodeURIComponent(name),
       {width:60,margin:1,color:{dark:'#FFD700',light:'#06091a'}},
       function(){c.drawImage(qc,lx+lw-68,qrY+10,60,60);drawRight();});
   }catch(e){drawRight();}
+}
+
+// ── Auto-highlight cadet from QR scan ──
+function highlightFromURL(){
+  const params = new URLSearchParams(window.location.search);
+  const target = params.get('cadet');
+  if(!target) return;
+
+  // Wait a tick for DOM to settle then find and open that cadet
+  setTimeout(()=>{
+    const match = allData.findIndex(row => {
+      const n = getField(row,['full name','name'])||'';
+      return n.trim().toLowerCase() === target.trim().toLowerCase();
+    });
+
+    if(match === -1) return;
+
+    // Flash the matching lb-row
+    const rows = document.querySelectorAll('.lb-row');
+    rows.forEach(r => {
+      const nameEl = r.querySelector('.lb-name');
+      if(nameEl && nameEl.textContent.toLowerCase().includes(target.toLowerCase())){
+        r.scrollIntoView({behavior:'smooth', block:'center'});
+        r.style.transition = 'all .3s';
+        r.style.background = 'rgba(255,215,0,0.15)';
+        r.style.borderColor = 'rgba(255,215,0,0.6)';
+        r.style.boxShadow = '0 0 20px rgba(255,215,0,0.3)';
+        // Open detail modal after scroll
+        setTimeout(()=> showDetail(match), 800);
+      }
+    });
+  }, 600);
 }
 function closeDetail(){
   document.getElementById('cdOverlay').classList.remove('show');
