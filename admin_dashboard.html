@@ -577,6 +577,8 @@ async function loadFromSheet(){
       });
       // Filter out completely empty rows — accept anything with any value
       allData = allData.filter(r => r.slice(1).some(v => v.trim() !== ''));
+
+
     } else {
       allData = parseCSV(raw);
     }
@@ -738,6 +740,15 @@ function getBadge(pct){
 // ── Render everything ──
 function renderAll(){
   if(!allData.length){ renderEmpty(); return; }
+  // Deduplicate: keep highest-scoring entry per cadet name+school
+  const _seen = {};
+  allData = allData.filter(r => {
+    const key = (r[COL.name]||'').toLowerCase().trim() + '|' + (r[COL.school]||'').toLowerCase().trim();
+    if(!key || key === '|') return true;
+    const pct = getScorePct(r);
+    if(_seen[key] === undefined || pct > _seen[key]){ _seen[key]=pct; return true; }
+    return false;
+  });
   renderKPIs();
   renderGender();
   renderRegions();
@@ -878,8 +889,15 @@ function renderSchools(){
 // ── Modules ──
 function renderModules(){
   const mods = COL.modules||[];
+  // Filter out any module columns that have no data (e.g. misdetected cols)
+  const validMods = mods.filter(colIdx => {
+    if(colIdx < 1) return false;
+    const vals = allData.map(r=>String(r[colIdx]||'').trim()).filter(v=>v!=='');
+    return vals.length > 0 && vals.some(v=>v.includes('/') || parseInt(v)>0);
+  });
+
   const avgs=MODULES.map((m,idx)=>{
-    const colIdx = mods[idx]!=null ? mods[idx] : -1;
+    const colIdx = validMods[idx] != null ? validMods[idx] : -1;
     if(colIdx===-1) return {...m, avg:0};
     const scores=allData.map(r=>{
       const s=String(r[colIdx]||'');
