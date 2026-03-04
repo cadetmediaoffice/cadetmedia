@@ -676,12 +676,15 @@ function parseScore(str){
 }
 
 function getScorePct(row){
-  // Strategy 1: Try dedicated totalScore column (e.g. "76%")
+  // Strategy 1: Try dedicated totalScore column (decimal 0.98 or "98%" or "98")
   if(COL.totalScore > 0){
     const ts = String(row[COL.totalScore]||'').trim();
-    if(ts){
-      const m = ts.match(/(\d+)/);
-      if(m){ const v=parseInt(m[1]); if(v>0 && v<=100) return v; }
+    if(ts && ts !== ''){
+      const f = parseFloat(ts);
+      if(!isNaN(f)){
+        if(f > 0 && f <= 1)   return Math.round(f * 100); // decimal 0.98 → 98
+        if(f > 1 && f <= 100) return Math.round(f);        // already percentage
+      }
     }
   }
 
