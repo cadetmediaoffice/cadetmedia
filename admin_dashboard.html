@@ -240,6 +240,7 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;}
     <span class="status-txt">LIVE</span>
     <span id="lastSync">Not synced yet</span>
     <button class="sync-btn" onclick="loadFromSheet()">⟳ Sync Data</button>
+    <button class="sync-btn" onclick="debugData()" style="background:#333;margin-left:6px;">🔍 Debug</button>
   </div>
 </div>
 
@@ -675,33 +676,56 @@ function parseScore(str){
 }
 
 function getScorePct(row){
-  // First try the Total Score (%) column directly
-  const ts = String(row[COL.totalScore]||'').trim();
-  if(ts){
-    const m = ts.match(/(\d+)/);
-    if(m){
-      const v = parseInt(m[1]);
-      if(v>=0 && v<=100) return v;
+  // Strategy 1: Try dedicated totalScore column (e.g. "76%")
+  if(COL.totalScore > 0){
+    const ts = String(row[COL.totalScore]||'').trim();
+    if(ts){
+      const m = ts.match(/(\d+)/);
+      if(m){ const v=parseInt(m[1]); if(v>0 && v<=100) return v; }
     }
   }
-  // Fallback: sum all module scores
+
+  // Strategy 2: Calculate from all module score columns ("26/30" format)
   let sum=0, max=0;
   const mods = COL.modules||[];
   for(let i=0;i<mods.length;i++){
-    if(mods[i]===-1) continue;
+    if(mods[i]<1) continue;
     const s = String(row[mods[i]]||'').trim();
     if(!s) continue;
     const parts = s.split('/');
     if(parts.length===2){
-      const got = parseInt(parts[0])||0;
-      const tot = parseInt(parts[1])||30;
+      const got=parseInt(parts[0])||0, tot=parseInt(parts[1])||30;
       if(tot>0){ sum+=got; max+=tot; }
     } else {
-      const v = parseInt(s)||0;
-      if(v>0 && v<=30){ sum+=v; max+=30; }
+      const v=parseInt(s)||0;
+      if(v>0 && v<=100){ sum+=v; max+=100; }
     }
   }
-  return max>0 ? Math.round(sum/max*100) : 0;
+  if(max>0) return Math.round(sum/max*100);
+
+  // Strategy 3: Scan every column for a percentage value
+  for(let i=1;i<row.length;i++){
+    const s=String(row[i]||'').trim();
+    if(s.includes('%')){
+      const m=s.match(/(\d+)/);
+      if(m){ const v=parseInt(m[1]); if(v>0&&v<=100) return v; }
+    }
+  }
+  return 0;
+}
+
+function debugData(){
+  if(!allData.length){ alert('No data loaded yet.'); return; }
+  const row = allData[0];
+  let info = 'ROW 0 LENGTH: ' + row.length + '\n\n';
+  info += 'COL.name=' + COL.name + ' → ' + row[COL.name] + '\n';
+  info += 'COL.totalScore=' + COL.totalScore + ' → ' + row[COL.totalScore] + '\n';
+  info += 'COL.modules=' + JSON.stringify(COL.modules) + '\n\n';
+  info += 'MODULE VALUES:\n';
+  (COL.modules||[]).forEach((c,i) => { info += '  col'+c+': '+row[c]+'\n'; });
+  info += '\nALL COLUMNS:\n';
+  row.forEach((v,i) => { if(i>0) info += '  ['+i+']: '+v+'\n'; });
+  alert(info);
 }
 
 function getBadge(pct){
