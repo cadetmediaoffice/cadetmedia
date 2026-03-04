@@ -558,7 +558,7 @@ function connectData(){
 // ── Auto-load on page open ──
 window.addEventListener('DOMContentLoaded', ()=>{
   // URL is hardcoded — loads automatically on any browser
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyNEpo4W0-hlPaHWIa75IOZldCtmRUHvu77ZQ9NDUv0RUhnJ0OQQ3DkfWjTtZAepgDA/exec';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwM9GgvylpJCTKUeFFdHjNlVUaLcyWUHmTA-tq4zUlG65iTojnCgKvZ-GQavA_J77nu/exec';
   document.getElementById('appsScriptUrl').value = SHEET_URL;
   document.getElementById('setupBox').style.display = 'none';
   loadData(SHEET_URL);
@@ -602,7 +602,7 @@ async function loadData(url){
 
 // ── Debug: fetch raw and show in console ──
 async function debugRaw(){
-  const url = 'https://script.google.com/macros/s/AKfycbyNEpo4W0-hlPaHWIa75IOZldCtmRUHvu77ZQ9NDUv0RUhnJ0OQQ3DkfWjTtZAepgDA/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbwM9GgvylpJCTKUeFFdHjNlVUaLcyWUHmTA-tq4zUlG65iTojnCgKvZ-GQavA_J77nu/exec';
   try {
     const res = await fetch(url, {mode:'cors'});
     const text = await res.text();
