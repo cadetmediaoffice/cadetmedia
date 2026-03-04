@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Congratulations – Cadet Media Ghana</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;
+  background:linear-gradient(160deg,#0a1628 0%,#1e3c72 50%,#2a5298 100%);
+  color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:18px 14px 40px;}
+
+/* ── Banner ── */
+.banner-wrap{width:100%;max-width:820px;margin-bottom:10px;}
+.banner-wrap img{width:100%;border-radius:14px;
+  box-shadow:0 0 30px rgba(255,215,0,0.4);
+  animation:glow 3s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 15px rgba(255,215,0,0.3);}
+  50%{box-shadow:0 0 40px rgba(255,215,0,0.8);}}
+
+/* ── Personalised greeting ── */
+.greeting{text-align:center;margin:10px 0 6px;}
+.greeting .emoji{font-size:44px;display:block;line-height:1;margin-bottom:6px;
+  animation:bounce 1.5s ease infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.greeting h1{font-size:22px;font-weight:900;line-height:1.3;
+  background:linear-gradient(90deg,#FFD700,#fff 50%,#FFD700);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.greeting .school{font-size:14px;opacity:.7;margin-top:4px;}
+
+/* ── Score card ── */
+.score-card{background:rgba(0,0,0,0.4);border:2px solid rgba(255,215,0,0.3);
+  border-radius:16px;padding:20px 24px;width:100%;max-width:520px;
+  text-align:center;margin:14px 0;}
+.score-card .pct{font-size:54px;font-weight:900;
+  background:linear-gradient(45deg,#FFD700,#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.score-card .pts{font-size:16px;opacity:.7;margin-top:2px;}
+.overall-badge{display:inline-block;margin-top:14px;padding:10px 28px;
+  border-radius:30px;font-size:18px;font-weight:bold;}
+
+/* ── Service badges grid ── */
+.section-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  opacity:.5;width:100%;max-width:820px;margin:16px 0 6px;padding-left:2px;}
+.badges-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  width:100%;max-width:820px;}
+@media(max-width:700px){.badges-grid{grid-template-columns:repeat(2,1fr);}}
+.badge-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;padding:12px 8px;text-align:center;transition:transform .2s;}
+.badge-card:hover{transform:scale(1.04);}
+.badge-card img{width:40px;height:40px;border-radius:50%;background:#fff;
+  padding:2px;object-fit:contain;margin-bottom:6px;}
+.badge-card .svc-name{font-size:11px;font-weight:bold;opacity:.8;line-height:1.3;margin-bottom:5px;}
+.badge-card .medal{font-size:22px;line-height:1;}
+.badge-card .pts-small{font-size:11px;opacity:.55;margin-top:2px;}
+.badge-card.gold{border-color:rgba(255,215,0,0.5);background:rgba(255,215,0,0.08);}
+.badge-card.silver{border-color:rgba(192,192,192,0.5);background:rgba(192,192,192,0.06);}
+.badge-card.bronze{border-color:rgba(205,127,50,0.5);background:rgba(205,127,50,0.06);}
+.badge-card.incomplete{opacity:.35;filter:grayscale(80%);}
+
+/* ── Submit form modal ── */
+.overlay{display:none;position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,0.85);justify-content:center;align-items:center;
+  padding:12px;}
+.overlay.show{display:flex;}
+.form-modal{background:linear-gradient(160deg,#0d1f42,#1a3a6e);
+  border:2px solid rgba(255,215,0,0.3);border-radius:18px;
+  padding:26px 22px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:13px;
+  box-shadow:0 0 40px rgba(255,215,0,0.15);}
+.form-modal h3{font-size:18px;text-align:center;font-weight:900;}
+.form-modal .sub{font-size:12px;opacity:.65;text-align:center;line-height:1.5;}
+.step-dots{display:flex;justify-content:center;gap:7px;}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all .3s;}
+.dot.active{background:#FFD700;transform:scale(1.3);}
+.dot.done{background:rgba(0,200,80,0.7);}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-group label{font-size:11px;font-weight:bold;opacity:.7;letter-spacing:.5px;text-transform:uppercase;}
+.field-group input,.field-group select{padding:11px 13px;border-radius:9px;
+  border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);
+  color:#fff;font-size:14px;outline:none;width:100%;transition:border-color .2s;}
+.field-group input:focus,.field-group select:focus{border-color:#FFD700;}
+.field-group input::placeholder{opacity:.4;}
+.field-group select option{background:#1a3a6e;}
+.step-display{font-size:12px;opacity:.5;text-align:center;}
+.modal-btns{display:flex;gap:9px;}
+.modal-btns button{flex:1;padding:11px;border:none;border-radius:9px;
+  font-size:14px;font-weight:bold;cursor:pointer;}
+.btn-next{background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;}
+.btn-back{background:rgba(255,255,255,0.1);color:#fff;display:none;}
+.err{color:#ff7070;font-size:12px;display:none;text-align:center;}
+
+/* ── Pre-filled read-only ── */
+.prefilled{background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.3)!important;
+  opacity:.9;}
+
+/* ── Success screen ── */
+.success{display:none;text-align:center;padding:10px 0;}
+.success .big{font-size:54px;}
+.success h3{font-size:20px;margin:8px 0 6px;}
+.success p{font-size:13px;opacity:.7;line-height:1.6;}
+
+/* ── Submit button ── */
+.submit-btn{display:block;margin:20px auto 0;padding:14px 38px;
+  background:linear-gradient(45deg,#FFD700,#e6a800);
+  color:#000;border:none;border-radius:13px;font-size:17px;font-weight:bold;
+  cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.4);
+  animation:pulseBtn 2s infinite;}
+@keyframes pulseBtn{0%,100%{box-shadow:0 4px 18px rgba(255,215,0,0.4);}
+  50%{box-shadow:0 4px 32px rgba(255,215,0,0.9);}}
+</style>
+</head>
+<body>
+
+<!-- Banner -->
+<div class="banner-wrap">
+  <img src="../MEDIA/all_services_banner.png" alt="All Services Banner">
+</div>
+
+<!-- Personalised Greeting -->
+<div class="greeting">
+  <span class="emoji">🎉</span>
+  <h1 id="greetingText">Congratulations, Cadet!</h1>
+  <div class="school" id="greetingSchool"></div>
+</div>
+
+<!-- Score Card -->
+<div class="score-card">
+  <div class="pct" id="totalPct">0%</div>
+  <div class="pts" id="totalPts">0 / 48 points</div>
+  <div class="overall-badge" id="overallBadge">🎓 Calculating...</div>
+</div>
+
+<!-- Service Badges -->
+<div class="section-title">📋 Your Service Module Results</div>
+<div class="badges-grid" id="badgesGrid"></div>
+
+<!-- Submit Button -->
+<button class="submit-btn" onclick="openForm()">
+  📋 Complete Registration &amp; Submit Results
+</button>
+
+<!-- ── SUBMISSION MODAL ── -->
+<div class="overlay" id="formOverlay">
+  <div class="form-modal" id="formModal">
+
+    <!-- Step dots -->
+    <div class="step-dots" id="stepDots"></div>
+    <div class="step-display" id="stepDisplay"></div>
+
+    <!-- Steps container -->
+    <div id="stepsContainer"></div>
+
+    <div class="err" id="formErr">Please fill in this field.</div>
+
+    <div class="modal-btns">
+      <button class="btn-back" id="btnBack" onclick="prevStep()">← Back</button>
+      <button class="btn-next" id="btnNext" onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Success -->
+    <div class="success" id="successScreen">
+      <div class="big">🏆</div>
+      <h3>Submitted Successfully!</h3>
+      <p>Your results have been recorded.<br>
+         We will see you at the<br>
+         <strong>Cadet Personality Awards</strong><br>
+         at Fire Academy &amp; Training Centre! 🇬🇭</p>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<!-- ── FULL PAGE REDIRECT SCREEN ── -->
+<div id="redirectScreen" style="display:none;position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#0a1628 0%,#1e3c72 50%,#2a5298 100%);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:30px 20px;text-align:center;">
+
+  <div style="font-size:64px;margin-bottom:10px;animation:bounce2 1s ease infinite;">🏆</div>
+
+  <h2 style="font-size:26px;font-weight:900;margin-bottom:6px;
+    background:linear-gradient(90deg,#FFD700,#fff,#FFD700);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+    Results Submitted!
+  </h2>
+
+  <p style="font-size:15px;opacity:.8;margin-bottom:24px;line-height:1.6;">
+    Taking you to the <strong style="color:#FFD700;">Live Leaderboard</strong><br>
+    to view your rank &amp; download your certificate 🎖️
+  </p>
+
+  <!-- Countdown circle -->
+  <div style="position:relative;width:110px;height:110px;margin:0 auto 24px;">
+    <svg width="110" height="110" style="transform:rotate(-90deg);">
+      <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+      <circle id="countdownCircle" cx="55" cy="55" r="48" fill="none"
+        stroke="#FFD700" stroke-width="8"
+        stroke-dasharray="301.6" stroke-dashoffset="0"
+        style="transition:stroke-dashoffset 1s linear;"/>
+    </svg>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;">
+      <span id="countdownNum" style="font-size:36px;font-weight:900;color:#FFD700;line-height:1;">5</span>
+      <span style="font-size:11px;opacity:.6;">seconds</span>
+    </div>
+  </div>
+
+  <!-- Manual button -->
+  <button onclick="goToLeaderboard()" style="
+    padding:15px 36px;
+    background:linear-gradient(45deg,#FFD700,#e6a800);
+    color:#000;border:none;border-radius:14px;
+    font-size:16px;font-weight:900;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,215,0,0.5);
+    margin-bottom:14px;width:100%;max-width:320px;">
+    🏆 Go to Leaderboard Now
+  </button>
+
+  <p style="font-size:12px;opacity:.45;">
+    View rankings · Download certificate · Share results
+  </p>
+</div>
+
+<style>
+@keyframes bounce2{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+</style>
+
+<script>
+// ── Google Form config ──
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb2Nkc19rLDOoCeR_GLABuG5aY2I-g/formResponse";
+
+const SERVICES = [
+  {key:"general",  name:"General Safety",        logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
+  {key:"fire",     name:"Fire Safety – GNFS",     logo:"../MEDIA/logo_gnfs.png",        entry:"entry.1366036710"},
+  {key:"police",   name:"Police / Community",     logo:"../MEDIA/logo_police.png",      entry:"entry.22414501"},
+  {key:"ambulance",name:"Ambulance / Health",     logo:"../MEDIA/logo_health.png",      entry:"entry.174470758"},
+  {key:"prisons",  name:"Prisons / Discipline",   logo:"../MEDIA/logo_prisons.png",     entry:"entry.1755285931"},
+  {key:"nadmo",    name:"NADMO / Disaster",       logo:"../MEDIA/logo_nadmo.png",       entry:"entry.173528320"},
+  {key:"immigration",name:"Immigration",          logo:"../MEDIA/logo_immigration.png", entry:"entry.1558874461"},
+  {key:"customs",  name:"Customs / GRA",          logo:"../MEDIA/logo_customs.png",     entry:"entry.2043827561"},
+  {key:"tourism",  name:"Tourism & Arts",         logo:"../MEDIA/logo_tourism.png",     entry:"entry.387208737"},
+  {key:"forest",   name:"Forest Commission",      logo:"../MEDIA/logo_forest.png",      entry:"entry.192995498"},
+  {key:"gaf",      name:"Ghana Armed Forces",     logo:"../MEDIA/logo_gaf.png",         entry:"entry.1803385068"},
+  {key:"narcotics",name:"NACOC / Drug Safety",    logo:"../MEDIA/logo_nacoc.png",       entry:"entry.1510755760"},
+];
+
+const MAX_PER_QUIZ = 30;
+const MAX_TOTAL    = SERVICES.length * MAX_PER_QUIZ; // 360? No — scores are /30 each but form expects /4
+// Actually keep original score max = 48 (original 4 q per quiz * 12) for display consistency
+// We'll display raw score out of total answered
+const TOTAL_MAX = SERVICES.length * MAX_PER_QUIZ; // 360
+
+// ── Load scores ──
+let totalScore = 0;
+let scoreMap   = {};
+SERVICES.forEach(s => {
+  const sc = parseInt(localStorage.getItem(s.key+'Score') || 0);
+  scoreMap[s.key] = sc;
+  totalScore += sc;
+});
+
+// ── Greeting ──
+const cadetName   = localStorage.getItem('cadetName')   || 'Cadet';
+const cadetGender = localStorage.getItem('cadetGender') || '';
+const cadetSchool = localStorage.getItem('cadetSchool') || '';
+const title = cadetGender === 'Female' ? 'Cadetess' : 'Cadet';
+
+document.getElementById('greetingText').textContent =
+  `🎉 Congratulations, ${title} ${cadetName}! 🎉`;
+document.getElementById('greetingSchool').textContent =
+  cadetSchool ? `Cadet Media Ghana · ${cadetSchool}` : 'Cadet Media Ghana';
+
+// ── Score card ──
+const pct = Math.round((totalScore / TOTAL_MAX) * 100);
+document.getElementById('totalPct').textContent = pct + '%';
+document.getElementById('totalPts').textContent = `${totalScore} / ${TOTAL_MAX} points`;
+
+let overallLabel, overallStyle;
+if(pct >= 85){
+  overallLabel='🏅 GOLD DISTINCTION — Outstanding Cadet!';
+  overallStyle='background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;';
+  confetti({particleCount:250,spread:140,origin:{y:0.5}});
+}else if(pct >= 70){
+  overallLabel='🥈 SILVER HONOURS — Excellent Cadet!';
+  overallStyle='background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;';
+}else if(pct >= 50){
+  overallLabel='🥉 BRONZE CREDIT — Good Cadet!';
+  overallStyle='background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;';
+}else{
+  overallLabel='🎓 PARTICIPANT — Keep Studying!';
+  overallStyle='background:rgba(255,255,255,0.1);color:#fff;';
+}
+const ob = document.getElementById('overallBadge');
+ob.textContent = overallLabel; ob.style.cssText += overallStyle;
+
+// ── Service badges ──
+const grid = document.getElementById('badgesGrid');
+SERVICES.forEach(s => {
+  const sc   = scoreMap[s.key];
+  const done = localStorage.getItem(s.key+'Completed') === 'true';
+  const card = document.createElement('div');
+  let cls='badge-card', medal='⬜', ptsText=done?`${sc}/${MAX_PER_QUIZ}`:'Not done';
+  if(!done){ cls+=' incomplete'; medal='—'; }
+  else if(sc >= MAX_PER_QUIZ*0.85){ cls+=' gold';   medal='🏅'; }
+  else if(sc >= MAX_PER_QUIZ*0.5){  cls+=' silver'; medal='🥈'; }
+  else{                              cls+=' bronze'; medal='🥉'; }
+  card.className=cls;
+  card.innerHTML=`<img src="${s.logo}" alt="${s.name}">
+    <div class="svc-name">${s.name}</div>
+    <div class="medal">${medal}</div>
+    <div class="pts-small">${ptsText}</div>`;
+  grid.appendChild(card);
+});
+
+// ── Form steps (3 remaining fields + confirm) ──
+const STEPS = [
+  {id:'s_phone',   label:'Contact Number',    html:'<div class="field-group"><label>Contact Number (WhatsApp)</label><input type="tel" id="f_phone" placeholder="+233 XX XXX XXXX" maxlength="20"></div>'},
+  {id:'s_email',   label:'Email Address',     html:'<div class="field-group"><label>Email Address</label><input type="email" id="f_email" placeholder="youremail@gmail.com" maxlength="80"></div>'},
+  {id:'s_region',  label:'Region',            html:`<div class="field-group"><label>Region</label><select id="f_region"><option value="">Select your region…</option>${['Ahafo','Ashanti','Bono','Bono East','Central','Eastern','Greater Accra','North East','Northern','Oti','Savannah','Upper East','Upper West','Volta','Western','Western North'].map(r=>`<option>${r}</option>`).join('')}</select></div>`},
+  {id:'s_district',label:'District',          html:'<div class="field-group"><label>District</label><input type="text" id="f_district" placeholder="e.g. Kumasi Metro" maxlength="60"></div>'},
+];
+
+let currentStep = 0;
+
+function buildStepDots(){
+  const container = document.getElementById('stepDots');
+  container.innerHTML='';
+  STEPS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i===currentStep?' active':i<currentStep?' done':'');
+    container.appendChild(d);
+  });
+}
+
+function showStep(idx){
+  const container=document.getElementById('stepsContainer');
+  container.innerHTML='';
+  if(idx < STEPS.length){
+    container.innerHTML=STEPS[idx].html;
+    document.getElementById('stepDisplay').textContent=`Step ${idx+1} of ${STEPS.length}`;
+    document.getElementById('btnNext').textContent = idx===STEPS.length-1 ? '✅ Submit Results' : 'Next →';
+    document.getElementById('btnBack').style.display = idx>0 ? 'block' : 'none';
+  }
+  buildStepDots();
+  document.getElementById('formErr').style.display='none';
+  // Auto-focus
+  setTimeout(()=>{const inp=container.querySelector('input,select');if(inp)inp.focus();},100);
+}
+
+function openForm(){
+  // Pre-fill name/sex/school as read-only display
+  currentStep=0;
+  const overlay=document.getElementById('formOverlay');
+  const modal=document.getElementById('formModal');
+
+  // Insert header with pre-filled info
+  modal.querySelector('.form-modal > h3') || prepend(modal);
+
+  document.getElementById('successScreen').style.display='none';
+  document.getElementById('stepsContainer').style.display='';
+  document.getElementById('stepDots').style.display='flex';
+  document.getElementById('stepDisplay').style.display='';
+  document.getElementById('modal-btns') || null;
+  document.querySelector('.modal-btns').style.display='flex';
+
+  showStep(0);
+  overlay.classList.add('show');
+}
+
+// Add header to modal on first open
+let headerAdded=false;
+function ensureHeader(){
+  if(headerAdded) return;
+  headerAdded=true;
+  const modal=document.getElementById('formModal');
+  const hdr=document.createElement('div');
+  hdr.innerHTML=`
+    <h3 style="background:linear-gradient(90deg,#FFD700,#fff,#FFD700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;font-size:18px;">
+      Complete Your Registration
+    </h3>
+    <div style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);border-radius:10px;padding:10px 12px;font-size:13px;text-align:center;line-height:1.6;">
+      <strong>🎖️ ${title} ${cadetName}</strong><br>
+      <span style="opacity:.7">${cadetSchool}</span>
+    </div>
+    <p class="sub">Just 4 more details and your results will be officially submitted.</p>`;
+  modal.insertBefore(hdr, modal.firstChild);
+}
+
+function openForm(){
+  ensureHeader();
+  currentStep=0;
+  document.getElementById('successScreen').style.display='none';
+  document.getElementById('stepsContainer').style.display='';
+  document.getElementById('stepDots').style.display='flex';
+  document.getElementById('stepDisplay').style.display='';
+  document.querySelector('.modal-btns').style.display='flex';
+  showStep(0);
+  document.getElementById('formOverlay').classList.add('show');
+}
+
+// Save field values as student progresses through steps
+const savedVals = { f_phone:'', f_email:'', f_region:'', f_district:'' };
+
+function getVal(idx){
+  const ids=['f_phone','f_email','f_region','f_district'];
+  const el=document.getElementById(ids[idx]);
+  // If element exists in DOM, read it live; otherwise use saved value
+  return el ? el.value.trim() : savedVals[ids[idx]];
+}
+
+function saveCurrentVal(){
+  const ids=['f_phone','f_email','f_region','f_district'];
+  const el=document.getElementById(ids[currentStep]);
+  if(el) savedVals[ids[currentStep]] = el.value.trim();
+}
+
+function nextStep(){
+  saveCurrentVal(); // Save before moving away
+  const val=getVal(currentStep);
+  if(!val){document.getElementById('formErr').style.display='block';return;}
+  document.getElementById('formErr').style.display='none';
+  if(currentStep < STEPS.length-1){
+    currentStep++;
+    showStep(currentStep);
+  } else {
+    submitResults();
+  }
+}
+
+function prevStep(){
+  saveCurrentVal(); // Save before going back
+  if(currentStep>0){ currentStep--; showStep(currentStep); }
+}
+
+function submitResults(){
+  saveCurrentVal(); // Save the last field before submitting
+  const phone    = savedVals['f_phone'];
+  const email    = savedVals['f_email'];
+  const region   = savedVals['f_region'];
+  const district = savedVals['f_district'];
+  const today    = new Date();
+  const dateStr  = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  const badgeText = overallLabel.replace(/🏅|🥈|🥉|🎓/g,'').trim();
+
+  // All form fields
+  const fields = {
+    'entry.3054047':    cadetName,
+    'entry.1860716112': cadetGender,
+    'entry.1484437620': cadetSchool,
+    'entry.1458315546': phone,
+    'entry.1119628571': email,
+    'entry.233909781':  region,
+    'entry.2095001572': district,
+    'entry.1152731764': `${scoreMap['general']}/${MAX_PER_QUIZ}`,
+    'entry.1366036710': `${scoreMap['fire']}/${MAX_PER_QUIZ}`,
+    'entry.22414501':   `${scoreMap['police']}/${MAX_PER_QUIZ}`,
+    'entry.174470758':  `${scoreMap['ambulance']}/${MAX_PER_QUIZ}`,
+    'entry.1755285931': `${scoreMap['prisons']}/${MAX_PER_QUIZ}`,
+    'entry.173528320':  `${scoreMap['nadmo']}/${MAX_PER_QUIZ}`,
+    'entry.1558874461': `${scoreMap['immigration']}/${MAX_PER_QUIZ}`,
+    'entry.2043827561': `${scoreMap['customs']}/${MAX_PER_QUIZ}`,
+    'entry.387208737':  `${scoreMap['tourism']}/${MAX_PER_QUIZ}`,
+    'entry.192995498':  `${scoreMap['forest']}/${MAX_PER_QUIZ}`,
+    'entry.1803385068': `${scoreMap['gaf']}/${MAX_PER_QUIZ}`,
+    'entry.1510755760': `${scoreMap['narcotics']}/${MAX_PER_QUIZ}`,
+    'entry.1633198439': `${pct}%`,
+    'entry.1557878665': badgeText,
+    'entry.609362363':  dateStr,
+  };
+
+  // Submit silently via hidden iframe POST to Google Forms
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = FORM_URL;
+  form.target = 'hiddenFrame';
+  form.style.display = 'none';
+  Object.entries(fields).forEach(([name, value]) => {
+    const inp = document.createElement('input');
+    inp.type  = 'hidden';
+    inp.name  = name;
+    inp.value = value || '';
+    form.appendChild(inp);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => document.body.removeChild(form), 2000);
+
+  // Also submit to Apps Script if URL is saved (writes to Sheet directly)
+  const scriptUrl = localStorage.getItem('cmg_sheet_url') || '';
+  if(scriptUrl){
+    fetch(scriptUrl + '?name='      + encodeURIComponent(cadetName)
+                    + '&gender='    + encodeURIComponent(cadetGender)
+                    + '&school='    + encodeURIComponent(cadetSchool)
+                    + '&phone='     + encodeURIComponent(phone)
+                    + '&email='     + encodeURIComponent(email)
+                    + '&region='    + encodeURIComponent(region)
+                    + '&district='  + encodeURIComponent(district)
+                    + '&total='     + encodeURIComponent(`${pct}%`)
+                    + '&badge='     + encodeURIComponent(badgeText)
+                    + '&date='      + encodeURIComponent(dateStr)
+                    + '&general='   + encodeURIComponent(`${scoreMap['general']}/${MAX_PER_QUIZ}`)
+                    + '&fire='      + encodeURIComponent(`${scoreMap['fire']}/${MAX_PER_QUIZ}`)
+                    + '&police='    + encodeURIComponent(`${scoreMap['police']}/${MAX_PER_QUIZ}`)
+                    + '&ambulance=' + encodeURIComponent(`${scoreMap['ambulance']}/${MAX_PER_QUIZ}`)
+                    + '&prisons='   + encodeURIComponent(`${scoreMap['prisons']}/${MAX_PER_QUIZ}`)
+                    + '&nadmo='     + encodeURIComponent(`${scoreMap['nadmo']}/${MAX_PER_QUIZ}`)
+                    + '&immigration='+ encodeURIComponent(`${scoreMap['immigration']}/${MAX_PER_QUIZ}`)
+                    + '&customs='   + encodeURIComponent(`${scoreMap['customs']}/${MAX_PER_QUIZ}`)
+                    + '&tourism='   + encodeURIComponent(`${scoreMap['tourism']}/${MAX_PER_QUIZ}`)
+                    + '&forest='    + encodeURIComponent(`${scoreMap['forest']}/${MAX_PER_QUIZ}`)
+                    + '&gaf='       + encodeURIComponent(`${scoreMap['gaf']}/${MAX_PER_QUIZ}`)
+                    + '&narcotics=' + encodeURIComponent(`${scoreMap['narcotics']}/${MAX_PER_QUIZ}`)
+    , {mode:'no-cors'}).catch(()=>{});
+  }
+
+  showSuccess();
+}
+
+function showSuccess(){
+  document.getElementById('stepsContainer').style.display='none';
+  document.getElementById('stepDots').style.display='none';
+  document.getElementById('stepDisplay').style.display='none';
+  document.querySelector('.modal-btns').style.display='none';
+  document.getElementById('formErr').style.display='none';
+  document.getElementById('successScreen').style.display='block';
+  confetti({particleCount:200,spread:120,origin:{y:0.6}});
+  startLeaderboardCountdown();
+}
+
+// Hidden iframe for form POST
+const iframe=document.createElement('iframe');
+iframe.name='hiddenFrame'; iframe.style.display='none';
+document.body.appendChild(iframe);
+
+// ── Go to leaderboard with cadet name ──
+function goToLeaderboard(){
+  const name = encodeURIComponent(cadetName);
+  window.location.href = 'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet=' + name;
+}
+
+function startLeaderboardCountdown(){
+  // Show full-page redirect screen
+  const screen = document.getElementById('redirectScreen');
+  screen.style.display = 'flex';
+
+  // Close the modal
+  document.getElementById('formOverlay').classList.remove('show');
+
+  // Animate SVG circle countdown (circumference = 2*pi*48 = 301.6)
+  const circle = document.getElementById('countdownCircle');
+  const numEl  = document.getElementById('countdownNum');
+  const total  = 301.6;
+  let secs = 5;
+
+  const tick = setInterval(()=>{
+    secs--;
+    if(numEl) numEl.textContent = secs;
+    if(circle) circle.style.strokeDashoffset = total - (total * secs / 5);
+    if(secs <= 0){
+      clearInterval(tick);
+      goToLeaderboard();
+    }
+  }, 1000);
+}
+
+// Close overlay on backdrop click
+document.getElementById('formOverlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('formOverlay'))
+    document.getElementById('formOverlay').classList.remove('show');
+});
+</script>
+</body>
+</html>
