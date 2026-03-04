@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cadet Media Ghana – Analytics Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --gold:#FFD700; --gold2:#e6a800;
+  --bg:#050d1a; --card:#0a1628;
+  --card2:#0f1e38; --border:rgba(255,215,0,0.15);
+  --text:#e8f0ff; --muted:rgba(232,240,255,0.5);
+  --male:#4fc3f7; --female:#f48fb1;
+  --green:#00e676; --red:#ff5252;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:0 0 60px;
+  background-image:
+    radial-gradient(ellipse at 20% 20%,rgba(255,215,0,0.04) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 80%,rgba(79,195,247,0.04) 0%,transparent 60%);
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:linear-gradient(90deg,#050d1a,#0a1628,#050d1a);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:10px;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(10px);
+}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.topbar-left img{height:44px;border-radius:50%;
+  box-shadow:0 0 12px rgba(255,215,0,0.4);}
+.topbar-title{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;
+  background:linear-gradient(90deg,var(--gold),#fff,var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:1px;}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:2px;text-transform:uppercase;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.status-dot{width:9px;height:9px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.status-txt{font-size:12px;color:var(--green);}
+#lastSync{font-size:11px;color:var(--muted);}
+.sync-btn{padding:8px 16px;border:1px solid var(--border);border-radius:8px;
+  background:rgba(255,215,0,0.08);color:var(--gold);font-family:'Rajdhani',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;}
+.sync-btn:hover{background:rgba(255,215,0,0.18);}
+
+/* ── MAIN ── */
+main{max-width:1300px;margin:0 auto;padding:24px 20px;}
+
+/* ── SETUP BANNER ── */
+.setup-banner{
+  background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(255,215,0,0.03));
+  border:1.5px solid rgba(255,215,0,0.3);border-radius:14px;
+  padding:18px 22px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:14px;}
+.setup-banner .icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+.setup-banner h3{font-family:'Orbitron',monospace;font-size:13px;color:var(--gold);margin-bottom:6px;}
+.setup-banner p{font-size:13px;color:var(--muted);line-height:1.7;}
+.setup-banner code{background:rgba(255,215,0,0.12);padding:2px 7px;
+  border-radius:5px;color:var(--gold);font-size:12px;}
+.sheet-input-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.sheet-input-row input{flex:1;min-width:220px;padding:9px 12px;border-radius:8px;
+  border:1px solid var(--border);background:rgba(255,255,255,0.05);
+  color:#fff;font-size:13px;outline:none;font-family:'Rajdhani',sans-serif;}
+.sheet-input-row input:focus{border-color:var(--gold);}
+.sheet-input-row button{padding:9px 18px;border:none;border-radius:8px;
+  background:linear-gradient(45deg,var(--gold),var(--gold2));
+  color:#000;font-weight:700;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:13px;}
+
+/* ── KPI CARDS ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px 16px;text-align:center;position:relative;overflow:hidden;
+  transition:transform .2s;}
+.kpi::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,215,0,0.04),transparent);pointer-events:none;}
+.kpi:hover{transform:translateY(-3px);}
+.kpi .icon{font-size:28px;margin-bottom:6px;}
+.kpi .val{font-family:'Orbitron',monospace;font-size:32px;font-weight:900;
+  color:var(--gold);line-height:1;}
+.kpi .lbl{font-size:12px;color:var(--muted);letter-spacing:1px;
+  text-transform:uppercase;margin-top:4px;}
+.kpi .sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ── SECTION TITLE ── */
+.sec-title{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:2px;
+  color:var(--gold);text-transform:uppercase;margin:0 0 12px;
+  display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── GRID LAYOUTS ── */
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.row-2,.row-3{grid-template-columns:1fr;}}
+.row-big-small{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.row-big-small{grid-template-columns:1fr;}}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;overflow:hidden;}
+.card-title{font-family:'Orbitron',monospace;font-size:11px;
+  color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;}
+
+/* ── GENDER CARD ── */
+.gender-split{display:flex;gap:0;border-radius:10px;overflow:hidden;
+  height:52px;margin-bottom:14px;font-family:'Orbitron',monospace;}
+.gender-male{background:linear-gradient(90deg,#1565c0,#4fc3f7);
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;font-size:14px;font-weight:700;color:#fff;transition:width .8s ease;}
+.gender-female{background:linear-gradient(90deg,#880e4f,#f48fb1);
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;font-size:14px;font-weight:700;color:#fff;transition:width .8s ease;}
+.gender-legend{display:flex;gap:18px;margin-top:8px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:13px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* ── LEADERBOARD ── */
+.leaderboard{display:flex;flex-direction:column;gap:6px;max-height:380px;overflow-y:auto;}
+.leaderboard::-webkit-scrollbar{width:4px;}
+.leaderboard::-webkit-scrollbar-track{background:rgba(255,255,255,0.05);}
+.leaderboard::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.lb-row{display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--card2);border-radius:9px;border:1px solid rgba(255,255,255,0.05);
+  transition:background .2s;}
+.lb-row:hover{background:rgba(255,215,0,0.06);}
+.lb-rank{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;
+  width:28px;text-align:center;flex-shrink:0;}
+.rank-1{color:#FFD700;} .rank-2{color:#C0C0C0;} .rank-3{color:#cd7f32;}
+.lb-info{flex:1;min-width:0;}
+.lb-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lb-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+.lb-score{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;
+  color:var(--gold);flex-shrink:0;}
+.lb-badge{font-size:16px;flex-shrink:0;}
+
+/* ── SCHOOL TABLE ── */
+.school-list{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;}
+.school-list::-webkit-scrollbar{width:4px;}
+.school-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.school-row{display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--card2);border-radius:8px;}
+.school-rank{font-family:'Orbitron',monospace;font-size:11px;color:var(--muted);width:22px;}
+.school-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;}
+.school-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  border-radius:3px;transition:width 1s ease;}
+.school-name{font-size:13px;font-weight:700;flex-shrink:0;max-width:160px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.school-count{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);flex-shrink:0;}
+.school-avg{font-size:11px;color:var(--muted);flex-shrink:0;min-width:50px;text-align:right;}
+
+/* ── CHARTS ── */
+.chart-wrap{position:relative;height:220px;}
+.chart-wrap-tall{position:relative;height:280px;}
+
+/* ── REGION MAP TABLE ── */
+.region-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.region-item{background:var(--card2);border-radius:8px;padding:8px 10px;
+  display:flex;align-items:center;justify-content:space-between;}
+.region-name{font-size:12px;font-weight:600;}
+.region-bar-wrap{flex:1;mx:8px;height:4px;background:rgba(255,255,255,0.07);
+  border-radius:2px;overflow:hidden;margin:0 8px;}
+.region-bar{height:100%;background:linear-gradient(90deg,#4fc3f7,var(--gold));border-radius:2px;}
+.region-count{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);}
+
+/* ── PASSWORD GATE ── */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  padding:20px;}
+.gate-box{background:var(--card);border:2px solid var(--border);
+  border-radius:18px;padding:36px 30px;width:100%;max-width:380px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;
+  box-shadow:0 0 60px rgba(255,215,0,0.1);}
+.gate-logo{font-size:50px;}
+.gate-title{font-family:'Orbitron',monospace;font-size:16px;color:var(--gold);}
+.gate-sub{font-size:13px;color:var(--muted);line-height:1.6;}
+.gate-input{width:100%;padding:13px;border-radius:10px;
+  border:1.5px solid var(--border);background:rgba(255,255,255,0.05);
+  color:#fff;font-size:16px;letter-spacing:4px;text-align:center;outline:none;
+  font-family:'Rajdhani',sans-serif;}
+.gate-input:focus{border-color:var(--gold);}
+.gate-btn{width:100%;padding:13px;border:none;border-radius:10px;
+  background:linear-gradient(45deg,var(--gold),var(--gold2));
+  color:#000;font-family:'Orbitron',monospace;font-size:14px;
+  font-weight:900;cursor:pointer;letter-spacing:1px;}
+.gate-err{color:#ff7070;font-size:12px;display:none;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty .eicon{font-size:40px;margin-bottom:10px;}
+.empty p{font-size:14px;line-height:1.7;}
+
+/* ── MODULE SCORES TABLE ── */
+.module-row{display:flex;align-items:center;gap:10px;padding:8px 10px;
+  background:var(--card2);border-radius:8px;margin-bottom:5px;}
+.module-icon{font-size:18px;flex-shrink:0;width:26px;text-align:center;}
+.module-name{flex:1;font-size:13px;font-weight:600;}
+.module-bar-wrap{width:120px;height:6px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden;}
+.module-bar{height:100%;border-radius:3px;}
+.module-avg{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);width:50px;text-align:right;}
+.module-pct{font-size:11px;color:var(--muted);width:38px;text-align:right;}
+</style>
+</head>
+<body>
+
+<!-- ── PASSWORD GATE ── -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">🔐</div>
+    <div class="gate-title">Admin Dashboard</div>
+    <div class="gate-sub">Cadet Media Ghana<br>Analytics & Awards Data<br><br>Enter administrator password to access.</div>
+    <input class="gate-input" type="password" id="gateInput" placeholder="••••••••" maxlength="40"
+      onkeydown="if(event.key==='Enter')checkGate()">
+    <div class="gate-err" id="gateErr">❌ Incorrect password.</div>
+    <button class="gate-btn" onclick="checkGate()">ENTER DASHBOARD</button>
+  </div>
+</div>
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <img src="../MEDIA/logo_quiz.png" alt="Logo" onerror="this.style.display='none'">
+    <div>
+      <div class="topbar-title">CADET MEDIA GHANA</div>
+      <div class="topbar-sub">Analytics Dashboard · Awards Intelligence</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="status-dot"></div>
+    <span class="status-txt">LIVE</span>
+    <span id="lastSync">Not synced yet</span>
+    <button class="sync-btn" onclick="loadFromSheet()">⟳ Sync Data</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ── SETUP BANNER ── -->
+<div class="setup-banner" id="setupBanner">
+  <div class="icon">⚙️</div>
+  <div style="flex:1">
+    <h3>Connect Your Data — Choose One Method</h3>
+
+    <!-- METHOD TABS -->
+    <div style="display:flex;gap:8px;margin:10px 0 14px;flex-wrap:wrap;">
+      <button onclick="showMethod(1)" id="mBtn1"
+        style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--gold);
+        background:rgba(255,215,0,0.15);color:var(--gold);font-weight:700;
+        cursor:pointer;font-size:12px;font-family:Rajdhani,sans-serif;">
+        ⭐ Method 1 — Apps Script (Best)
+      </button>
+      <button onclick="showMethod(2)" id="mBtn2"
+        style="padding:7px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,0.2);
+        background:transparent;color:#aaa;font-weight:700;
+        cursor:pointer;font-size:12px;font-family:Rajdhani,sans-serif;">
+        Method 2 — Paste CSV
+      </button>
+    </div>
+
+    <!-- METHOD 1: Apps Script -->
+    <div id="method1">
+      <p style="margin-bottom:10px;">
+        Works perfectly from the pendrive. Do this <strong>once</strong> and the dashboard auto-loads every time:<br><br>
+        <strong>Step 1.</strong> Open your Google Sheets (linked to your Form responses).<br>
+        <strong>Step 2.</strong> Click <strong>Extensions → Apps Script</strong>.<br>
+        <strong>Step 3.</strong> Delete everything in the editor and paste this code:<br>
+      </p>
+      <div style="background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.2);
+        border-radius:8px;padding:12px;font-family:monospace;font-size:11px;
+        color:#adf;line-height:1.7;margin-bottom:10px;white-space:pre-wrap;user-select:all;"
+        id="appsScriptCode">function doGet(e){
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data  = sheet.getDataRange().getValues();
+  var csv   = data.map(function(row){
+    return row.map(function(cell){
+      var s = String(cell);
+      if(s.indexOf(',')>-1||s.indexOf('"')>-1||s.indexOf('\n')>-1)
+        s = '"'+s.replace(/"/g,'""')+'"';
+      return s;
+    }).join(',');
+  }).join('\n');
+  return ContentService.createTextOutput(csv)
+    .setMimeType(ContentService.MimeType.TEXT);
+}</div>
+      <p>
+        <strong>Step 4.</strong> Click <strong>Deploy → New Deployment</strong>.<br>
+        <strong>Step 5.</strong> Choose type: <strong>Web App</strong>.<br>
+        <strong>Step 6.</strong> Set <em>"Who has access"</em> to <strong>"Anyone"</strong>.<br>
+        <strong>Step 7.</strong> Click <strong>Deploy</strong> → copy the <strong>Web App URL</strong>.<br>
+        <strong>Step 8.</strong> Paste it below:
+      </p>
+      <div class="sheet-input-row" style="margin-top:10px;">
+        <input type="text" id="sheetUrl"
+          placeholder="Paste your Apps Script Web App URL here…">
+        <button onclick="saveSheetUrl()">Connect</button>
+      </div>
+      <button onclick="copyCode()" style="margin-top:8px;padding:6px 14px;
+        border:1px solid rgba(255,215,0,0.3);border-radius:6px;
+        background:transparent;color:var(--gold);cursor:pointer;
+        font-size:11px;font-family:Rajdhani,sans-serif;">
+        📋 Copy Apps Script Code
+      </button>
+    </div>
+
+    <!-- METHOD 2: Paste CSV -->
+    <div id="method2" style="display:none;">
+      <p style="margin-bottom:8px;">
+        Use this when offline or if Apps Script is not set up yet.<br><br>
+        <strong>Step 1.</strong> Open your Google Sheets → <strong>File → Download → CSV</strong>.<br>
+        <strong>Step 2.</strong> Open the downloaded CSV file in Notepad or any text editor.<br>
+        <strong>Step 3.</strong> Select All (Ctrl+A) → Copy (Ctrl+C).<br>
+        <strong>Step 4.</strong> Paste it in the box below and click <strong>Load Data</strong>.
+      </p>
+      <textarea id="csvPaste"
+        placeholder="Paste your CSV data here…"
+        style="width:100%;height:120px;padding:10px;border-radius:8px;
+        border:1.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);
+        color:#fff;font-size:12px;font-family:monospace;resize:vertical;outline:none;">
+      </textarea>
+      <div class="sheet-input-row" style="margin-top:8px;">
+        <button onclick="loadFromPaste()" style="padding:10px 20px;border:none;
+          border-radius:8px;background:linear-gradient(45deg,var(--gold),var(--gold2));
+          color:#000;font-weight:700;cursor:pointer;font-family:Rajdhani,sans-serif;font-size:13px;">
+          Load Data
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── KPI ROW ── -->
+<div class="kpi-row">
+  <div class="kpi"><div class="icon">👥</div><div class="val" id="kpiTotal">—</div><div class="lbl">Total Cadets</div></div>
+  <div class="kpi"><div class="icon">🏫</div><div class="val" id="kpiSchools">—</div><div class="lbl">Schools</div></div>
+  <div class="kpi"><div class="icon">📊</div><div class="val" id="kpiAvg">—</div><div class="lbl">Avg Score %</div><div class="sub" id="kpiAvgSub"></div></div>
+  <div class="kpi"><div class="icon">🏅</div><div class="val" id="kpiGold">—</div><div class="lbl">Gold Cadets</div><div class="sub" id="kpiGoldSub"></div></div>
+</div>
+
+<!-- ── GENDER + REGION ── -->
+<div class="row-big-small">
+
+  <!-- Gender -->
+  <div class="card">
+    <div class="card-title">👥 Gender Distribution</div>
+    <div class="gender-split" id="genderBar">
+      <div class="gender-male" id="gMale" style="width:50%">👦 —</div>
+      <div class="gender-female" id="gFemale" style="width:50%">👧 —</div>
+    </div>
+    <div class="gender-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--male)"></div><span id="gMaleLbl">Male: —</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--female)"></div><span id="gFemaleLbl">Female: —</span></div>
+    </div>
+    <div class="chart-wrap" style="margin-top:16px;">
+      <canvas id="genderChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Region -->
+  <div class="card">
+    <div class="card-title">🌍 Top Regions</div>
+    <div class="region-grid" id="regionGrid">
+      <div class="empty"><div class="eicon">🗺️</div><p>Sync data to see regional breakdown</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── LEADERBOARD + SCHOOLS ── -->
+<div class="row-2">
+
+  <!-- Top Individuals -->
+  <div class="card">
+    <div class="card-title">🏆 Top 20 Individual Cadets</div>
+    <div class="leaderboard" id="leaderboard">
+      <div class="empty"><div class="eicon">🏅</div><p>Sync data to see top performers</p></div>
+    </div>
+  </div>
+
+  <!-- Top Schools -->
+  <div class="card">
+    <div class="card-title">🏫 Top Schools by Average Score</div>
+    <div class="school-list" id="schoolList">
+      <div class="empty"><div class="eicon">🏫</div><p>Sync data to see school rankings</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MODULE SCORES ── -->
+<div class="row-2">
+  <div class="card">
+    <div class="card-title">📚 Average Score by Service Module</div>
+    <div id="moduleList">
+      <div class="empty"><div class="eicon">📊</div><p>Sync data to see module performance</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📈 Score Distribution</div>
+    <div class="chart-wrap-tall">
+      <canvas id="scoreChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ── GENDER BY MODULE ── -->
+<div class="card" style="margin-bottom:16px;">
+  <div class="card-title">⚡ Gender Performance by Module</div>
+  <div class="chart-wrap-tall">
+    <canvas id="genderModuleChart"></canvas>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════
+//  CHANGE THIS PASSWORD
+// ══════════════════════════════════════
+const ADMIN_PW = "CadetMedia@2025!";
+// ══════════════════════════════════════
+
+const MODULES = [
+  {key:"general",   name:"General Safety",    icon:"🛡️"},
+  {key:"fire",      name:"Fire Safety",        icon:"🔥"},
+  {key:"police",    name:"Police / Community", icon:"👮"},
+  {key:"ambulance", name:"Ambulance",          icon:"🚑"},
+  {key:"prisons",   name:"Prisons",            icon:"⚖️"},
+  {key:"nadmo",     name:"NADMO",              icon:"🌪️"},
+  {key:"immigration",name:"Immigration",       icon:"✈️"},
+  {key:"customs",   name:"Customs / GRA",      icon:"📦"},
+  {key:"tourism",   name:"Tourism",            icon:"🏛️"},
+  {key:"forest",    name:"Forest",             icon:"🌿"},
+  {key:"gaf",       name:"Armed Forces",       icon:"🎖️"},
+  {key:"narcotics", name:"NACOC",              icon:"🚫"},
+];
+
+// Column mapping — matches your Google Form field order exactly:
+// 0=Timestamp
+// 1=FullName        (entry.3054047)
+// 2=Gender          (entry.1860716112)
+// 3=School          (entry.1484437620)
+// 4=Phone           (entry.1458315546)
+// 5=Email           (entry.1119628571)
+// 6=General Score   (entry.1152731764)
+// 7=Fire Score      (entry.1366036710)
+// 8=Police Score    (entry.22414501)
+// 9=Ambulance Score (entry.174470758)
+// 10=Prisons Score  (entry.1755285931)
+// 11=NADMO Score    (entry.173528320)
+// 12=Immigration    (entry.1558874461)
+// 13=Customs        (entry.2043827561)
+// 14=Tourism        (entry.387208737)
+// 15=Forest         (entry.192995498)
+// 16=GAF            (entry.1803385068)
+// 17=NACOC          (entry.1510755760)
+// 18=Total Score %  (entry.1633198439)
+// 19=Badge          (entry.1557878665)
+// 20=Region         (entry.233909781)
+// 21=District       (entry.2095001572)
+// 22=Date           (entry.609362363)
+const COL = {
+  name:1, gender:2, school:3, phone:4, email:5,
+  moduleStart:6,   // columns 6–17 are the 12 module scores
+  totalScore:18, badge:19, region:20, district:21, date:22,
+};
+
+let allData = [];
+let charts  = {};
+
+// ── Gate ──
+function checkGate(){
+  if(document.getElementById('gateInput').value === ADMIN_PW){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('setupBanner').style.display='none';
+    loadFromSheet();
+  } else {
+    document.getElementById('gateErr').style.display='block';
+    document.getElementById('gateInput').value='';
+  }
+}
+document.getElementById('gateInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkGate();});
+
+function showMethod(n){
+  document.getElementById('method1').style.display = n===1?'block':'none';
+  document.getElementById('method2').style.display = n===2?'block':'none';
+  document.getElementById('mBtn1').style.borderColor = n===1?'var(--gold)':'rgba(255,255,255,0.2)';
+  document.getElementById('mBtn1').style.background  = n===1?'rgba(255,215,0,0.15)':'transparent';
+  document.getElementById('mBtn1').style.color       = n===1?'var(--gold)':'#aaa';
+  document.getElementById('mBtn2').style.borderColor = n===2?'var(--gold)':'rgba(255,255,255,0.2)';
+  document.getElementById('mBtn2').style.background  = n===2?'rgba(255,215,0,0.15)':'transparent';
+  document.getElementById('mBtn2').style.color       = n===2?'var(--gold)':'#aaa';
+}
+
+function copyCode(){
+  const code = document.getElementById('appsScriptCode').textContent;
+  navigator.clipboard.writeText(code).then(()=>{
+    alert('✅ Apps Script code copied! Paste it in Extensions → Apps Script.');
+  }).catch(()=>{
+    // Fallback for file:// protocol
+    const ta = document.createElement('textarea');
+    ta.value = code; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('✅ Apps Script code copied!');
+  });
+}
+
+function saveSheetUrl(){
+  const url = document.getElementById('sheetUrl').value.trim();
+  if(!url){ alert('Please paste the Apps Script Web App URL first.'); return; }
+  localStorage.setItem('cmg_sheet_url', url);
+  loadFromSheet();
+}
+
+// ── Method 1: Load from Apps Script Web App (CORS-safe) ──
+async function loadFromSheet(){
+  const url = 'https://script.google.com/macros/s/AKfycbyNEpo4W0-hlPaHWIa75IOZldCtmRUHvu77ZQ9NDUv0RUhnJ0OQQ3DkfWjTtZAepgDA/exec';
+  document.querySelector('.sync-btn').textContent='⟳ Loading…';
+  try {
+    // Apps Script web apps support CORS — this works from file:// and any browser
+    const res  = await fetch(url + '?_=' + Date.now(), {mode:'cors'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = (await res.text()).trim();
+
+    if(raw.startsWith('[')){
+      // JSON array of objects from Apps Script
+      const rows = JSON.parse(raw);
+      if(!rows.length) throw new Error('Sheet is empty.');
+      const headers = Object.keys(rows[0]).map(k => k.trim());
+      const fi = kws => { const i=headers.findIndex(h=>kws.some(k=>h.toLowerCase().includes(k))); return i<0?-1:i+1; };
+      COL.name       = fi(['full name','name']);
+      COL.gender     = fi(['sex','gender']);
+      COL.school     = fi(['school','institution']);
+      COL.phone      = fi(['phone','contact','whatsapp']);
+      COL.email      = fi(['email']);
+      COL.totalScore = fi(['total score','overall','percentage']);
+      COL.badge      = fi(['badge','distinction']);
+      COL.region     = fi(['region']);
+      COL.district   = fi(['district']);
+      COL.date       = fi(['date','timestamp']);
+      COL.modules    = headers.reduce((a,h,i)=>{ if(h.toLowerCase().includes('score')&&!h.toLowerCase().includes('total')) a.push(i+1); return a; },[]);
+      allData = rows.map(r=>{ const a=[null]; headers.forEach(h=>a.push((r[h.trim()]||'').toString().trim())); return a; })
+                    .filter(r=>(r[COL.name]||'').trim()!=='');
+    } else {
+      allData = parseCSV(raw);
+    }
+    if(!allData.length) throw new Error('No data rows found.');
+    document.getElementById('lastSync').textContent = '✅ Synced: '+new Date().toLocaleTimeString();
+    document.getElementById('setupBanner').style.display='none';
+    renderAll();
+  } catch(e){
+    document.querySelector('.sync-btn').textContent='⟳ Sync Data';
+    alert(
+      '❌ Could not load data.\n\n'+
+      'Common fixes:\n'+
+      '1. Make sure you deployed as a Web App with access set to "Anyone"\n'+
+      '2. Try re-deploying — create a NEW deployment (not updating old one)\n'+
+      '3. If running from pendrive, use Method 2 (Paste CSV) as a backup\n\n'+
+      'Error: '+e.message
+    );
+    return;
+  }
+  document.querySelector('.sync-btn').textContent='⟳ Sync Data';
+}
+
+// ── Method 2: Load from pasted CSV ──
+function loadFromPaste(){
+  const text = document.getElementById('csvPaste').value.trim();
+  if(!text){ alert('Please paste your CSV data first.'); return; }
+  try {
+    allData = parseCSV(text);
+    if(!allData.length) throw new Error('No data found. Make sure you copied the full CSV content.');
+    document.getElementById('lastSync').textContent = '✅ Loaded from CSV paste: '+new Date().toLocaleTimeString();
+    document.getElementById('setupBanner').style.display='none';
+    renderAll();
+  } catch(e){
+    alert('❌ Could not parse CSV.\n\nMake sure you copied the full content from the CSV file.\n\nError: '+e.message);
+  }
+}
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+
+  // Parse a CSV line respecting quoted fields
+  function parseLine(line){
+    const cols=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cols.push(cur.trim().replace(/^"|"$/g,''));cur='';}
+      else cur+=line[i];
+    }
+    cols.push(cur.trim().replace(/^"|"$/g,''));
+    return cols;
+  }
+
+  const headers = parseLine(lines[0]);
+  console.log('Sheet headers detected:', headers);
+
+  // ── EXACT column mapping verified from your Google Sheet ──
+  const detectedCOL = {
+    name:       2,   // Full Name
+    gender:     3,   // Sex
+    school:     4,   // School / Institution
+    phone:      5,   // Phone number
+    email:      6,   // Email Address
+    totalScore: 19,  // Total Score (%)
+    badge:      20,  // Final Badge Earned
+    region:     21,  // Region
+    district:   22,  // District
+    date:       23,  // Date Completed
+    modules:    [7,8,9,10,11,12,13,14,15,16,17,18],
+    // Col 7  = General Safety Quiz Score
+    // Col 8  = Fire Safety Quiz Score
+    // Col 9  = Community Safety (Police) Quiz Score
+    // Col 10 = Health & Ambulance Quiz Score
+    // Col 11 = Prisons Service Quiz Score
+    // Col 12 = Disaster Preparedness (NADMO) Quiz Score
+    // Col 13 = Immigration Service Quiz Score
+    // Col 14 = Customs Division Quiz Score
+    // Col 15 = Tourism & Creative Arts Quiz Score
+    // Col 16 = Forest Conservation Quiz Score
+    // Col 17 = National Defence (GAF) Quiz Score
+    // Col 18 = Narcotics Control Quiz Score
+  };
+
+  // Remove debug panel if present
+  setTimeout(()=>{ const d=document.getElementById('debugPanel'); if(d)d.remove(); },100);
+
+  // Override global COL with verified values
+  Object.assign(COL, detectedCOL);
+
+  return lines.slice(1).map(line=>{
+    const cols = parseLine(line);
+    return cols;
+  }).filter(r=>r.length>2 && r[2] && r[2].trim() !== '');
+}
+
+function parseScore(str){
+  if(!str) return 0;
+  const m = String(str).match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function getScorePct(row){
+  // First try the Total Score (%) column directly
+  const ts = String(row[COL.totalScore]||'').trim();
+  if(ts){
+    const m = ts.match(/(\d+)/);
+    if(m){
+      const v = parseInt(m[1]);
+      if(v>=0 && v<=100) return v;
+    }
+  }
+  // Fallback: sum all module scores
+  let sum=0, max=0;
+  const mods = COL.modules||[];
+  for(let i=0;i<mods.length;i++){
+    if(mods[i]===-1) continue;
+    const s = String(row[mods[i]]||'').trim();
+    if(!s) continue;
+    const parts = s.split('/');
+    if(parts.length===2){
+      const got = parseInt(parts[0])||0;
+      const tot = parseInt(parts[1])||30;
+      if(tot>0){ sum+=got; max+=tot; }
+    } else {
+      const v = parseInt(s)||0;
+      if(v>0 && v<=30){ sum+=v; max+=30; }
+    }
+  }
+  return max>0 ? Math.round(sum/max*100) : 0;
+}
+
+function getBadge(pct){
+  return pct>=85?'🏅':pct>=70?'🥈':pct>=50?'🥉':'🎓';
+}
+
+// ── Render everything ──
+function renderAll(){
+  if(!allData.length){ renderEmpty(); return; }
+  renderKPIs();
+  renderGender();
+  renderRegions();
+  renderLeaderboard();
+  renderSchools();
+  renderModules();
+  renderScoreDistChart();
+  renderGenderModuleChart();
+}
+
+function renderEmpty(){
+  // Charts placeholder
+  ['genderChart','scoreChart','genderModuleChart'].forEach(id=>{
+    const ctx=document.getElementById(id).getContext('2d');
+    if(charts[id]) charts[id].destroy();
+  });
+}
+
+// ── KPIs ──
+function renderKPIs(){
+  const total  = allData.length;
+  const schools= new Set(allData.map(r=>(r[COL.school]||'').trim().toLowerCase())).size;
+  const pcts   = allData.map(r=>getScorePct(r));
+  const avg    = Math.round(pcts.reduce((a,b)=>a+b,0)/total);
+  const gold   = pcts.filter(p=>p>=85).length;
+  document.getElementById('kpiTotal').textContent   = total;
+  document.getElementById('kpiSchools').textContent = schools;
+  document.getElementById('kpiAvg').textContent     = avg+'%';
+  document.getElementById('kpiAvgSub').textContent  = 'Overall average';
+  document.getElementById('kpiGold').textContent    = gold;
+  document.getElementById('kpiGoldSub').textContent = `${Math.round(gold/total*100)}% of cadets`;
+}
+
+// ── Gender ──
+function renderGender(){
+  let male=0, female=0;
+  allData.forEach(r=>{
+    const g=(r[COL.gender]||'').trim().toLowerCase();
+    if(g==='male'||g==='m'||g==='boy') male++;
+    else if(g==='female'||g==='f'||g==='girl'||g==='woman'||g==='lady') female++;
+  });
+  const total=male+female||1;
+  const mp=Math.round(male/total*100), fp=100-mp;
+  document.getElementById('gMale').style.width   = mp+'%';
+  document.getElementById('gFemale').style.width = fp+'%';
+  document.getElementById('gMale').textContent   = `👦 ${male} (${mp}%)`;
+  document.getElementById('gFemale').textContent = `👧 ${female} (${fp}%)`;
+  document.getElementById('gMaleLbl').textContent   = `Male: ${male} (${mp}%)`;
+  document.getElementById('gFemaleLbl').textContent = `Female: ${female} (${fp}%)`;
+
+  const ctx=document.getElementById('genderChart').getContext('2d');
+  if(charts.genderChart) charts.genderChart.destroy();
+  charts.genderChart = new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['Male','Female'],
+      datasets:[{data:[male,female],backgroundColor:['#4fc3f7','#f48fb1'],
+        borderColor:['#1565c0','#880e4f'],borderWidth:2}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#e8f0ff',font:{family:'Rajdhani',size:13}}}}}
+  });
+}
+
+// ── Regions ──
+function renderRegions(){
+  const map={};
+  allData.forEach(r=>{
+    const reg=(r[COL.region]||'Unknown').trim();
+    map[reg]=(map[reg]||0)+1;
+  });
+  const sorted=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  const max=sorted[0]?.[1]||1;
+  const grid=document.getElementById('regionGrid');
+  grid.innerHTML='';
+  sorted.forEach(([name,cnt])=>{
+    const pct=Math.round(cnt/max*100);
+    grid.innerHTML+=`<div class="region-item">
+      <span class="region-name">${name}</span>
+      <div class="region-bar-wrap"><div class="region-bar" style="width:${pct}%"></div></div>
+      <span class="region-count">${cnt}</span>
+    </div>`;
+  });
+}
+
+// ── Leaderboard ──
+function renderLeaderboard(){
+  const ranked = allData.map(r=>({
+    name:(r[COL.name]||'Unknown').trim(),
+    school:(r[COL.school]||'').trim(),
+    gender:(r[COL.gender]||'').trim(),
+    pct:getScorePct(r)
+  })).sort((a,b)=>b.pct-a.pct).slice(0,20);
+
+  const lb=document.getElementById('leaderboard');
+  lb.innerHTML='';
+  ranked.forEach((c,i)=>{
+    const rankCls=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const title=c.gender.toLowerCase()==='female'?'Cadetess':'Cadet';
+    lb.innerHTML+=`<div class="lb-row">
+      <span class="lb-rank ${rankCls}">${i+1}</span>
+      <div class="lb-info">
+        <div class="lb-name">${title} ${c.name}</div>
+        <div class="lb-meta">${c.school}</div>
+      </div>
+      <span class="lb-score">${c.pct}%</span>
+      <span class="lb-badge">${getBadge(c.pct)}${medal}</span>
+    </div>`;
+  });
+}
+
+// ── Schools ──
+function renderSchools(){
+  const map={};
+  allData.forEach(r=>{
+    const s=(r[COL.school]||'Unknown').trim();
+    if(!map[s]) map[s]={total:0,count:0};
+    map[s].total+=getScorePct(r); map[s].count++;
+  });
+  const sorted=Object.entries(map)
+    .map(([name,d])=>({name,avg:Math.round(d.total/d.count),count:d.count}))
+    .sort((a,b)=>b.avg-a.avg).slice(0,20);
+  const maxAvg=sorted[0]?.avg||1;
+  const list=document.getElementById('schoolList');
+  list.innerHTML='';
+  sorted.forEach((s,i)=>{
+    list.innerHTML+=`<div class="school-row">
+      <span class="school-rank">${i+1}</span>
+      <span class="school-name" title="${s.name}">${s.name}</span>
+      <div class="school-bar-wrap"><div class="school-bar" style="width:${Math.round(s.avg/maxAvg*100)}%"></div></div>
+      <span class="school-count">${s.count} 🎓</span>
+      <span class="school-avg">${s.avg}% avg</span>
+    </div>`;
+  });
+}
+
+// ── Modules ──
+function renderModules(){
+  const mods = COL.modules||[];
+  const avgs=MODULES.map((m,idx)=>{
+    const colIdx = mods[idx]!=null ? mods[idx] : -1;
+    if(colIdx===-1) return {...m, avg:0};
+    const scores=allData.map(r=>{
+      const s=String(r[colIdx]||'');
+      const parts=s.split('/');
+      return parts.length===2
+        ? Math.round(parseInt(parts[0])/Math.max(parseInt(parts[1]),1)*100)
+        : parseScore(s);
+    }).filter(v=>v>0&&v<=100);
+    const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):0;
+    return {...m, avg};
+  }).sort((a,b)=>b.avg-a.avg);
+
+  const list=document.getElementById('moduleList');
+  list.innerHTML='';
+  avgs.forEach(m=>{
+    const color=m.avg>=75?'#00e676':m.avg>=50?'#FFD700':'#ff5252';
+    list.innerHTML+=`<div class="module-row">
+      <span class="module-icon">${m.icon}</span>
+      <span class="module-name">${m.name}</span>
+      <div class="module-bar-wrap"><div class="module-bar" style="width:${m.avg}%;background:${color}"></div></div>
+      <span class="module-avg" style="color:${color}">${m.avg}%</span>
+    </div>`;
+  });
+}
+
+// ── Score Distribution Chart ──
+function renderScoreDistChart(){
+  const brackets=['0–20%','21–40%','41–60%','61–80%','81–100%'];
+  const counts=[0,0,0,0,0];
+  allData.forEach(r=>{
+    const p=getScorePct(r);
+    if(p<=20)counts[0]++;else if(p<=40)counts[1]++;
+    else if(p<=60)counts[2]++;else if(p<=80)counts[3]++;else counts[4]++;
+  });
+  const ctx=document.getElementById('scoreChart').getContext('2d');
+  if(charts.scoreChart) charts.scoreChart.destroy();
+  charts.scoreChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:brackets,datasets:[{
+      label:'Number of Cadets',
+      data:counts,
+      backgroundColor:['#ff5252','#ff9100','#FFD700','#69f0ae','#40c4ff'],
+      borderRadius:8,
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#e8f0ff',font:{family:'Rajdhani'}},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{ticks:{color:'#e8f0ff',font:{family:'Rajdhani'}},grid:{color:'rgba(255,255,255,0.05)'}}
+      }}
+  });
+}
+
+// ── Gender by Module Chart ──
+function renderGenderModuleChart(){
+  const mods = COL.modules||[];
+  const maleAvgs=[], femaleAvgs=[];
+  MODULES.forEach((m,idx)=>{
+    const colIdx = mods[idx]!=null ? mods[idx] : -1;
+    const ms=[], fs=[];
+    allData.forEach(r=>{
+      const g=(r[COL.gender]||'').toLowerCase();
+      if(colIdx===-1) return;
+      const s=String(r[colIdx]||'');
+      const parts=s.split('/');
+      const v=parts.length===2
+        ? Math.round(parseInt(parts[0])/Math.max(parseInt(parts[1]),1)*100)
+        : parseScore(s);
+      if(v>0&&v<=100){
+        if(g==='male'||g==='m')ms.push(v);
+        else if(g==='female'||g==='f')fs.push(v);
+      }
+    });
+    maleAvgs.push(ms.length?Math.round(ms.reduce((a,b)=>a+b,0)/ms.length):0);
+    femaleAvgs.push(fs.length?Math.round(fs.reduce((a,b)=>a+b,0)/fs.length):0);
+  });
+  const ctx=document.getElementById('genderModuleChart').getContext('2d');
+  if(charts.genderModuleChart) charts.genderModuleChart.destroy();
+  charts.genderModuleChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:MODULES.map(m=>m.name),
+      datasets:[
+        {label:'Male',data:maleAvgs,backgroundColor:'rgba(79,195,247,0.7)',borderRadius:5},
+        {label:'Female',data:femaleAvgs,backgroundColor:'rgba(244,143,177,0.7)',borderRadius:5}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#e8f0ff',font:{family:'Rajdhani',size:12}}}},
+      scales:{
+        x:{ticks:{color:'#e8f0ff',font:{family:'Rajdhani',size:10}},grid:{color:'rgba(255,255,255,0.05)'}},
+        y:{max:100,ticks:{color:'#e8f0ff',font:{family:'Rajdhani'}},grid:{color:'rgba(255,255,255,0.05)'}}
+      }}
+  });
+}
+</script>
+</body>
+</html>
