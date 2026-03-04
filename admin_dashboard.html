@@ -538,25 +538,48 @@ async function loadFromSheet(){
       // JSON array of objects from Apps Script
       const rows = JSON.parse(raw);
       if(!rows.length) throw new Error('Sheet is empty.');
-      const headers = Object.keys(rows[0]).map(k => k.trim());
-      const fi = kws => { const i=headers.findIndex(h=>kws.some(k=>h.toLowerCase().includes(k))); return i<0?-1:i+1; };
+      // Trim all keys
+      const cleanRows = rows.map(r => {
+        const c = {};
+        Object.keys(r).forEach(k => { c[k.trim()] = (r[k]||'').toString().trim(); });
+        return c;
+      });
+      const headers = Object.keys(cleanRows[0]);
+      console.log('Sheet headers:', headers);
+
+      // Map columns by matching header keywords
+      const fi = kws => {
+        const i = headers.findIndex(h => kws.some(k => h.toLowerCase().includes(k.toLowerCase())));
+        return i < 0 ? -1 : i + 1; // +1 because arr[0] is null placeholder
+      };
       COL.name       = fi(['full name','name']);
       COL.gender     = fi(['sex','gender']);
       COL.school     = fi(['school','institution']);
       COL.phone      = fi(['phone','contact','whatsapp']);
       COL.email      = fi(['email']);
-      COL.totalScore = fi(['total score','overall','percentage']);
-      COL.badge      = fi(['badge','distinction']);
+      COL.totalScore = fi(['total score','overall','percentage','%']);
+      COL.badge      = fi(['badge','distinction','honour']);
       COL.region     = fi(['region']);
       COL.district   = fi(['district']);
-      COL.date       = fi(['date','timestamp']);
-      COL.modules    = headers.reduce((a,h,i)=>{ if(h.toLowerCase().includes('score')&&!h.toLowerCase().includes('total')) a.push(i+1); return a; },[]);
-      allData = rows.map(r=>{ const a=[null]; headers.forEach(h=>a.push((r[h.trim()]||'').toString().trim())); return a; })
-                    .filter(r=>(r[COL.name]||'').trim()!=='');
+      COL.date       = fi(['date','timestamp','completed']);
+      COL.modules    = headers.reduce((a,h,i) => {
+        if(h.toLowerCase().includes('score') && !h.toLowerCase().includes('total')) a.push(i+1);
+        return a;
+      }, []);
+      console.log('COL mapping:', JSON.stringify(COL));
+
+      // Convert to arrays — [null, col1, col2, ...]
+      allData = cleanRows.map(r => {
+        const a = [null];
+        headers.forEach(h => a.push(r[h] || ''));
+        return a;
+      });
+      // Filter out completely empty rows — accept anything with any value
+      allData = allData.filter(r => r.slice(1).some(v => v.trim() !== ''));
     } else {
       allData = parseCSV(raw);
     }
-    if(!allData.length) throw new Error('No data rows found.');
+    if(!allData.length) throw new Error('No data rows found. Raw response started with: ' + raw.substring(0,120));
     document.getElementById('lastSync').textContent = '✅ Synced: '+new Date().toLocaleTimeString();
     document.getElementById('setupBanner').style.display='none';
     renderAll();
