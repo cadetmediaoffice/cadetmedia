@@ -246,7 +246,7 @@ main{max-width:1300px;margin:0 auto;padding:24px 20px;}
 <main>
 
 <!-- ── SETUP BANNER ── -->
-<div class="setup-banner" id="setupBanner">
+<div class="setup-banner" id="setupBanner" style="display:none;">
   <div class="icon">⚙️</div>
   <div style="flex:1">
     <h3>Connect Your Data — Choose One Method</h3>
@@ -561,15 +561,13 @@ async function loadFromSheet(){
     document.getElementById('setupBanner').style.display='none';
     renderAll();
   } catch(e){
-    document.querySelector('.sync-btn').textContent='⟳ Sync Data';
-    alert(
-      '❌ Could not load data.\n\n'+
-      'Common fixes:\n'+
-      '1. Make sure you deployed as a Web App with access set to "Anyone"\n'+
-      '2. Try re-deploying — create a NEW deployment (not updating old one)\n'+
-      '3. If running from pendrive, use Method 2 (Paste CSV) as a backup\n\n'+
-      'Error: '+e.message
-    );
+    document.querySelector('.sync-btn').textContent='⟳ Retry';
+    const errDiv = document.getElementById('loadError') || document.createElement('div');
+    errDiv.id = 'loadError';
+    errDiv.style.cssText = 'background:rgba(255,60,60,0.15);border:1px solid rgba(255,60,60,0.4);border-radius:10px;padding:14px 18px;color:#ff8080;font-size:13px;margin:16px;line-height:1.8;';
+    errDiv.innerHTML = '<strong>❌ Data Load Failed</strong><br><br><strong>Error:</strong> ' + e.message + '<br><br>The Apps Script URL may have changed or access is not set to Anyone. Paste your current URL below and click Connect.';
+    if(!document.getElementById('loadError')) document.querySelector('main').insertBefore(errDiv, document.querySelector('main').firstChild);
+    document.getElementById('setupBanner').style.display = 'flex';
     return;
   }
   document.querySelector('.sync-btn').textContent='⟳ Sync Data';
