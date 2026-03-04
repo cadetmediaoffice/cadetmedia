@@ -568,7 +568,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 async function loadData(url){
   document.getElementById('liveStatus').textContent = 'Syncing…';
   try {
-    const res  = await fetch(url, {mode:'cors'});
+    const res  = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now(), {mode:'cors'});
     if(!res.ok) throw new Error(`Server returned ${res.status}`);
     const text = await res.text();
     if(!text || text.trim().length < 10) throw new Error('Empty response from Apps Script');
@@ -666,17 +666,17 @@ function parseData(text){
 // ── Get field from row object by keyword ──
 function getField(row, keywords){
   const key = Object.keys(row).find(k =>
-    keywords.some(kw => k.toLowerCase().includes(kw.toLowerCase()))
+    keywords.some(kw => k.trim().toLowerCase().includes(kw.toLowerCase()))
   );
-  return key ? (row[key]||'').trim() : '';
+  return key ? (row[key]||'').toString().trim() : '';
 }
 
 // ── Get module score from row object ──
 function getModuleField(row, keywords){
   const key = Object.keys(row).find(k =>
-    keywords.some(kw => k.toLowerCase().includes(kw.toLowerCase()))
+    keywords.some(kw => k.trim().toLowerCase().includes(kw.toLowerCase()))
   );
-  return key ? (row[key]||'').trim() : '';
+  return key ? (row[key]||'').toString().trim() : '';
 }
 
 // ── Score ──
