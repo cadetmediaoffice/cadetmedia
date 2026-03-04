@@ -626,8 +626,13 @@ function parseData(text){
   // ── Try JSON first (preferred — no column shift issues) ──
   if(text.startsWith('[')){
     try {
-      const rows = JSON.parse(text);
-      // Each row is an object keyed by header name
+      const rawRows = JSON.parse(text);
+      // Trim ALL keys — sheet headers have extra spaces e.g. "  Full Name  "
+      const rows = rawRows.map(r => {
+        const clean = {};
+        Object.keys(r).forEach(k => { clean[k.trim()] = (r[k]||'').toString().trim(); });
+        return clean;
+      });
       return rows.filter(r => r && (r['Full Name']||r['full name']||'').trim() !== '');
     } catch(e){ console.warn('JSON parse failed, falling back to CSV', e); }
   }
