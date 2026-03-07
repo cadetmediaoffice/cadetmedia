@@ -575,11 +575,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
   scoreMap.forEach(({key, input, total})=>{
     const val = localStorage.getItem(key);
     if(val){
-      // val could be "25/40" or just "25"
+      // Handle both "25" and "25/30" formats
       if(val.includes('/')){
         document.getElementById(input).value = val;
       } else {
-        document.getElementById(input).value = val+'/'+total;
+        const num = parseInt(val) || 0;
+        document.getElementById(input).value = num+'/'+total;
       }
     }
   });
@@ -589,3 +590,4 @@ window.addEventListener('DOMContentLoaded', ()=>{
 </script>
 </body>
 </html>
+
