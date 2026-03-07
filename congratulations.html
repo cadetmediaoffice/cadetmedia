@@ -258,7 +258,9 @@ const TOTAL_MAX = SERVICES.length * MAX_PER_QUIZ; // 360
 let totalScore = 0;
 let scoreMap   = {};
 SERVICES.forEach(s => {
-  const sc = parseInt(localStorage.getItem(s.key+'Score') || 0);
+  const raw = localStorage.getItem(s.key+'Score') || '0';
+  // Handle both "25" and "25/30" formats
+  const sc = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
   scoreMap[s.key] = sc;
   totalScore += sc;
 });
@@ -301,7 +303,8 @@ ob.textContent = overallLabel; ob.style.cssText += overallStyle;
 const grid = document.getElementById('badgesGrid');
 SERVICES.forEach(s => {
   const sc   = scoreMap[s.key];
-  const done = localStorage.getItem(s.key+'Completed') === 'true';
+  const raw  = localStorage.getItem(s.key+'Score');
+  const done = localStorage.getItem(s.key+'Completed') === 'true' || (raw && parseInt(raw) > 0);
   const card = document.createElement('div');
   let cls='badge-card', medal='⬜', ptsText=done?`${sc}/${MAX_PER_QUIZ}`:'Not done';
   if(!done){ cls+=' incomplete'; medal='—'; }
