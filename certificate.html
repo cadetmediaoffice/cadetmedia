@@ -140,7 +140,7 @@ canvas#cert{width:100%;display:block;}
   <div class="section-title">📊 Module Scores (format: 27/30)</div>
   <div class="module-grid">
     <div class="mod-field"><label>🛡️ General</label><input id="m0" value="16/30"></div>
-    <div class="mod-field"><label>🔥 Fire</label><input id="m1" value="11/30"></div>
+    <div class="mod-field"><label>🔥 Fire</label><input id="m1" value="0/30"></div>
     <div class="mod-field"><label>👮 Police</label><input id="m2" value="13/30"></div>
     <div class="mod-field"><label>🚑 Health</label><input id="m3" value="14/30"></div>
     <div class="mod-field"><label>⚖️ Prisons</label><input id="m4" value="10/30"></div>
@@ -414,17 +414,25 @@ function finalizeCert(name,title,school,region,score,badge,date,cfg,serial,lx,lw
   ctx.save();
   ctx.shadowColor = cfg.glow;
   ctx.shadowBlur = 20;
-  ctx.font='600 46px "Cinzel", serif';
+  // ── Auto-shrink name font to fit certificate width ──
+  const fullName = title+' '+name;
+  const maxNameWidth = rw * 0.82;
+  let nameFontSize = 46;
+  ctx.font='600 '+nameFontSize+'px "Cinzel", serif';
+  while(ctx.measureText(fullName).width > maxNameWidth && nameFontSize > 22){
+    nameFontSize -= 1;
+    ctx.font='600 '+nameFontSize+'px "Cinzel", serif';
+  }
   const nameGrad = ctx.createLinearGradient(rx,0,rx+rw,0);
   nameGrad.addColorStop(0,cfg.color2);
   nameGrad.addColorStop(0.5,'#ffffff');
   nameGrad.addColorStop(1,cfg.color2);
   ctx.fillStyle=nameGrad;
-  ctx.fillText(title+' '+name, rx+rw/2, lineY+90);
+  ctx.fillText(fullName, rx+rw/2, lineY+90);
   ctx.restore();
 
   // Name underline
-  const nmW = ctx.measureText(title+' '+name).width;
+  const nmW = ctx.measureText(fullName).width;
   ctx.strokeStyle=cfg.color; ctx.lineWidth=1;
   ctx.beginPath();
   ctx.moveTo(rx+rw/2-nmW/2,lineY+96);
@@ -540,6 +548,42 @@ window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('iDate').value = d;
   // Auto serial
   document.getElementById('iSerial').value = 'CMG-2026-'+Math.random().toString(36).substring(2,8).toUpperCase();
+
+  // ── Auto-fill from localStorage quiz scores ──
+  const n = localStorage.getItem('cadetName');
+  const g = localStorage.getItem('cadetGender');
+  const s = localStorage.getItem('cadetSchool');
+  if(n) document.getElementById('iName').value = n;
+  if(g) document.getElementById('iGender').value = g;
+  if(s) document.getElementById('iSchool').value = s;
+
+  // Module scores — map quiz localStorage keys to module inputs
+  const scoreMap = [
+    {key:'generalScore', input:'m0', total:30},
+    {key:'fireScore',    input:'m1', total:30},
+    {key:'policeScore',  input:'m2', total:30},
+    {key:'ambulanceScore', input:'m3', total:30},
+    {key:'prisonsScore', input:'m4', total:30},
+    {key:'nadmoScore',   input:'m5', total:30},
+    {key:'immigrationScore', input:'m6', total:30},
+    {key:'customsScore', input:'m7', total:30},
+    {key:'tourismScore', input:'m8', total:30},
+    {key:'forestScore',  input:'m9', total:30},
+    {key:'gafScore',     input:'m10', total:30},
+    {key:'narcoticsScore', input:'m11', total:30},
+  ];
+  scoreMap.forEach(({key, input, total})=>{
+    const val = localStorage.getItem(key);
+    if(val){
+      // val could be "25/40" or just "25"
+      if(val.includes('/')){
+        document.getElementById(input).value = val;
+      } else {
+        document.getElementById(input).value = val+'/'+total;
+      }
+    }
+  });
+
   generate();
 });
 </script>
