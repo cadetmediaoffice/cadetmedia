@@ -493,7 +493,7 @@ function submitResults(){
   setTimeout(() => document.body.removeChild(form), 2000);
 
   // Also submit to Apps Script if URL is saved (writes to Sheet directly)
-  const scriptUrl = localStorage.getItem('cmg_sheet_url') || '';
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec';
   if(scriptUrl){
     fetch(scriptUrl + '?name='      + encodeURIComponent(cadetName)
                     + '&gender='    + encodeURIComponent(cadetGender)
