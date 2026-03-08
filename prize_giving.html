@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Prize Giving — Cadet Media Ghana</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:Arial,sans-serif;
+  background:radial-gradient(ellipse at top,#1a0a3a 0%,#0a0a1a 60%,#000 100%);
+  color:#fff;min-height:100vh;overflow-x:hidden;
+}
+
+/* ── Stars background ── */
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle 3s infinite;}
+@keyframes twinkle{0%,100%{opacity:.2;}50%{opacity:1;}}
+
+/* ── Wrap ── */
+.wrap{position:relative;z-index:1;padding:20px 16px 40px;}
+
+/* ── Header ── */
+.header{text-align:center;padding:20px 10px 30px;}
+.header img{height:90px;border-radius:50%;
+  box-shadow:0 0 30px rgba(255,215,0,0.6);
+  animation:glow 3s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(255,215,0,0.4);}
+  50%{box-shadow:0 0 50px rgba(255,215,0,0.9),0 0 80px rgba(255,215,0,0.4);}}
+.header h1{
+  font-size:clamp(22px,4vw,42px);font-weight:900;margin:14px 0 6px;
+  background:linear-gradient(90deg,#FFD700,#fff,#FFD700,#fff,#FFD700);
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmer 4s linear infinite;}
+@keyframes shimmer{0%{background-position:0% 50%;}100%{background-position:300% 50%;}}
+.header p{font-size:14px;opacity:.6;letter-spacing:1px;}
+.header .banner{
+  width:100%;max-width:700px;border-radius:14px;margin:14px auto 0;display:block;
+  filter:drop-shadow(0 0 20px rgba(255,215,0,0.4));
+  animation:floatBanner 4s ease-in-out infinite;}
+@keyframes floatBanner{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ── Connect box ── */
+.connect-box{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);
+  border-radius:14px;padding:20px;max-width:600px;margin:0 auto 30px;text-align:center;}
+.connect-box input{
+  width:100%;padding:12px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.07);color:#fff;font-size:13px;outline:none;margin:10px 0;}
+.connect-box input:focus{border-color:#FFD700;}
+.connect-btn{
+  padding:12px 28px;background:linear-gradient(45deg,#FFD700,#e6a800);
+  color:#000;border:none;border-radius:10px;font-size:14px;font-weight:bold;
+  cursor:pointer;transition:transform .2s;}
+.connect-btn:hover{transform:scale(1.04);}
+.status-bar{
+  text-align:center;font-size:13px;opacity:.6;margin-bottom:20px;
+  padding:8px;background:rgba(255,255,255,0.04);border-radius:8px;
+  max-width:600px;margin:0 auto 24px;}
+
+/* ── Section title ── */
+.section-title{
+  text-align:center;font-size:clamp(16px,2.5vw,24px);font-weight:900;
+  margin:40px 0 20px;letter-spacing:2px;
+  text-transform:uppercase;color:#FFD700;}
+.section-sub{text-align:center;font-size:12px;opacity:.5;margin-top:-14px;margin-bottom:20px;}
+
+/* ── OVERALL PODIUM ── */
+.podium-stage{
+  display:flex;justify-content:center;align-items:flex-end;
+  gap:16px;max-width:700px;margin:0 auto 40px;flex-wrap:wrap;}
+
+.podium-slot{
+  display:flex;flex-direction:column;align-items:center;
+  border-radius:16px 16px 0 0;padding:20px 14px 0;
+  min-width:160px;flex:1;max-width:220px;position:relative;
+  animation:riseUp .8s ease-out forwards;opacity:0;}
+@keyframes riseUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+
+.podium-slot.p1{
+  background:linear-gradient(160deg,rgba(255,215,0,0.25),rgba(255,180,0,0.1));
+  border:2px solid rgba(255,215,0,0.6);height:220px;
+  box-shadow:0 0 40px rgba(255,215,0,0.3);animation-delay:.1s;}
+.podium-slot.p2{
+  background:linear-gradient(160deg,rgba(192,192,192,0.2),rgba(180,180,180,0.08));
+  border:2px solid rgba(192,192,192,0.4);height:180px;animation-delay:.3s;}
+.podium-slot.p3{
+  background:linear-gradient(160deg,rgba(205,127,50,0.2),rgba(180,100,30,0.08));
+  border:2px solid rgba(205,127,50,0.4);height:160px;animation-delay:.5s;}
+
+.podium-crown{font-size:32px;margin-bottom:4px;display:block;text-align:center;}
+.podium-avatar{
+  width:64px;height:64px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:900;margin:0 auto 8px;}
+.p1 .podium-avatar{background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;}
+.p2 .podium-avatar{background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;}
+.p3 .podium-avatar{background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;}
+
+.podium-name{font-size:13px;font-weight:900;text-align:center;margin-bottom:3px;}
+.podium-school{font-size:10px;opacity:.6;text-align:center;margin-bottom:6px;}
+.podium-score{
+  font-size:22px;font-weight:900;text-align:center;
+  background:linear-gradient(90deg,#FFD700,#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.podium-prize{
+  font-size:11px;margin-top:6px;padding:4px 12px;border-radius:20px;
+  background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);
+  text-align:center;color:#FFD700;font-weight:bold;}
+.podium-base{
+  width:100%;height:40px;display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;
+  background:rgba(0,0,0,0.4);border-radius:0 0 8px 8px;margin-top:auto;}
+.p1 .podium-base{font-size:32px;}
+
+/* ── SERVICE CHAMPIONS GRID ── */
+.champ-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;max-width:1100px;margin:0 auto;}
+
+.champ-card{
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(255,255,255,0.1);
+  border-radius:14px;padding:16px;
+  display:flex;align-items:center;gap:14px;
+  transition:transform .2s,box-shadow .2s;
+  animation:fadeInCard .6s ease-out forwards;opacity:0;}
+.champ-card:hover{transform:scale(1.03);box-shadow:0 4px 24px rgba(255,215,0,0.15);}
+@keyframes fadeInCard{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+.champ-icon{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  background:rgba(255,255,255,0.08);}
+.champ-icon img{width:44px;height:44px;border-radius:50%;object-fit:contain;}
+
+.champ-info{flex:1;}
+.champ-service{font-size:10px;opacity:.5;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.champ-name{font-size:14px;font-weight:900;margin-bottom:2px;}
+.champ-school{font-size:11px;opacity:.6;margin-bottom:4px;}
+.champ-score-row{display:flex;align-items:center;gap:8px;}
+.champ-score{font-size:18px;font-weight:900;color:#FFD700;}
+.champ-prize-tag{
+  font-size:10px;padding:2px 8px;border-radius:20px;
+  background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.25);
+  color:#FFD700;font-weight:bold;}
+
+/* Tie badge */
+.tie-badge{
+  font-size:10px;padding:2px 8px;border-radius:20px;
+  background:rgba(100,200,255,0.15);border:1px solid rgba(100,200,255,0.3);
+  color:#88ddff;margin-left:4px;}
+
+/* ── BEST SCHOOL ── */
+.school-card{
+  max-width:500px;margin:0 auto 40px;
+  background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,180,0,0.05));
+  border:2px solid rgba(255,215,0,0.4);border-radius:18px;
+  padding:24px;text-align:center;
+  box-shadow:0 0 30px rgba(255,215,0,0.15);
+  animation:riseUp .8s ease-out .4s forwards;opacity:0;}
+.school-card .trophy{font-size:52px;margin-bottom:10px;}
+.school-card .school-name{font-size:22px;font-weight:900;color:#FFD700;margin-bottom:6px;}
+.school-card .school-stats{font-size:13px;opacity:.7;margin-bottom:10px;}
+.school-card .school-prize{
+  display:inline-block;padding:8px 20px;border-radius:20px;
+  background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.4);
+  color:#FFD700;font-weight:bold;font-size:13px;}
+
+/* ── STATS ROW ── */
+.stats-row{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:12px;
+  max-width:800px;margin:0 auto 30px;}
+.stat-box{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;padding:14px 20px;text-align:center;min-width:110px;}
+.stat-num{font-size:28px;font-weight:900;color:#FFD700;}
+.stat-lbl{font-size:10px;opacity:.5;margin-top:2px;letter-spacing:.5px;text-transform:uppercase;}
+
+/* ── NO DATA ── */
+.no-data{text-align:center;padding:60px 20px;opacity:.4;font-size:16px;}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:30px 10px;font-size:11px;opacity:.3;margin-top:20px;}
+
+/* ── Print / Fullscreen button ── */
+.top-btns{display:flex;justify-content:center;gap:10px;margin:16px 0;}
+.top-btn{
+  padding:10px 20px;border:1px solid rgba(255,255,255,0.2);border-radius:10px;
+  background:rgba(255,255,255,0.07);color:#fff;font-size:12px;font-weight:bold;
+  cursor:pointer;transition:all .2s;}
+.top-btn:hover{background:rgba(255,255,255,0.15);}
+.top-btn.gold{background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;border-color:#FFD700;}
+
+@media print{
+  .connect-box,.top-btns,.connect-btn,.status-bar{display:none;}
+  body{background:#000;}
+}
+@media(max-width:600px){
+  .podium-stage{gap:8px;}
+  .podium-slot{min-width:100px;padding:12px 8px 0;}
+  .podium-avatar{width:48px;height:48px;font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <img src="../MEDIA/logo_quiz.png" alt="Cadet Media">
+    <h1>🏆 Prize Giving Ceremony</h1>
+    <p>CADET MEDIA GHANA · PUBLIC SAFETY EDUCATION AWARDS</p>
+    <img src="../MEDIA/all_services_banner.png" class="banner" alt="All Services">
+  </div>
+
+  <!-- Connect -->
+  <div class="connect-box" id="connectBox">
+    <div style="font-size:14px;margin-bottom:8px;font-weight:bold;">🔗 Connect to Live Data</div>
+    <div style="font-size:12px;opacity:.6;margin-bottom:10px;">Paste your Google Apps Script URL to load all cadet results</div>
+    <input type="text" id="appsUrl" placeholder="https://script.google.com/macros/s/..." />
+    <button class="connect-btn" onclick="connectData()">Load Results</button>
+  </div>
+
+  <div class="status-bar" id="statusBar">Waiting for data...</div>
+
+  <div class="top-btns">
+    <button class="top-btn gold" onclick="window.print()">🖨️ Print / Save PDF</button>
+    <button class="top-btn" onclick="toggleFullscreen()">⛶ Fullscreen Display</button>
+    <button class="top-btn" onclick="fireConfetti()">🎉 Confetti!</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow" style="display:none;">
+    <div class="stat-box"><div class="stat-num" id="sTotalCadets">—</div><div class="stat-lbl">Total Cadets</div></div>
+    <div class="stat-box"><div class="stat-num" id="sTotalSchools">—</div><div class="stat-lbl">Schools</div></div>
+    <div class="stat-box"><div class="stat-num" id="sTotalGold">—</div><div class="stat-lbl">Gold Badges</div></div>
+    <div class="stat-box"><div class="stat-num" id="sTotalComplete">—</div><div class="stat-lbl">Completed All</div></div>
+  </div>
+
+  <!-- OVERALL WINNERS -->
+  <div id="overallSection" style="display:none;">
+    <div class="section-title">🥇 Overall Champions</div>
+    <div class="section-sub">Highest total score across all 11 service modules</div>
+    <div class="podium-stage" id="podiumStage"></div>
+  </div>
+
+  <!-- SERVICE CHAMPIONS -->
+  <div id="serviceSection" style="display:none;">
+    <div class="section-title">🏅 Service Module Champions</div>
+    <div class="section-sub">Best score in each individual service quiz</div>
+    <div class="champ-grid" id="champGrid"></div>
+  </div>
+
+  <!-- BEST SCHOOL -->
+  <div id="schoolSection" style="display:none;">
+    <div class="section-title">🏫 Best School Award</div>
+    <div class="section-sub">Highest average score across all students from one school</div>
+    <div id="schoolCard"></div>
+  </div>
+
+  <div class="footer">
+    Cadet Media Ghana · Public Safety Education Awards 🇬🇭<br>
+    All results are automatically calculated from quiz performance data
+  </div>
+
+</div><!-- /wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec";
+
+
+// ── Generate stars ──
+(function(){
+  const s = document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const d = document.createElement('div');
+    d.className = 'star';
+    d.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      width:${Math.random()*3+1}px;
+      height:${Math.random()*3+1}px;
+      animation-delay:${Math.random()*4}s;
+      animation-duration:${2+Math.random()*4}s;`;
+    s.appendChild(d);
+  }
+})();
+
+// ── Column mapping (matches leaderboard.html exactly) ──
+const COL = {
+  name:2, gender:3, school:4,
+  modules:[7,8,9,10,11,12,13,14,15,16,17,18],
+  totalScore:19, badge:20, region:21
+};
+
+// ── 11 Service modules ──
+const SERVICES = [
+  {key:'fire',      label:'Fire Safety',          sub:'Ghana National Fire Service',    icon:'../MEDIA/logo_gnfs.png',      emoji:'🔥', prize:'Service Champion Trophy'},
+  {key:'police',    label:'Community Safety',      sub:'Ghana Police Service',           icon:'../MEDIA/logo_police.png',    emoji:'👮', prize:'Service Champion Trophy'},
+  {key:'ambulance', label:'Health & Safety',       sub:'National Ambulance Service',     icon:'../MEDIA/logo_health.png',    emoji:'🚑', prize:'Service Champion Trophy'},
+  {key:'prisons',   label:'Discipline & Safety',   sub:'Ghana Prisons Service',          icon:'../MEDIA/logo_prisons.png',   emoji:'⛓️', prize:'Service Champion Trophy'},
+  {key:'nadmo',     label:'Disaster Preparedness', sub:'NADMO',                          icon:'../MEDIA/logo_nadmo.png',     emoji:'🌊', prize:'Service Champion Trophy'},
+  {key:'immigration',label:'Immigration Education',sub:'Ghana Immigration Service',      icon:'../MEDIA/logo_immigration.png',emoji:'✈️',prize:'Service Champion Trophy'},
+  {key:'customs',   label:'Customs Education',     sub:'Ghana Revenue Authority',        icon:'../MEDIA/logo_customs.png',   emoji:'💰', prize:'Service Champion Trophy'},
+  {key:'tourism',   label:'Tourism, Arts & Culture',sub:'Ministry of Tourism',           icon:'../MEDIA/logo_tourism.png',   emoji:'🌍', prize:'Service Champion Trophy'},
+  {key:'forest',    label:'Forest Conservation',   sub:'Forestry Commission',            icon:'../MEDIA/logo_forest.png',    emoji:'🌲', prize:'Service Champion Trophy'},
+  {key:'gaf',       label:'National Defence',      sub:'Ghana Armed Forces',             icon:'../MEDIA/logo_gaf.png',       emoji:'⚔️', prize:'Service Champion Trophy'},
+  {key:'narcotics', label:'Drug Safety & Awareness',sub:'NACOC',                         icon:'../MEDIA/logo_nacoc.png',     emoji:'💊', prize:'Service Champion Trophy'},
+];
+
+const OVERALL_PRIZES = ['📱 Smartphone','🎧 Bluetooth Earphones','🔋 Power Bank'];
+
+let allData = [];
+
+// ── Auto-load saved URL ──
+window.addEventListener('DOMContentLoaded', ()=>{
+  const saved = localStorage.getItem('cmg_lb_url') || localStorage.getItem('cmg_sheet_url');
+  if(saved){
+    document.getElementById('appsUrl').value = saved;
+    document.getElementById('connectBox').style.display = 'none';
+    loadData(saved);
+  }
+});
+
+function connectData(){
+  const url = document.getElementById('appsUrl').value.trim();
+  if(!url){ alert('Please paste your Apps Script URL.'); return; }
+  localStorage.setItem('cmg_lb_url', url);
+  loadData(url);
+}
+
+async function loadData(url){
+  setStatus('⏳ Loading cadet results...');
+  try{
+    const res = await fetch(url, {mode:'cors'});
+    if(!res.ok) throw new Error(`Server error ${res.status}`);
+    const text = await res.text();
+    allData = parseCSV(text);
+    if(!allData.length) throw new Error('No cadet data found yet.');
+    document.getElementById('connectBox').style.display = 'none';
+    setStatus(`✅ Loaded ${allData.length} cadet results · ${new Date().toLocaleTimeString()}`);
+    renderAll();
+    // Auto-refresh every 2 minutes
+    setTimeout(()=>loadData(url), 120000);
+  } catch(e){
+    setStatus('⚠️ ' + e.message);
+  }
+}
+
+function setStatus(msg){ document.getElementById('statusBar').textContent = msg; }
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  function parseLine(line){
+    const cols=[];let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cols.push(cur.replace(/^"|"$/g,'').trim());cur='';}
+      else cur+=line[i];
+    }
+    cols.push(cur.replace(/^"|"$/g,'').trim());
+    return cols;
+  }
+  return lines.slice(1).map(l=>parseLine(l))
+    .filter(r=>r.length>3 && r[COL.name] && r[COL.name].trim()!=='');
+}
+
+// ── Get overall score % ──
+function getOverallPct(row){
+  const ts = String(row[COL.totalScore]||'').trim();
+  if(ts){ const m=ts.match(/(\d+)/); if(m){const v=parseInt(m[1]);if(v>=0&&v<=100)return v;} }
+  let sum=0,max=0;
+  COL.modules.forEach(ci=>{
+    const s=String(row[ci]||'').trim(); if(!s)return;
+    const parts=s.split('/');
+    if(parts.length===2){const g=parseInt(parts[0])||0,t=parseInt(parts[1])||30;if(t>0){sum+=g;max+=t;}}
+    else{const v=parseInt(s)||0;if(v>0&&v<=30){sum+=v;max+=30;}}
+  });
+  return max>0?Math.round(sum/max*100):0;
+}
+
+// ── Get single module score % ──
+function getModulePct(row, moduleIndex){
+  const ci = COL.modules[moduleIndex];
+  const s = String(row[ci]||'').trim();
+  if(!s) return null;
+  const parts = s.split('/');
+  if(parts.length===2){
+    const g=parseInt(parts[0])||0, t=parseInt(parts[1])||30;
+    return t>0 ? Math.round(g/t*100) : null;
+  }
+  const v=parseInt(s)||0;
+  return (v>0&&v<=30) ? Math.round(v/30*100) : null;
+}
+
+function getName(row){ return (row[COL.name]||'').trim(); }
+function getSchool(row){ return (row[COL.school]||'Unknown').trim(); }
+function getGender(row){ return (row[COL.gender]||'').trim(); }
+function getTitle(g){ return (g||'').toLowerCase()==='female'?'Cadetess':'Cadet'; }
+function getAvatar(name){ return name?name.charAt(0).toUpperCase():'?'; }
+
+// ── Render everything ──
+function renderAll(){
+  const cadets = allData.map(r=>({
+    row:r,
+    name:getName(r),
+    school:getSchool(r),
+    gender:getGender(r),
+    pct:getOverallPct(r),
+  })).sort((a,b)=>b.pct-a.pct);
+
+  renderStats(cadets);
+  renderOverall(cadets);
+  renderServiceChampions();
+  renderBestSchool(cadets);
+
+  document.getElementById('statsRow').style.display='flex';
+  document.getElementById('overallSection').style.display='block';
+  document.getElementById('serviceSection').style.display='block';
+  document.getElementById('schoolSection').style.display='block';
+
+  // Big confetti on load
+  setTimeout(()=>fireConfetti(), 800);
+}
+
+// ── Stats ──
+function renderStats(cadets){
+  const schools = new Set(cadets.map(c=>c.school.toLowerCase())).size;
+  const gold = cadets.filter(c=>c.pct>=85).length;
+  const complete = cadets.filter(c=>{
+    let filled=0;
+    COL.modules.forEach((ci,i)=>{if(getModulePct(c.row,i)!==null)filled++;});
+    return filled>=11;
+  }).length;
+  document.getElementById('sTotalCadets').textContent = cadets.length;
+  document.getElementById('sTotalSchools').textContent = schools;
+  document.getElementById('sTotalGold').textContent = gold;
+  document.getElementById('sTotalComplete').textContent = complete;
+}
+
+// ── Overall Top 3 Podium ──
+function renderOverall(cadets){
+  const top = cadets.slice(0,3);
+  if(!top.length){ document.getElementById('podiumStage').innerHTML='<div class="no-data">No data yet</div>'; return; }
+
+  // Order: 2nd, 1st, 3rd for visual podium effect
+  const slots = top.length>=3
+    ? [{c:top[1],cls:'p2',crown:'🥈',n:2},{c:top[0],cls:'p1',crown:'👑',n:1},{c:top[2],cls:'p3',crown:'🥉',n:3}]
+    : [{c:top[0],cls:'p1',crown:'👑',n:1}];
+
+  // Check for ties at each position
+  const isTied = (i) => top[i] && top[i-1] && top[i].pct === top[i-1]?.pct;
+
+  document.getElementById('podiumStage').innerHTML = slots.map(({c,cls,crown,n},delay)=>{
+    const tied = cadets.filter(x=>x.pct===c.pct).length > 1;
+    const prize = OVERALL_PRIZES[n-1] || '';
+    return `<div class="podium-slot ${cls}" style="animation-delay:${delay*.15}s">
+      <span class="podium-crown">${crown}</span>
+      <div class="podium-avatar">${getAvatar(c.name)}</div>
+      <div class="podium-name">${getTitle(c.gender)} ${c.name}${tied?'<span class="tie-badge">TIE</span>':''}</div>
+      <div class="podium-school">${c.school}</div>
+      <div class="podium-score">${c.pct}%</div>
+      <div class="podium-prize">${prize}</div>
+      <div class="podium-base">${n}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Service Champions ──
+function renderServiceChampions(){
+  let html = '';
+  SERVICES.forEach((svc, idx)=>{
+    // Find best scorer for this module
+    const scored = allData.map(r=>({
+      name:getName(r), school:getSchool(r), gender:getGender(r),
+      pct: getModulePct(r, idx)
+    })).filter(x=>x.pct!==null).sort((a,b)=>b.pct-a.pct);
+
+    if(!scored.length){
+      html += `<div class="champ-card" style="animation-delay:${idx*.08}s">
+        <div class="champ-icon">${svc.emoji}</div>
+        <div class="champ-info">
+          <div class="champ-service">${svc.label}</div>
+          <div class="champ-name" style="opacity:.4">No results yet</div>
+          <div class="champ-school" style="opacity:.3">${svc.sub}</div>
+        </div>
+      </div>`;
+      return;
+    }
+
+    const winner = scored[0];
+    const tied = scored.filter(x=>x.pct===winner.pct).length > 1;
+    const tiedCount = scored.filter(x=>x.pct===winner.pct).length;
+
+    html += `<div class="champ-card" style="animation-delay:${idx*.08}s">
+      <div class="champ-icon">
+        <img src="${svc.icon}" alt="${svc.label}" onerror="this.parentNode.innerHTML='${svc.emoji}'">
+      </div>
+      <div class="champ-info">
+        <div class="champ-service">${svc.label}</div>
+        <div class="champ-name">
+          ${getTitle(winner.gender)} ${winner.name}
+          ${tied?`<span class="tie-badge">+${tiedCount-1} tied</span>`:''}
+        </div>
+        <div class="champ-school">${winner.school}</div>
+        <div class="champ-score-row">
+          <span class="champ-score">${winner.pct}%</span>
+          <span class="champ-prize-tag">${svc.prize}</span>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('champGrid').innerHTML = html;
+}
+
+// ── Best School ──
+function renderBestSchool(cadets){
+  const map = {};
+  cadets.forEach(c=>{
+    const s = c.school;
+    if(!map[s]) map[s]={total:0,count:0};
+    map[s].total += c.pct;
+    map[s].count++;
+  });
+
+  const sorted = Object.entries(map)
+    .map(([name,d])=>({name, avg:Math.round(d.total/d.count), count:d.count}))
+    .sort((a,b)=>b.avg-a.avg);
+
+  if(!sorted.length){ document.getElementById('schoolCard').innerHTML=''; return; }
+
+  const best = sorted[0];
+  document.getElementById('schoolCard').innerHTML = `
+    <div class="school-card">
+      <div class="trophy">🏫</div>
+      <div class="school-name">${best.name}</div>
+      <div class="school-stats">
+        Average Score: <strong style="color:#FFD700">${best.avg}%</strong> 
+        &nbsp;·&nbsp; ${best.count} cadet${best.count>1?'s':''} participated
+      </div>
+      <div class="school-prize">🏆 Best School Trophy + Certificate</div>
+    </div>`;
+}
+
+// ── Confetti ──
+function fireConfetti(){
+  const colors = ['#FFD700','#ff4444','#44ff88','#4488ff','#ff88ff'];
+  confetti({particleCount:200,spread:160,origin:{y:0.5},colors});
+  setTimeout(()=>confetti({particleCount:100,spread:120,origin:{x:0.1,y:0.6},colors}),400);
+  setTimeout(()=>confetti({particleCount:100,spread:120,origin:{x:0.9,y:0.6},colors}),600);
+}
+
+// ── Fullscreen ──
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+</script>
+</body>
+</html>
