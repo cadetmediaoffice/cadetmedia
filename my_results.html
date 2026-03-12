@@ -282,95 +282,170 @@ if(!name || !code || activated !== 'true'){
   window.location.href = 'activate.html';
 }
 
-// ── Build page ──
-var titleStr  = gender === 'Female' ? 'Cadetess' : 'Cadet';
-var firstName = name ? name.split(' ')[0] : '';
+// ── Score keys mapped to Form Responses column headers ──
+var SCORE_KEYS = {
+  general:     '  General Safety Quiz Score  ',
+  fire:        '  Fire Safety Quiz Score  ',
+  police:      '  Community Safety (Police) Quiz Score  ',
+  ambulance:   '  Health & Ambulance Quiz Score  ',
+  prisons:     '  Prisons Service Quiz Score  ',
+  nadmo:       '  Disaster Preparedness (NADMO) Quiz Score  ',
+  immigration: '  Immigration Service Quiz Score  ',
+  customs:     '  Customs Division Quiz Score  ',
+  tourism:     '  Tourism & Creative Arts Quiz Score  ',
+  forest:      '  Forest Conservation Quiz Score  ',
+  gaf:         '  National Defence (GAF) Quiz Score  ',
+  narcotics:   '  Narcotics Control Quiz Score  '
+};
 
-// Set leaderboard link
-document.getElementById('leaderboardBtn').href =
-  'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet=' +
-  encodeURIComponent(name || '');
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
 
-// Splash overlay text
-document.getElementById('overlayTitle').textContent =
-  'Welcome back, ' + titleStr + ' ' + firstName + '!';
-document.getElementById('overlayText').textContent =
-  submitted
-    ? 'Your results have been submitted. Tap to view your scores.'
-    : 'You have completed the quiz. Tap to view your scores.';
-
-// Compute scores
-var totalScore = 0;
-var scoreMap   = {};
+// ── Try to load scores from localStorage first, then fall back to server ──
+var localScoreMap = {};
+var hasLocalScores = false;
 SERVICES.forEach(function(s){
   var raw = localStorage.getItem(s.key + 'Score') || '0';
   var sc  = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
-  scoreMap[s.key] = sc;
-  totalScore += sc;
+  localScoreMap[s.key] = sc;
+  if(sc > 0) hasLocalScores = true;
 });
-var pct = Math.round((totalScore / TOTAL_MAX) * 100);
 
-// Cadet card
-document.getElementById('cadetName').textContent  = titleStr + ' ' + name;
-document.getElementById('cadetSchool').textContent = school || 'Ghana Student Safety & Service Challenge';
-document.getElementById('totalScore').textContent  = totalScore + ' / ' + TOTAL_MAX + ' pts (' + pct + '%)';
+function buildPage(scoreMap) {
+  var titleStr  = gender === 'Female' ? 'Cadetess' : 'Cadet';
+  var firstName = name ? name.split(' ')[0] : '';
 
-var badgeEl = document.getElementById('overallBadge');
-if(pct >= 85){
-  badgeEl.textContent = '🏅 GOLD DISTINCTION';
-  badgeEl.style.cssText += 'background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;';
-} else if(pct >= 70){
-  badgeEl.textContent = '🥈 SILVER HONOURS';
-  badgeEl.style.cssText += 'background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;';
-} else if(pct >= 50){
-  badgeEl.textContent = '🥉 BRONZE CREDIT';
-  badgeEl.style.cssText += 'background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;';
-} else {
-  badgeEl.textContent = '🎓 PARTICIPANT';
-  badgeEl.style.cssText += 'background:rgba(255,255,255,0.12);color:#fff;';
+  var totalScore = 0;
+  SERVICES.forEach(function(s){ totalScore += (scoreMap[s.key] || 0); });
+  var pct = Math.round((totalScore / TOTAL_MAX) * 100);
+
+  // Set leaderboard link
+  document.getElementById('leaderboardBtn').href =
+    'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet=' +
+    encodeURIComponent(name || '');
+
+  // Splash overlay
+  document.getElementById('overlayTitle').textContent = 'Welcome back, ' + titleStr + ' ' + firstName + '!';
+  document.getElementById('overlayText').textContent  = 'Your results have been submitted. Tap to view your scores.';
+
+  // Cadet card
+  document.getElementById('cadetName').textContent   = titleStr + ' ' + name;
+  document.getElementById('cadetSchool').textContent = school || 'Ghana Student Safety & Service Challenge';
+  document.getElementById('totalScore').textContent  = totalScore + ' / ' + TOTAL_MAX + ' pts (' + pct + '%)';
+
+  var badgeEl = document.getElementById('overallBadge');
+  if(pct >= 85){
+    badgeEl.textContent = '🏅 GOLD DISTINCTION';
+    badgeEl.style.cssText += 'background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;';
+  } else if(pct >= 70){
+    badgeEl.textContent = '🥈 SILVER HONOURS';
+    badgeEl.style.cssText += 'background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;';
+  } else if(pct >= 50){
+    badgeEl.textContent = '🥉 BRONZE CREDIT';
+    badgeEl.style.cssText += 'background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;';
+  } else {
+    badgeEl.textContent = '🎓 PARTICIPANT';
+    badgeEl.style.cssText += 'background:rgba(255,255,255,0.12);color:#fff;';
+  }
+
+  // Score grid
+  var grid = document.getElementById('scoreGrid');
+  grid.innerHTML = '';
+  SERVICES.forEach(function(s){
+    var sc   = scoreMap[s.key] || 0;
+    var done = sc > 0;
+    var cls  = 'score-card';
+    var medal= done ? (sc >= MAX_PER_QUIZ * 0.85 ? '🏅' : sc >= MAX_PER_QUIZ * 0.5 ? '🥈' : '🥉') : '—';
+    if(sc >= MAX_PER_QUIZ * 0.85) cls += ' gold';
+    else if(sc >= MAX_PER_QUIZ * 0.5) cls += ' silver';
+    else if(done) cls += ' bronze';
+
+    var card = document.createElement('div');
+    card.className = cls;
+    card.innerHTML =
+      '<img src="' + s.logo + '" onerror="this.style.display=\'none\'" alt="">' +
+      '<div class="score-info">' +
+        '<div class="score-name">' + s.name + '</div>' +
+        '<div class="score-pts">' + (done ? sc + ' / ' + MAX_PER_QUIZ + ' pts' : 'Not completed') + '</div>' +
+      '</div>' +
+      '<div class="score-medal">' + medal + '</div>';
+    grid.appendChild(card);
+  });
+
+  // Tap overlay handler
+  document.getElementById('tapBtn').onclick = function(){
+    if(AC.state === 'suspended') AC.resume();
+    var overlay = document.getElementById('tapOverlay');
+    overlay.style.transition = 'opacity .35s';
+    overlay.style.opacity = '0';
+    setTimeout(function(){ overlay.style.display = 'none'; }, 380);
+    sndFanfare();
+    setTimeout(function(){
+      speak('Welcome back, ' + titleStr + ' ' + firstName + '! ' +
+        'You scored ' + totalScore + ' out of ' + TOTAL_MAX + ' points. ' +
+        'Your results have been officially submitted to Cadet Media Ghana. Well done!');
+    }, 1200);
+  };
 }
 
-// Score grid
-var grid = document.getElementById('scoreGrid');
-SERVICES.forEach(function(s){
-  var sc   = scoreMap[s.key];
-  var done = localStorage.getItem(s.key + 'Completed') === 'true' || sc > 0;
-  var cls  = 'score-card';
-  var medal= done ? (sc >= MAX_PER_QUIZ * 0.85 ? '🏅' : sc >= MAX_PER_QUIZ * 0.5 ? '🥈' : '🥉') : '—';
-  if(sc >= MAX_PER_QUIZ * 0.85) cls += ' gold';
-  else if(sc >= MAX_PER_QUIZ * 0.5) cls += ' silver';
-  else if(done) cls += ' bronze';
+// ── Load scores: local if available, otherwise fetch from server ──
+if(hasLocalScores) {
+  buildPage(localScoreMap);
+} else {
+  // No local scores — fetch from server leaderboard using cadet name
+  document.getElementById('scoreGrid').innerHTML =
+    '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">Loading your results from server...</div>';
 
-  var card = document.createElement('div');
-  card.className = cls;
-  card.innerHTML =
-    '<img src="' + s.logo + '" onerror="this.style.display=\'none\'" alt="">' +
-    '<div class="score-info">' +
-      '<div class="score-name">' + s.name + '</div>' +
-      '<div class="score-pts">' + (done ? sc + ' / ' + MAX_PER_QUIZ + ' pts' : 'Not completed') + '</div>' +
-    '</div>' +
-    '<div class="score-medal">' + medal + '</div>';
-  grid.appendChild(card);
-});
+  fetch(SCRIPT_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      // Find this cadet's most recent submission by matching name
+      var myName = (name || '').trim().toLowerCase();
+      var match  = null;
+      // Search from end to get most recent entry
+      for(var i = rows.length - 1; i >= 0; i--){
+        var rowName = (rows[i]['Full Name '] || '').trim().toLowerCase();
+        if(rowName === myName){
+          match = rows[i];
+          break;
+        }
+      }
 
-// ── Tap overlay handler ──
-document.getElementById('tapBtn').onclick = function(){
-  if(AC.state === 'suspended') AC.resume();
-  var overlay = document.getElementById('tapOverlay');
-  overlay.style.transition = 'opacity .35s';
-  overlay.style.opacity = '0';
-  setTimeout(function(){ overlay.style.display = 'none'; }, 380);
+      if(!match){
+        document.getElementById('scoreGrid').innerHTML =
+          '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">' +
+          '⚠️ Could not find your results on the server. Please contact your administrator.</div>';
+        buildPage(localScoreMap); // show zeros at least
+        return;
+      }
 
-  sndFanfare();
-  setTimeout(function(){
-    speak('Welcome back, ' + titleStr + ' ' + firstName + '! ' +
-      'You scored ' + totalScore + ' out of ' + TOTAL_MAX + ' points. ' +
-      (submitted
-        ? 'Your results have been officially submitted to Cadet Media Ghana. Well done!'
-        : 'Your quiz is complete. You may view your full certificate from the links below.')
-    );
-  }, 1200);
-};
+      // Parse scores from server row
+      var serverScoreMap = {};
+      SERVICES.forEach(function(s){
+        var colName = SCORE_KEYS[s.key];
+        var raw     = (match[colName] || '0').toString().trim();
+        var sc      = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
+        serverScoreMap[s.key] = sc;
+        // Save to localStorage so future loads are instant
+        localStorage.setItem(s.key + 'Score', sc + '/' + MAX_PER_QUIZ);
+        localStorage.setItem(s.key + 'Completed', 'true');
+      });
+
+      // Also restore school/gender if missing
+      if(!school && match['  School / Institution  ']){
+        var svSchool = (match['  School / Institution  '] || '').trim();
+        localStorage.setItem('cadetSchool', svSchool);
+        school = svSchool;
+      }
+
+      buildPage(serverScoreMap);
+    })
+    .catch(function(){
+      document.getElementById('scoreGrid').innerHTML =
+        '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">' +
+        '⚠️ Unable to connect to server. Showing local data.</div>';
+      buildPage(localScoreMap);
+    });
+}
 </script>
 </body>
 </html>
