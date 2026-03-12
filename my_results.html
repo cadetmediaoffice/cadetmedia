@@ -434,8 +434,17 @@ window.addEventListener('DOMContentLoaded', function(){
 
   if(!hasLocalScores)
   fetch(SCRIPT_URL)
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(rows){
+      // Show what we received and are searching for
+      console.log('Rows from server:', rows.length);
+      console.log('Searching name:', name, '| code:', code);
+      if(rows.length > 0) console.log('First row keys:', JSON.stringify(Object.keys(rows[0])));
+      if(rows.length > 0) console.log('First row sample:', JSON.stringify(rows[0]));
+
       var myName = (name || '').trim().toLowerCase();
       var myCode = (code || '').trim().toUpperCase();
       var match  = null;
