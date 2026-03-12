@@ -256,12 +256,10 @@ window.addEventListener('DOMContentLoaded',function(){
   // ── 2. Completed / Submitted → My Results (checked BEFORE session guard) ──
   var SERVICE_KEYS = ['fire','police','ambulance','prisons','nadmo',
                       'immigration','customs','tourism','forest','gaf','narcotics'];
-  var submitted   = localStorage.getItem('cmgResultsSubmitted') === 'true';
-  var allDone     = SERVICE_KEYS.every(function(k){
-    return localStorage.getItem(k+'Completed') === 'true'
-        && !!localStorage.getItem(k+'Score');
-  });
-  if(submitted || allDone){
+  var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
+  // Only redirect to my_results if submitted — not just allDone
+  // If allDone but not submitted, student must go through congratulations.html first
+  if(submitted){
     window.location.href = 'my_results.html';
     return;
   }
