@@ -356,11 +356,11 @@ window.addEventListener('DOMContentLoaded', function(){
     return;
   }
 
-  // ── 2. Completed / Submitted → send to My Results BEFORE any session check ──
-  //    Do this FIRST so a completed user is never exposed to score-wipe logic
-  var submitted       = localStorage.getItem('cmgResultsSubmitted') === 'true';
-  var allServicesDone = SERVICE_KEYS.every(function(k){ return isDone(k); });
-  if(submitted || allServicesDone){
+  // ── 2. Already submitted → send to My Results ──
+  //    Only redirect if SUBMITTED. If all done but not submitted,
+  //    stay on this page so they can click the congratulations button.
+  var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
+  if(submitted){
     window.location.href = 'my_results.html';
     return;
   }
