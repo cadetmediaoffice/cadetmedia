@@ -420,14 +420,19 @@ window.addEventListener('DOMContentLoaded', function(){
     return false;
   }
   
-  // ── ALWAYS fetch from server for submitted users ──
-  // Shows latest scores even after admin reset or new device
-  document.getElementById('scoreGrid').innerHTML =
-    '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
-    'background:rgba(0,180,100,0.25);border-radius:12px;font-size:14px;">' +
-    '🔄 <strong>Loading your results...</strong><br>' +
-    '<small style="opacity:.6">' + (name||'') + ' | ' + (code||'') + '</small></div>';
-  
+  // ── Use local scores if available, otherwise fetch from server ──
+  if(hasLocalScores) {
+    buildPage(localScoreMap);
+  } else {
+    // No local scores — fetch from server (after admin reset or new device)
+    document.getElementById('scoreGrid').innerHTML =
+      '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
+      'background:rgba(0,180,100,0.25);border-radius:12px;font-size:14px;">' +
+      '🔄 <strong>Loading your results...</strong><br>' +
+      '<small style="opacity:.6">' + (name||'') + ' | ' + (code||'') + '</small></div>';
+  }
+
+  if(!hasLocalScores)
   fetch(SCRIPT_URL)
     .then(function(r){ return r.json(); })
     .then(function(rows){
