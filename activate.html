@@ -495,7 +495,19 @@ function activateOffline(name, gender, school, region, code) {
 }
 
 function saveAndLaunch(name, gender, school, region, code, isReturning) {
-  // Only set identity keys — NEVER touch score/completed keys
+  // For a new user (isReturning=false), wipe ALL previous user data first
+  // This handles the case where admin reset was not done before a new user registers
+  if (!isReturning) {
+    var WIPE_KEYS = ['general','fire','police','ambulance','prisons',
+                     'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+    WIPE_KEYS.forEach(function(k){
+      localStorage.removeItem(k + 'Score');
+      localStorage.removeItem(k + 'Completed');
+    });
+    localStorage.removeItem('cmgResultsSubmitted');
+    localStorage.removeItem('cmgSessionKey');
+    localStorage.removeItem('cadetRegion');
+  }
   localStorage.setItem('cadetName',    name);
   localStorage.setItem('cadetGender',  gender);
   localStorage.setItem('cadetSchool',  school);
