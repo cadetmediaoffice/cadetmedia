@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cadet Media Ghana – Quiz Menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;
+  background:linear-gradient(160deg,#0a1628 0%,#1e3c72 50%,#2a5298 100%);
+  color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:18px 14px 30px;}
+
+/* ── Header ── */
+.header{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;max-width:900px;}
+.header img.main-logo{height:110px;border-radius:50%;
+  box-shadow:0 0 25px rgba(255,215,0,0.4);margin-bottom:4px;}
+.header img.banner{width:100%;max-width:820px;border-radius:14px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+  filter:drop-shadow(0 0 12px rgba(255,215,0,0.35));
+  animation:glow 3s ease-in-out infinite;}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 8px rgba(255,215,0,0.3));}
+  50%{filter:drop-shadow(0 0 22px rgba(255,215,0,0.7));}}
+.header h1{font-size:17px;text-align:center;opacity:.85;margin-top:6px;letter-spacing:.5px;}
+
+/* ── Section label ── */
+.section-label{width:100%;max-width:980px;font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;opacity:.5;margin:18px 0 6px;padding-left:2px;}
+
+/* ── Grid ── */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;
+  width:100%;max-width:980px;}
+@media(max-width:860px){.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.grid{grid-template-columns:1fr;}}
+
+/* ── Quiz card ── */
+.qcard{display:flex;align-items:center;gap:10px;padding:11px 12px;
+  border-radius:11px;text-decoration:none;color:#fff;font-weight:bold;font-size:13px;
+  border:1.5px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.07);
+  transition:background .2s,transform .2s;position:relative;cursor:pointer;}
+.qcard:hover:not(.locked):not(.used){
+  background:rgba(255,255,255,0.2);transform:scale(1.03);}
+
+/* service logo */
+.qcard img{width:36px;height:36px;border-radius:50%;
+  background:#fff;padding:2px;flex-shrink:0;object-fit:contain;}
+
+/* label text */
+.qcard .txt{flex:1;line-height:1.4;}
+.qcard .sub{font-size:10px;opacity:.55;font-weight:normal;display:block;margin-top:2px;}
+
+/* status icon area */
+.qcard .status{width:24px;height:24px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:14px;}
+
+/* ── LOCKED ── */
+.qcard.locked{
+  opacity:.35;cursor:not-allowed;pointer-events:none;
+  filter:grayscale(80%) brightness(0.5);}
+.qcard.locked .status::after{content:"🔒";font-size:15px;opacity:.7;}
+
+/* ── USED (completed, dimmed) ── */
+.qcard.used{
+  opacity:0.4;
+  cursor:not-allowed;
+  pointer-events:none;
+  filter:grayscale(60%) brightness(0.7);
+  border-color:rgba(255,215,0,0.2);
+  background:rgba(255,215,0,0.04);}
+/* golden tick badge */
+.qcard.used .status::after{content:"✓";
+  background:linear-gradient(45deg,#FFD700,#ffb300);
+  border-radius:50%;width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;
+  color:#000;font-size:12px;font-weight:900;}
+/* ── NEXT (just unlocked — pulse glow) ── */
+.qcard.next-up{
+  border-color:rgba(0,255,120,0.6)!important;
+  box-shadow:0 0 18px rgba(0,255,120,0.35),0 0 6px rgba(0,255,120,0.2);
+  animation:unlockPulse 2s ease-in-out infinite;}
+@keyframes unlockPulse{
+  0%,100%{box-shadow:0 0 10px rgba(0,255,120,0.3);}
+  50%{box-shadow:0 0 28px rgba(0,255,120,0.7),0 0 8px rgba(0,255,120,0.4);}}
+.qcard.next-up .status::after{content:"🔓";font-size:16px;}
+
+/* ── GENERAL repeatable badge ── */
+.repeat-tag{display:inline-block;margin-top:3px;font-size:9.5px;
+  background:rgba(0,220,100,0.2);border:1px solid rgba(0,220,100,0.45);
+  border-radius:20px;padding:1px 7px;color:#80ffb0;font-weight:normal;}
+
+/* ── Congrats button ── */
+#congratsBtn{display:none;margin-top:22px;padding:15px 38px;
+  background:linear-gradient(45deg,#FFD700,#e6a800);
+  color:#000;border:none;border-radius:13px;font-size:17px;
+  font-weight:bold;cursor:pointer;letter-spacing:.3px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.4);text-decoration:none;
+  animation:pulseBtn 2s infinite;}
+@keyframes pulseBtn{0%,100%{box-shadow:0 4px 18px rgba(255,215,0,0.4);}
+  50%{box-shadow:0 4px 32px rgba(255,215,0,0.9);}}
+
+/* ── Footer ── */
+footer{margin-top:auto;padding-top:24px;font-size:11px;
+  color:rgba(255,255,255,0.28);text-align:center;width:100%;}
+#adminLink{font-size:10.5px;color:rgba(255,255,255,0.18);
+  cursor:pointer;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,0.18);
+  transition:color .2s;user-select:none;}
+#adminLink:hover{color:rgba(255,255,255,0.5);}
+
+/* ── Modal overlay ── */
+.overlay{display:none;position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,0.75);justify-content:center;align-items:center;}
+.overlay.show{display:flex;}
+.modal{background:linear-gradient(160deg,#0d1f42,#1a3060);
+  border:1px solid rgba(255,255,255,0.15);border-radius:16px;
+  padding:32px 28px;width:92%;max-width:370px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);}
+.modal h3{font-size:19px;text-align:center;}
+.modal p{font-size:13px;opacity:.7;text-align:center;line-height:1.6;}
+.modal input[type=password]{width:100%;padding:12px;border-radius:9px;
+  border:1.5px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-size:16px;letter-spacing:4px;text-align:center;outline:none;}
+.modal input:focus{border-color:#f2c300;}
+.modal-btns{display:flex;gap:10px;width:100%;}
+.modal-btns button{flex:1;padding:11px;border:none;border-radius:9px;
+  font-size:14px;font-weight:bold;cursor:pointer;transition:opacity .2s;}
+.btn-ok{background:linear-gradient(45deg,#f2c300,#e6a800);color:#000;}
+.btn-ok:hover{opacity:.85;}
+.btn-cancel{background:rgba(255,255,255,0.1);color:#fff;}
+.btn-cancel:hover{opacity:.7;}
+.err{color:#ff7070;font-size:12.5px;display:none;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <img class="main-logo" src="../MEDIA/logo_quiz.png" alt="Cadet Media">
+  <img class="banner" src="../MEDIA/all_services_banner.png" alt="All Services Banner">
+  <h1>Cadet Media Ghana — Public Safety Education Quiz</h1>
+</div>
+
+<!-- ── GENERAL QUIZ (repeatable) ── -->
+<div class="section-label">🛡️ Start Here — Unlimited Attempts</div>
+<div class="grid">
+  <a class="qcard" href="general_quiz.html"
+     data-key="general" data-repeatable="true">
+    <img src="../MEDIA/logo_quiz.png" alt="General">
+    <span class="txt">
+      General Public Safety
+      <span class="sub">
+        <span class="repeat-tag">♻️ Practice as many times as you like</span>
+      </span>
+    </span>
+    <span class="status"></span>
+  </a>
+</div>
+
+<!-- ── SERVICE MODULES (one-attempt, sequential unlock) ── -->
+<div class="section-label">📚 Service Modules — One Attempt Each</div>
+<div class="grid" id="serviceGrid">
+
+  <a class="qcard" href="fire_quiz.html"
+     data-key="fire" data-prev="general">
+    <img src="../MEDIA/logo_gnfs.png" alt="Fire">
+    <span class="txt">Fire Safety<span class="sub">Ghana National Fire Service</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="police_quiz.html"
+     data-key="police" data-prev="fire">
+    <img src="../MEDIA/logo_police.png" alt="Police">
+    <span class="txt">Community Safety<span class="sub">Ghana Police Service</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="ambulance_quiz.html"
+     data-key="ambulance" data-prev="police">
+    <img src="../MEDIA/logo_health.png" alt="Ambulance">
+    <span class="txt">Health & Safety<span class="sub">National Ambulance Service</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="prisonsService_quiz.html"
+     data-key="prisons" data-prev="ambulance">
+    <img src="../MEDIA/logo_prisons.png" alt="Prisons">
+    <span class="txt">Discipline & Safety<span class="sub">Ghana Prisons Service</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="nadmo_quiz.html"
+     data-key="nadmo" data-prev="prisons">
+    <img src="../MEDIA/logo_nadmo.png" alt="NADMO">
+    <span class="txt">Disaster Preparedness<span class="sub">NADMO</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="immigration_quiz.html"
+     data-key="immigration" data-prev="nadmo">
+    <img src="../MEDIA/logo_immigration.png" alt="Immigration">
+    <span class="txt">Immigration Education<span class="sub">Ghana Immigration Service</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="customs_quiz.html"
+     data-key="customs" data-prev="immigration">
+    <img src="../MEDIA/logo_customs.png" alt="Customs">
+    <span class="txt">Customs Education<span class="sub">Ghana Revenue Authority</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="tourism_quiz.html"
+     data-key="tourism" data-prev="customs">
+    <img src="../MEDIA/logo_tourism.png" alt="Tourism">
+    <span class="txt">Tourism, Arts & Culture<span class="sub">Ministry of Tourism</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="forest_commission_quiz.html"
+     data-key="forest" data-prev="tourism">
+    <img src="../MEDIA/logo_forest.png" alt="Forest">
+    <span class="txt">Forest Conservation<span class="sub">Forestry Commission</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="ghana_armed_forces_quiz.html"
+     data-key="gaf" data-prev="forest">
+    <img src="../MEDIA/logo_gaf.png" alt="GAF">
+    <span class="txt">National Defence<span class="sub">Ghana Armed Forces</span></span>
+    <span class="status"></span>
+  </a>
+
+  <a class="qcard" href="narcotics_quiz.html"
+     data-key="narcotics" data-prev="gaf">
+    <img src="../MEDIA/logo_nacoc.png" alt="NACOC">
+    <span class="txt">Drug Safety & Awareness<span class="sub">NACOC</span></span>
+    <span class="status"></span>
+  </a>
+
+</div>
+
+<!-- Shows only when ALL 11 service quizzes are done but NOT yet submitted -->
+<a id="congratsBtn" href="congratulations.html">
+  🏆 View My Full Results &amp; Certificate
+</a>
+
+<!-- Shows only for users who have ALREADY submitted their results -->
+<div id="submittedBanner" style="display:none;margin-top:22px;width:100%;max-width:620px;
+  background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.05));
+  border:1.5px solid rgba(255,215,0,0.35);border-radius:16px;
+  padding:22px 20px;text-align:center;">
+  <div style="font-size:32px;margin-bottom:8px;">🏅</div>
+  <h2 style="color:#FFD700;font-size:17px;margin-bottom:6px;">Quiz Completed &amp; Submitted!</h2>
+  <p style="font-size:13px;opacity:.75;line-height:1.7;margin-bottom:18px;">
+    Your results have been officially submitted to Cadet Media Ghana.<br>
+    All institutional quizzes are now closed. You may still practise on the General Quiz above.
+  </p>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <a id="leaderboardLink" href="#" style="
+      display:block;padding:13px 20px;
+      background:linear-gradient(45deg,#FFD700,#e6a800);
+      color:#000;border-radius:11px;font-weight:bold;font-size:14px;
+      text-decoration:none;">
+      🏆 View Leaderboard
+    </a>
+    <a href="congratulations.html" style="
+      display:block;padding:13px 20px;
+      background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);
+      color:#fff;border-radius:11px;font-weight:bold;font-size:14px;
+      text-decoration:none;">
+      📋 View My Results &amp; Certificate
+    </a>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  Cadet Media Ghana · Public Safety Education Initiative<br><br>
+  <span id="adminLink">🔐 Admin Reset</span>
+</footer>
+
+<!-- ── ADMIN MODAL ── -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>🔐 Admin Reset</h3>
+    <p>This will erase all quiz progress on this device.<br>
+       Enter the administrator password to continue.</p>
+    <input type="password" id="pwInput" placeholder="••••••••" maxlength="40"
+      onkeydown="if(event.key==='Enter')doReset()">
+    <div class="err" id="errMsg">❌ Incorrect password. Try again.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-ok"     onclick="doReset()">Reset Progress</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PW = "CadetMedia@2025!";
+
+const ALL_KEYS = ['general','fire','police','ambulance','prisons',
+                  'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+const SERVICE_KEYS = ALL_KEYS.slice(1);
+
+const isAdmin = new URLSearchParams(location.search).get('admin') === 'true';
+
+function isDone(key){
+  // Both Completed flag AND a score must exist to count as genuinely done
+  var completed = localStorage.getItem(key+'Completed') === 'true';
+  var hasScore  = !!localStorage.getItem(key+'Score');
+  return completed && hasScore;
+}
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('errMsg').style.display = 'none';
+}
+
+function doReset(){
+  const entered = document.getElementById('pwInput').value;
+  if(entered === ADMIN_PW){
+    ALL_KEYS.forEach(k => {
+      localStorage.removeItem(k+'Score');
+      localStorage.removeItem(k+'Completed');
+    });
+    localStorage.removeItem('cadetName');
+    localStorage.removeItem('cadetGender');
+    localStorage.removeItem('cadetSchool');
+    localStorage.removeItem('cmgCode');
+    localStorage.removeItem('cmgActivated');
+    localStorage.removeItem('cmgResultsSubmitted');
+    localStorage.removeItem('cmgSessionKey');
+    closeModal();
+    alert('✅ All progress and registration cleared. The pendrive is ready for a new student.');
+    window.location.href = 'activate.html';
+  } else {
+    document.getElementById('errMsg').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+
+  // ── 1. Activation Check — must have valid identity in localStorage ──
+  var name      = localStorage.getItem('cadetName');
+  var school    = localStorage.getItem('cadetSchool');
+  var gender    = localStorage.getItem('cadetGender');
+  var code      = localStorage.getItem('cmgCode');
+  var activated = localStorage.getItem('cmgActivated');
+  if(!name || !school || !gender || !code || activated !== 'true'){
+    window.location.href = 'activate.html';
+    return;
+  }
+
+  // ── 2. Completed / Submitted → send to My Results BEFORE any session check ──
+  //    Do this FIRST so a completed user is never exposed to score-wipe logic
+  var submitted       = localStorage.getItem('cmgResultsSubmitted') === 'true';
+  var allServicesDone = SERVICE_KEYS.every(function(k){ return isDone(k); });
+  if(submitted || allServicesDone){
+    window.location.href = 'my_results.html';
+    return;
+  }
+
+  // ── 3. Session Integrity Check ──
+  //    If the stored session key doesn't match the current identity,
+  //    this pendrive has been passed to a new user WITHOUT going through activate.html.
+  //    BLOCK access — do NOT wipe scores, redirect to activate.html to register properly.
+  var sessionKey    = name + '|' + code;
+  var storedSession = localStorage.getItem('cmgSessionKey');
+  if(storedSession && storedSession !== sessionKey){
+    // Identity mismatch — scores belong to the previous owner, protect them.
+    // Force the new user to go through activation to register their own identity.
+    window.location.href = 'activate.html';
+    return;
+  }
+  localStorage.setItem('cmgSessionKey', sessionKey);
+
+  // ── 4. ACTIVE / IN-PROGRESS USER — sequential unlock ──
+  var allDone = true;
+
+  document.querySelectorAll('.qcard').forEach(function(card){
+    var key        = card.dataset.key;
+    var prev       = card.dataset.prev;
+    var repeatable = card.dataset.repeatable === 'true';
+    var done       = isDone(key);
+    var prevDone   = !prev || isDone(prev);
+
+    if(key !== 'general' && !done) allDone = false;
+
+    if(done && !repeatable){
+      card.classList.add('used');
+    } else if(!repeatable && prevDone && !done){
+      card.classList.add('next-up');
+    } else if(!repeatable && !prevDone && !isAdmin){
+      card.classList.add('locked');
+    }
+
+    if(isAdmin){
+      card.classList.remove('locked');
+      card.classList.remove('next-up');
+    }
+  });
+
+  // Show congrats/submit button once all 11 service modules are done
+  if(allDone) document.getElementById('congratsBtn').style.display = 'inline-block';
+
+  // ── 4. Admin modal trigger ──
+  document.getElementById('adminLink').addEventListener('click', function(){
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('pwInput').value = '';
+    document.getElementById('errMsg').style.display = 'none';
+    setTimeout(function(){ document.getElementById('pwInput').focus(); }, 120);
+  });
+
+  // ── 5. Close modal on backdrop click ──
+  document.getElementById('overlay').addEventListener('click', function(e){
+    if(e.target === document.getElementById('overlay')) closeModal();
+  });
+
+});
+</script>
+</body>
+</html>
