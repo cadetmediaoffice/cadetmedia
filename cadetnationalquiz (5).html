@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>National Public Safety Quiz — Cadet Media Ghana</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    min-height: 100vh;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 20px 20px;
+}
+
+/* ── Top bar: logo + banner side by side ── */
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 1100px;
+    margin-bottom: 14px;
+}
+.logo {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,215,0,0.4);
+}
+.banner {
+    flex: 1;
+    height: auto;
+    max-height: 100px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    object-fit: cover;
+}
+
+/* ── Two-column landscape layout ── */
+.landscape {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+    align-items: flex-start;
+}
+
+/* LEFT column */
+.left-col {
+    flex: 1.1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.title-block { text-align: left; }
+h1 {
+    font-size: 24px;
+    letter-spacing: 0.4px;
+    margin-bottom: 3px;
+}
+.edition {
+    font-size: 14px;
+    color: #FFD700;
+    font-weight: bold;
+}
+.intro-para {
+    font-size: 13px;
+    line-height: 1.8;
+    opacity: 0.92;
+}
+.award-box {
+    font-size: 12.5px;
+    background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.35);
+    border-radius: 12px;
+    padding: 12px 16px;
+    line-height: 1.85;
+}
+.medals {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.medal-tag {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+button {
+    padding: 13px 30px;
+    font-size: 17px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(45deg, #f2c300, #e6a800);
+    color: #000;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 18px rgba(242,195,0,0.4);
+    width: 100%;
+    letter-spacing: 0.3px;
+}
+button:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 24px rgba(242,195,0,0.6);
+}
+
+/* RIGHT column */
+.right-col {
+    flex: 0.9;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.modules-label {
+    font-size: 13px;
+    color: #c8e6ff;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+ul.modules-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+ul.modules-list li {
+    font-size: 12.5px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    line-height: 1.4;
+}
+
+/* Footer */
+.footer {
+    margin-top: 16px;
+    font-size: 11.5px;
+    color: #cce0ff;
+    text-align: center;
+    opacity: 0.7;
+    line-height: 1.6;
+}
+
+/* Fallback for narrow screens */
+@media(max-width: 680px){
+    .landscape { flex-direction: column; }
+    .top-bar { flex-direction: column; align-items: center; }
+    .logo { width: 90px; height: 90px; }
+    .banner { max-height: 80px; width: 100%; }
+    h1 { font-size: 20px; text-align: center; }
+    .title-block { text-align: center; }
+    button { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="top-bar">
+    <img src="../MEDIA/logo_quiz.png" alt="Cadet Media Ghana" class="logo">
+    <img src="../MEDIA/all_services_banner.png" alt="Ghana Public Safety Services" class="banner">
+</div>
+
+<!-- Landscape two-column layout -->
+<div class="landscape">
+
+    <!-- LEFT: title, intro, awards, button -->
+    <div class="left-col">
+        <div class="title-block">
+            <h1>🇬🇭 National Public Safety Quiz</h1>
+            <p class="edition">Cadet Media Ghana &nbsp;·&nbsp; 2026 Edition</p>
+        </div>
+
+        <p class="intro-para">
+            This competition tests your understanding of Ghana's public safety institutions and the
+            vital roles they play in protecting lives, maintaining order, and building safer communities.
+            You will be assessed across <strong>12 dedicated service modules</strong> — each representing
+            a key national agency working to keep Ghana safe.
+        </p>
+
+        <div class="award-box">
+            🏆 <strong>Outstanding performers will be honoured and awarded</strong> at the
+            <strong>Cadet Personality Awards Day</strong> held at the
+            <strong>Fire Academy and Training Centre (FATS)</strong>.<br><br>
+            Certificates of achievement are awarded to <em>all</em> participating cadets.
+            <div class="medals">
+                <span class="medal-tag">🥇 Gold — 85% &amp; above</span>
+                <span class="medal-tag">🥈 Silver — 70–84%</span>
+                <span class="medal-tag">🥉 Bronze — 50–69%</span>
+            </div>
+        </div>
+
+        <button id="startQuizBtn">🚀 Begin the Challenge</button>
+    </div>
+
+    <!-- RIGHT: modules list -->
+    <div class="right-col">
+        <p class="modules-label">📚 Service modules in this competition:</p>
+        <ul class="modules-list">
+            <li>🛡️ General Public Safety &amp; Emergency Awareness</li>
+            <li>🔥 Fire Safety &amp; Prevention — Ghana National Fire Service</li>
+            <li>👮 Community Policing — Ghana Police Service</li>
+            <li>🚑 Health &amp; First Aid — National Ambulance Service</li>
+            <li>⚖️ Discipline &amp; Corrections — Ghana Prisons Service</li>
+            <li>🌪️ Disaster Preparedness — NADMO</li>
+            <li>✈️ Border &amp; Travel Safety — Ghana Immigration Service</li>
+            <li>📦 Trade &amp; Customs — Ghana Revenue Authority</li>
+            <li>🏛️ Heritage, Tourism &amp; Arts — Ministry of Tourism, Arts and Culture</li>
+            <li>🌿 Environmental Protection — Forestry Commission</li>
+            <li>🎖️ National Defence — Ghana Armed Forces</li>
+            <li>🚫 Drug &amp; Substance Awareness — NACOC</li>
+        </ul>
+    </div>
+
+</div>
+
+<div class="footer">
+    An educational initiative by <strong>Cadet Media Ghana</strong>
+    in collaboration with Ghana's national public safety institutions
+</div>
+
+<!-- Click Sound -->
+<audio id="hoverSound">
+    <source src="../MEDIA/hover.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+window.addEventListener('DOMContentLoaded',function(){
+
+  // ── CMG Activation Check ──
+  var name      = localStorage.getItem('cadetName');
+  var school    = localStorage.getItem('cadetSchool');
+  var gender    = localStorage.getItem('cadetGender');
+  var code      = localStorage.getItem('cmgCode');
+  var activated = localStorage.getItem('cmgActivated');
+  if(!name || !school || !gender || !code || activated !== 'true'){
+    window.location.href = 'activate.html';
+    return;
+  }
+
+  // ── Completed / Submitted Check ──
+  // ── 2. Completed / Submitted → My Results (checked BEFORE session guard) ──
+  var SERVICE_KEYS = ['fire','police','ambulance','prisons','nadmo',
+                      'immigration','customs','tourism','forest','gaf','narcotics'];
+  var submitted   = localStorage.getItem('cmgResultsSubmitted') === 'true';
+  var allDone     = SERVICE_KEYS.every(function(k){
+    return localStorage.getItem(k+'Completed') === 'true'
+        && !!localStorage.getItem(k+'Score');
+  });
+  if(submitted || allDone){
+    window.location.href = 'my_results.html';
+    return;
+  }
+
+  // ── 3. Session Integrity — prevent new user bypassing activate.html ──
+  // If sessionKey doesn't match current identity, scores belong to someone else.
+  // Block access — the new user must register through activate.html first.
+  var sessionKey    = name + '|' + code;
+  var storedSession = localStorage.getItem('cmgSessionKey');
+  if(storedSession && storedSession !== sessionKey){
+    window.location.href = 'activate.html';
+    return;
+  }
+
+});
+const startBtn   = document.getElementById('startQuizBtn');
+const hoverSound = document.getElementById('hoverSound');
+
+function playClickSound(){
+    hoverSound.pause();
+    hoverSound.currentTime = 0;
+    hoverSound.play().catch(()=>{});
+}
+
+startBtn.addEventListener('click', () => {
+    playClickSound();
+    setTimeout(() => {
+        window.location.href = 'quiz_questions.html';
+    }, 150);
+});
+</script>
+</body>
+</html>
