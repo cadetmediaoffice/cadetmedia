@@ -409,9 +409,19 @@ if(hasLocalScores) {
   document.getElementById('scoreGrid').innerHTML =
     '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">Loading your results from server...</div>';
 
+  // Show what name/code we are searching for
+  document.getElementById('scoreGrid').innerHTML =
+    '<div style="color:#aaa;text-align:center;padding:20px;grid-column:1/-1">' +
+    '🔄 Loading from server...<br>' +
+    '<small style="opacity:.5">Name: ' + name + ' | Code: ' + code + '</small></div>';
+
   fetch(SCRIPT_URL)
     .then(function(r){ return r.json(); })
     .then(function(rows){
+      // Debug: log first row keys to console
+      if(rows.length > 0) console.log('Server columns:', Object.keys(rows[0]));
+      console.log('Total rows:', rows.length);
+      console.log('Looking for name:', name, '| code:', code);
       // Find this cadet's most recent submission
       // Try matching by code first (most reliable), then by name
       var myName = (name || '').trim().toLowerCase();
