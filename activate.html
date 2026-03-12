@@ -432,13 +432,8 @@ function activatePendrive() {
           localStorage.setItem('cmgActivated',        'true');
           localStorage.setItem('cmgResultsSubmitted', 'true');
           localStorage.setItem('cmgSessionKey',       registeredName + '|' + code);
-          // Clear any old scores so my_results.html fetches fresh from server
-          var SK2 = ['general','fire','police','ambulance','prisons','nadmo',
-                     'immigration','customs','tourism','forest','gaf','narcotics'];
-          SK2.forEach(function(k){
-            localStorage.removeItem(k + 'Score');
-            localStorage.removeItem(k + 'Completed');
-          });
+          // Do NOT wipe scores here — if they survived admin reset, use them
+          // my_results.html will fetch from server only if scores are missing
           sndSuccessFanfare();
           var fn1 = registeredName.split(' ')[0];
           var ts1 = gender === 'Female' ? 'Cadetess' : 'Cadet';
