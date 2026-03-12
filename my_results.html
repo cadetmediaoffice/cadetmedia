@@ -324,11 +324,9 @@ SERVICES.forEach(function(s){
   if(sc > 0) hasLocalScores = true;
 });
 
-// If submitted=true but no local scores → ALWAYS fetch from server
-// (handles admin reset, new device, cleared localStorage)
-if(submitted && !hasLocalScores) {
-  hasLocalScores = false; // force server fetch
-}
+// Submitted users ALWAYS fetch from server — ensures latest scores
+// even after admin reset or new device. Local scores used as fallback only.
+if(submitted) hasLocalScores = false;
 
 function buildPage(scoreMap) {
   var titleStr  = gender === 'Female' ? 'Cadetess' : 'Cadet';
