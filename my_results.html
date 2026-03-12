@@ -270,240 +270,230 @@ var SERVICES = [
 var MAX_PER_QUIZ = 30;
 var TOTAL_MAX    = SERVICES.length * MAX_PER_QUIZ; // 360
 
-// ── Guard: must be activated ──
-var name     = localStorage.getItem('cadetName');
-var gender   = localStorage.getItem('cadetGender') || 'Male';
-var school   = localStorage.getItem('cadetSchool');
-var code     = localStorage.getItem('cmgCode');
-var activated= localStorage.getItem('cmgActivated');
-var submitted= localStorage.getItem('cmgResultsSubmitted') === 'true';
 
-if(!name || !code || activated !== 'true'){
-  window.location.href = 'activate.html';
-}
-
-// ── Score keys mapped to Form Responses column headers ──
-// Column names from Form Responses 1 — with exact spacing as in your sheet
-var SCORE_KEYS = {
-  general:     '  General Safety Quiz Score  ',
-  fire:        '  Fire Safety Quiz Score  ',
-  police:      '  Community Safety (Police) Quiz Score  ',
-  ambulance:   '  Health & Ambulance Quiz Score  ',
-  prisons:     '  Prisons Service Quiz Score  ',
-  nadmo:       '  Disaster Preparedness (NADMO) Quiz Score  ',
-  immigration: '  Immigration Service Quiz Score  ',
-  customs:     '  Customs Division Quiz Score  ',
-  tourism:     '  Tourism & Creative Arts Quiz Score  ',
-  forest:      '  Forest Conservation Quiz Score  ',
-  gaf:         '  National Defence (GAF) Quiz Score  ',
-  narcotics:   '  Narcotics Control Quiz Score  '
-};
-
-// Helper: find score from row trying multiple key formats
-function getScore(row, key) {
-  var val = row[SCORE_KEYS[key]];
-  if(val !== undefined && val !== '') return val.toString().trim();
-  // Try trimmed version
-  for(var k in row) {
-    if(k.trim().toLowerCase().indexOf(key.toLowerCase()) !== -1 && k.indexOf('Score') !== -1) {
-      if(row[k] !== '') return row[k].toString().trim();
-    }
+window.addEventListener('DOMContentLoaded', function(){
+  // ── Guard: must be activated ──
+  var name     = localStorage.getItem('cadetName');
+  var gender   = localStorage.getItem('cadetGender') || 'Male';
+  var school   = localStorage.getItem('cadetSchool');
+  var code     = localStorage.getItem('cmgCode');
+  var activated= localStorage.getItem('cmgActivated');
+  var submitted= localStorage.getItem('cmgResultsSubmitted') === 'true';
+  
+  if(!name || !code || activated !== 'true'){
+    window.location.href = 'activate.html';
   }
-  return '0';
-}
-
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
-
-// ── Load local scores ──
-var localScoreMap = {};
-var hasLocalScores = false;
-SERVICES.forEach(function(s){
-  var raw = localStorage.getItem(s.key + 'Score') || '0';
-  var sc  = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
-  localScoreMap[s.key] = sc;
-  if(sc > 0) hasLocalScores = true;
-});
-
-// Submitted users ALWAYS fetch from server — ensures latest scores
-// even after admin reset or new device. Local scores used as fallback only.
-if(submitted) hasLocalScores = false;
-
-function buildPage(scoreMap) {
-  var titleStr  = gender === 'Female' ? 'Cadetess' : 'Cadet';
-  var firstName = name ? name.split(' ')[0] : '';
-
-  var totalScore = 0;
-  SERVICES.forEach(function(s){ totalScore += (scoreMap[s.key] || 0); });
-  var pct = Math.round((totalScore / TOTAL_MAX) * 100);
-
-  // Set leaderboard link
-  document.getElementById('leaderboardBtn').href =
-    'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet=' +
-    encodeURIComponent(name || '');
-
-  // Splash overlay
-  document.getElementById('overlayTitle').textContent = 'Welcome back, ' + titleStr + ' ' + firstName + '!';
-  document.getElementById('overlayText').textContent  = 'Your results have been submitted. Tap to view your scores.';
-
-  // Cadet card
-  document.getElementById('cadetName').textContent   = titleStr + ' ' + name;
-  document.getElementById('cadetSchool').textContent = school || 'Ghana Student Safety & Service Challenge';
-  document.getElementById('totalScore').textContent  = totalScore + ' / ' + TOTAL_MAX + ' pts (' + pct + '%)';
-
-  var badgeEl = document.getElementById('overallBadge');
-  if(pct >= 85){
-    badgeEl.textContent = '🏅 GOLD DISTINCTION';
-    badgeEl.style.cssText += 'background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;';
-  } else if(pct >= 70){
-    badgeEl.textContent = '🥈 SILVER HONOURS';
-    badgeEl.style.cssText += 'background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;';
-  } else if(pct >= 50){
-    badgeEl.textContent = '🥉 BRONZE CREDIT';
-    badgeEl.style.cssText += 'background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;';
-  } else {
-    badgeEl.textContent = '🎓 PARTICIPANT';
-    badgeEl.style.cssText += 'background:rgba(255,255,255,0.12);color:#fff;';
-  }
-
-  // Score grid
-  var grid = document.getElementById('scoreGrid');
-  grid.innerHTML = '';
-  SERVICES.forEach(function(s){
-    var sc   = scoreMap[s.key] || 0;
-    var done = sc > 0;
-    var cls  = 'score-card';
-    var medal= done ? (sc >= MAX_PER_QUIZ * 0.85 ? '🏅' : sc >= MAX_PER_QUIZ * 0.5 ? '🥈' : '🥉') : '—';
-    if(sc >= MAX_PER_QUIZ * 0.85) cls += ' gold';
-    else if(sc >= MAX_PER_QUIZ * 0.5) cls += ' silver';
-    else if(done) cls += ' bronze';
-
-    var card = document.createElement('div');
-    card.className = cls;
-    card.innerHTML =
-      '<img src="' + s.logo + '" onerror="this.style.display=\'none\'" alt="">' +
-      '<div class="score-info">' +
-        '<div class="score-name">' + s.name + '</div>' +
-        '<div class="score-pts">' + (done ? sc + ' / ' + MAX_PER_QUIZ + ' pts' : 'Not completed') + '</div>' +
-      '</div>' +
-      '<div class="score-medal">' + medal + '</div>';
-    grid.appendChild(card);
-  });
-
-  // Tap overlay handler
-  document.getElementById('tapBtn').onclick = function(){
-    if(AC.state === 'suspended') AC.resume();
-    var overlay = document.getElementById('tapOverlay');
-    overlay.style.transition = 'opacity .35s';
-    overlay.style.opacity = '0';
-    setTimeout(function(){ overlay.style.display = 'none'; }, 380);
-    sndFanfare();
-    setTimeout(function(){
-      speak('Welcome back, ' + titleStr + ' ' + firstName + '! ' +
-        'You scored ' + totalScore + ' out of ' + TOTAL_MAX + ' points. ' +
-        'Your results have been officially submitted to Cadet Media Ghana. Well done!');
-    }, 1200);
+  
+  // ── Score keys mapped to Form Responses column headers ──
+  // Column names from Form Responses 1 — with exact spacing as in your sheet
+  var SCORE_KEYS = {
+    general:     '  General Safety Quiz Score  ',
+    fire:        '  Fire Safety Quiz Score  ',
+    police:      '  Community Safety (Police) Quiz Score  ',
+    ambulance:   '  Health & Ambulance Quiz Score  ',
+    prisons:     '  Prisons Service Quiz Score  ',
+    nadmo:       '  Disaster Preparedness (NADMO) Quiz Score  ',
+    immigration: '  Immigration Service Quiz Score  ',
+    customs:     '  Customs Division Quiz Score  ',
+    tourism:     '  Tourism & Creative Arts Quiz Score  ',
+    forest:      '  Forest Conservation Quiz Score  ',
+    gaf:         '  National Defence (GAF) Quiz Score  ',
+    narcotics:   '  Narcotics Control Quiz Score  '
   };
-}
-
-// ── Load scores: local if available, otherwise fetch from server ──
-if(hasLocalScores) {
-  buildPage(localScoreMap);
-} else {
-  // No local scores — fetch from server leaderboard using cadet name
+  
+  // Helper: find score from row trying multiple key formats
+  function getScore(row, key) {
+    var val = row[SCORE_KEYS[key]];
+    if(val !== undefined && val !== '') return val.toString().trim();
+    // Try trimmed version
+    for(var k in row) {
+      if(k.trim().toLowerCase().indexOf(key.toLowerCase()) !== -1 && k.indexOf('Score') !== -1) {
+        if(row[k] !== '') return row[k].toString().trim();
+      }
+    }
+    return '0';
+  }
+  
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
+  
+  // ── Load local scores ──
+  var localScoreMap = {};
+  var hasLocalScores = false;
+  SERVICES.forEach(function(s){
+    var raw = localStorage.getItem(s.key + 'Score') || '0';
+    var sc  = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
+    localScoreMap[s.key] = sc;
+    if(sc > 0) hasLocalScores = true;
+  });
+  
+  // If local scores exist → use them (works offline too)
+  // If no local scores → fetch from server (handles admin reset / new device)
+  // hasLocalScores is already correctly set above
+  
+  function buildPage(scoreMap) {
+    var titleStr  = gender === 'Female' ? 'Cadetess' : 'Cadet';
+    var firstName = name ? name.split(' ')[0] : '';
+  
+    var totalScore = 0;
+    SERVICES.forEach(function(s){ totalScore += (scoreMap[s.key] || 0); });
+    var pct = Math.round((totalScore / TOTAL_MAX) * 100);
+  
+    // Set leaderboard link
+    document.getElementById('leaderboardBtn').href =
+      'https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet=' +
+      encodeURIComponent(name || '');
+  
+    // Splash overlay
+    document.getElementById('overlayTitle').textContent = 'Welcome back, ' + titleStr + ' ' + firstName + '!';
+    document.getElementById('overlayText').textContent  = 'Your results have been submitted. Tap to view your scores.';
+  
+    // Cadet card
+    document.getElementById('cadetName').textContent   = titleStr + ' ' + name;
+    document.getElementById('cadetSchool').textContent = school || 'Ghana Student Safety & Service Challenge';
+    document.getElementById('totalScore').textContent  = totalScore + ' / ' + TOTAL_MAX + ' pts (' + pct + '%)';
+  
+    var badgeEl = document.getElementById('overallBadge');
+    if(pct >= 85){
+      badgeEl.textContent = '🏅 GOLD DISTINCTION';
+      badgeEl.style.cssText += 'background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;';
+    } else if(pct >= 70){
+      badgeEl.textContent = '🥈 SILVER HONOURS';
+      badgeEl.style.cssText += 'background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;';
+    } else if(pct >= 50){
+      badgeEl.textContent = '🥉 BRONZE CREDIT';
+      badgeEl.style.cssText += 'background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;';
+    } else {
+      badgeEl.textContent = '🎓 PARTICIPANT';
+      badgeEl.style.cssText += 'background:rgba(255,255,255,0.12);color:#fff;';
+    }
+  
+    // Score grid
+    var grid = document.getElementById('scoreGrid');
+    grid.innerHTML = '';
+    SERVICES.forEach(function(s){
+      var sc   = scoreMap[s.key] || 0;
+      var done = sc > 0;
+      var cls  = 'score-card';
+      var medal= done ? (sc >= MAX_PER_QUIZ * 0.85 ? '🏅' : sc >= MAX_PER_QUIZ * 0.5 ? '🥈' : '🥉') : '—';
+      if(sc >= MAX_PER_QUIZ * 0.85) cls += ' gold';
+      else if(sc >= MAX_PER_QUIZ * 0.5) cls += ' silver';
+      else if(done) cls += ' bronze';
+  
+      var card = document.createElement('div');
+      card.className = cls;
+      card.innerHTML =
+        '<img src="' + s.logo + '" onerror="this.style.display=\'none\'" alt="">' +
+        '<div class="score-info">' +
+          '<div class="score-name">' + s.name + '</div>' +
+          '<div class="score-pts">' + (done ? sc + ' / ' + MAX_PER_QUIZ + ' pts' : 'Not completed') + '</div>' +
+        '</div>' +
+        '<div class="score-medal">' + medal + '</div>';
+      grid.appendChild(card);
+    });
+  
+    // Tap overlay handler
+    document.getElementById('tapBtn').onclick = function(){
+      if(AC.state === 'suspended') AC.resume();
+      var overlay = document.getElementById('tapOverlay');
+      overlay.style.transition = 'opacity .35s';
+      overlay.style.opacity = '0';
+      setTimeout(function(){ overlay.style.display = 'none'; }, 380);
+      sndFanfare();
+      setTimeout(function(){
+        speak('Welcome back, ' + titleStr + ' ' + firstName + '! ' +
+          'You scored ' + totalScore + ' out of ' + TOTAL_MAX + ' points. ' +
+          'Your results have been officially submitted to Cadet Media Ghana. Well done!');
+      }, 1200);
+    };
+  }
+  
+  // ── Helper functions for server matching ──
+  function getRowName(row){
+    return (row['Full Name '] || row['Full Name'] || '').trim().toLowerCase();
+  }
+  function namesSimilar(a, b){
+    if(!a || !b) return false;
+    if(a === b) return true;
+    if(a.startsWith(b) || b.startsWith(a)) return true;
+    var af = a.split(' ')[0], bf = b.split(' ')[0];
+    if(af.length >= 4 && af === bf) return true;
+    return false;
+  }
+  
+  // ── ALWAYS fetch from server for submitted users ──
+  // Shows latest scores even after admin reset or new device
   document.getElementById('scoreGrid').innerHTML =
-    '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">Loading your results from server...</div>';
-
-  // Show what name/code we are searching for
-  document.getElementById('scoreGrid').innerHTML =
-    '<div style="color:#aaa;text-align:center;padding:20px;grid-column:1/-1">' +
-    '🔄 Loading from server...<br>' +
-    '<small style="opacity:.5">Name: ' + name + ' | Code: ' + code + '</small></div>';
-
+    '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
+    'background:rgba(0,180,100,0.25);border-radius:12px;font-size:14px;">' +
+    '🔄 <strong>Loading your results...</strong><br>' +
+    '<small style="opacity:.6">' + (name||'') + ' | ' + (code||'') + '</small></div>';
+  
   fetch(SCRIPT_URL)
     .then(function(r){ return r.json(); })
     .then(function(rows){
-      // Debug: log first row keys to console
-      if(rows.length > 0) console.log('Server columns:', Object.keys(rows[0]));
-      console.log('Total rows:', rows.length);
-      console.log('Looking for name:', name, '| code:', code);
       var myName = (name || '').trim().toLowerCase();
       var myCode = (code || '').trim().toUpperCase();
       var match  = null;
-
-      // Helper: get name from a row regardless of column key spacing
-      function getRowName(row){
-        return (row['Full Name '] || row['Full Name'] || row[' Full Name '] || '').trim().toLowerCase();
+  
+      // Pass 1 — exact code match
+      for(var i = rows.length-1; i >= 0; i--){
+        var rc = (rows[i]['Column 1'] || '').toString().trim().toUpperCase();
+        if(myCode && rc === myCode){ match = rows[i]; break; }
       }
-
-      // Helper: names are similar if one starts with the other (handles truncation)
-      function namesSimilar(a, b){
-        if(!a || !b) return false;
-        if(a === b) return true;
-        // Handle truncation: "jonathan mo" vs "jonathan moo"
-        if(a.startsWith(b) || b.startsWith(a)) return true;
-        // First word match (at least 4 chars)
-        var af = a.split(' ')[0], bf = b.split(' ')[0];
-        if(af.length >= 4 && af === bf) return true;
-        return false;
-      }
-
-      // Pass 1: exact code match
-      for(var i = rows.length - 1; i >= 0; i--){
-        var rowCode = (rows[i]['Column 1'] || '').toString().trim().toUpperCase();
-        if(myCode && rowCode === myCode){ match = rows[i]; break; }
-      }
-
-      // Pass 2: exact name match
+      // Pass 2 — exact name match
       if(!match){
-        for(var i = rows.length - 1; i >= 0; i--){
+        for(var i = rows.length-1; i >= 0; i--){
           if(getRowName(rows[i]) === myName){ match = rows[i]; break; }
         }
       }
-
-      // Pass 3: fuzzy name match (truncation, partial)
+      // Pass 3 — fuzzy name match
       if(!match){
-        for(var i = rows.length - 1; i >= 0; i--){
+        for(var i = rows.length-1; i >= 0; i--){
           if(namesSimilar(getRowName(rows[i]), myName)){ match = rows[i]; break; }
         }
       }
-
+  
       if(!match){
         document.getElementById('scoreGrid').innerHTML =
-          '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">' +
-          '⚠️ Could not find your results on the server.<br>' +
-          '<small style="opacity:.6">Looking for: ' + name + ' / ' + code + '</small><br><br>' +
-          'Please contact your administrator.</div>';
-        buildPage(localScoreMap);
-        return;
+          '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
+          'background:rgba(255,100,0,0.2);border-radius:12px;">' +
+          '⚠️ Results not found on server.<br>' +
+          '<small style="opacity:.6">Name: ' + name + '<br>Code: ' + code + '</small></div>';
+        buildPage({}); return;
       }
-
-      // Parse scores from server row using flexible helper
-      var serverScoreMap = {};
+  
+      // Parse scores
+      var sm = {};
       SERVICES.forEach(function(s){
         var raw = getScore(match, s.key);
-        var sc  = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
-        serverScoreMap[s.key] = sc;
-        // Save to localStorage so future loads are instant
-        localStorage.setItem(s.key + 'Score', sc + '/' + MAX_PER_QUIZ);
-        localStorage.setItem(s.key + 'Completed', 'true');
+        var sc  = parseInt(raw.indexOf('/') > -1 ? raw.split('/')[0] : raw) || 0;
+        sm[s.key] = sc;
+        localStorage.setItem(s.key+'Score', sc+'/'+MAX_PER_QUIZ);
+        localStorage.setItem(s.key+'Completed','true');
       });
-
-      // Also restore school/gender if missing
-      if(!school && match['  School / Institution  ']){
-        var svSchool = (match['  School / Institution  '] || '').trim();
-        localStorage.setItem('cadetSchool', svSchool);
-        school = svSchool;
-      }
-
-      buildPage(serverScoreMap);
+  
+      // Restore school if missing
+      var svSchool = (match['  School / Institution  '] || match['School / Institution'] || '').trim();
+      if(svSchool){ localStorage.setItem('cadetSchool', svSchool); school = svSchool; }
+  
+      buildPage(sm);
     })
-    .catch(function(){
-      document.getElementById('scoreGrid').innerHTML =
-        '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">' +
-        '⚠️ Unable to connect to server. Showing local data.</div>';
-      buildPage(localScoreMap);
+    .catch(function(err){
+      if(hasLocalScores){
+        // Offline but has local scores — show them silently
+        buildPage(localScoreMap);
+      } else {
+        // Offline and no local scores — show message
+        document.getElementById('scoreGrid').innerHTML =
+          '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
+          'background:rgba(255,100,0,0.25);border-radius:12px;">' +
+          '📶 No internet connection.<br>' +
+          '<small>Connect to internet and reload to see your results.</small></div>';
+        buildPage({});
+      }
     });
-}
+  
+});
 </script>
 </body>
 </html>
