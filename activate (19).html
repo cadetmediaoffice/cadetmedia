@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Activate — Cadet Media Ghana</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+  min-height:100vh;color:#fff;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:20px;
+}
+.logo{width:100px;height:100px;border-radius:50%;
+  border:3px solid rgba(255,215,0,0.5);margin-bottom:16px;
+  box-shadow:0 0 30px rgba(255,215,0,0.3);}
+.banner{width:100%;max-width:600px;border-radius:10px;margin-bottom:20px;
+  filter:drop-shadow(0 0 10px rgba(255,255,255,0.2));}
+.card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:28px 24px;
+  width:100%;max-width:440px;
+  display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+.card h2{font-size:20px;text-align:center;color:#FFD700;}
+.card p{font-size:13px;opacity:.75;text-align:center;line-height:1.7;}
+.step{
+  background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);
+  border-radius:10px;padding:12px 14px;font-size:13px;
+  display:flex;align-items:flex-start;gap:10px;line-height:1.6;
+}
+.step-num{
+  background:linear-gradient(45deg,#FFD700,#e6a800);
+  color:#000;font-weight:900;font-size:13px;
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+label{font-size:13px;font-weight:bold;opacity:.85;}
+input,select{
+  width:100%;padding:12px 14px;border-radius:10px;
+  border:2px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-size:14px;outline:none;transition:border .2s;
+}
+input:focus,select:focus{border-color:#FFD700;}
+select option{background:#1a1a2e;color:#fff;}
+.code-input{font-family:monospace;font-size:16px;letter-spacing:3px;text-align:center;text-transform:uppercase;}
+.btn{
+  padding:14px;font-size:16px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;transition:all .2s;
+  box-shadow:0 4px 18px rgba(255,215,0,0.4);
+}
+.btn:hover{transform:scale(1.02);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.err{background:rgba(220,50,50,0.15);border:1px solid rgba(220,50,50,0.4);
+  border-radius:8px;padding:10px 14px;font-size:13px;color:#ff9090;text-align:center;display:none;}
+.success{background:rgba(0,200,80,0.12);border:1px solid rgba(0,200,80,0.35);
+  border-radius:8px;padding:10px 14px;font-size:13px;color:#80ffb0;text-align:center;display:none;}
+.spinner{display:none;text-align:center;font-size:13px;opacity:.7;}
+.already-activated{display:none;flex-direction:column;gap:12px;text-align:center;}
+.already-activated h3{color:#FFD700;font-size:18px;}
+.already-activated p{font-size:13px;opacity:.75;line-height:1.7;}
+.btn-go{
+  padding:13px;font-size:15px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;
+  box-shadow:0 4px 18px rgba(255,215,0,0.4);
+}
+
+/* SPLASH */
+@keyframes sBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+@keyframes sRipple{0%{transform:scale(1);opacity:.5;}100%{transform:scale(2.4);opacity:0;}}
+</style>
+</head>
+<body>
+
+<img src="../MEDIA/logo_quiz.png" alt="CMG" class="logo">
+<img src="../MEDIA/all_services_banner.png" alt="All Services" class="banner">
+
+<!-- Registration form -->
+<div class="card" id="regCard">
+  <h2>🔐 Activate Your Pendrive</h2>
+  <p>This pendrive is your personal quiz key.<br>
+     Enter your details and the unique code printed on your pendrive to activate it.</p>
+  <div class="step">
+    <span class="step-num">1</span>
+    <span>Find the <strong>unique code</strong> printed on your pendrive label or packaging. It looks like:<br>
+    <strong style="color:#FFD700;letter-spacing:2px;">CMG-2026-GH-00001-XXXX</strong></span>
+  </div>
+  <div><label>Full Name</label>
+    <input type="text" id="inName" placeholder="e.g. Kofi Mensah Asante" maxlength="60"></div>
+  <div><label>Gender</label>
+    <select id="inGender">
+      <option value="">— Select —</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select></div>
+  <div><label>School / Institution</label>
+    <input type="text" id="inSchool" placeholder="e.g. Accra Academy SHS" maxlength="80"></div>
+  <div><label>Region</label>
+    <select id="inRegion">
+      <option value="">— Select Region —</option>
+      <option>Greater Accra</option><option>Ashanti</option><option>Western</option>
+      <option>Central</option><option>Eastern</option><option>Volta</option>
+      <option>Northern</option><option>Upper East</option><option>Upper West</option>
+      <option>Brong-Ahafo</option><option>Oti</option><option>Bono</option>
+      <option>Bono East</option><option>Ahafo</option><option>Savannah</option>
+      <option>North East</option><option>Western North</option>
+    </select></div>
+  <div><label>Your Pendrive Code</label>
+    <input type="text" id="inCode" class="code-input"
+      placeholder="CMG-2026-GH-00000-XXXX" maxlength="22"
+      oninput="this.value=this.value.toUpperCase()"></div>
+  <div class="err" id="errMsg"></div>
+  <div class="spinner" id="spinner">⏳ Verifying your code with CMG servers...</div>
+  <div class="success" id="successMsg"></div>
+  <button class="btn" id="activateBtn" onclick="activatePendrive()">
+    🚀 Activate &amp; Begin Quiz
+  </button>
+  <p style="font-size:11px;opacity:.45;text-align:center;">
+    Each code can only be used by one person. Copying this pendrive will not work for quiz submission.
+  </p>
+</div>
+
+<!-- Already activated card -->
+<div class="card already-activated" id="alreadyCard">
+  <h3>✅ Pendrive Already Activated</h3>
+  <p id="alreadyText"></p>
+
+  <!-- Identity verification -->
+  <div style="border-top:1px solid rgba(255,215,0,0.2);padding-top:16px;">
+    <p style="font-size:13px;color:#FFD700;font-weight:bold;margin-bottom:12px;text-align:center;">
+      🔒 Confirm Your Identity to Continue
+    </p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label>Full Name</label>
+        <input type="text" id="verifyName" placeholder="Enter your full name" maxlength="60">
+      </div>
+      <div>
+        <label>School / Institution</label>
+        <input type="text" id="verifySchool" placeholder="Enter your school name" maxlength="80">
+      </div>
+      <div>
+        <label>Activation Code</label>
+        <input type="text" id="verifyCode" class="code-input"
+          placeholder="CMG-2026-GH-00000-XXXX" maxlength="22"
+          oninput="this.value=this.value.toUpperCase()">
+      </div>
+    </div>
+
+    <div class="err" id="verifyErr" style="margin-top:10px;"></div>
+
+    <button class="btn" onclick="verifyAndContinue()" style="margin-top:14px;">
+      ▶ Confirm &amp; Continue Quiz
+    </button>
+  </div>
+
+  <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
+    <p style="font-size:12px;opacity:.6;margin-bottom:10px;text-align:center;line-height:1.6;">
+      Not you? Clear this registration and use your own code.
+    </p>
+    <button onclick="clearAndRegister()" style="
+      width:100%;padding:11px;border:2px solid rgba(220,80,80,0.5);
+      background:rgba(220,80,80,0.1);color:#ff9090;
+      border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;">
+      ⚠️ I am a NEW student — Erase &amp; Start Fresh
+    </button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  AUDIO ENGINE
+// ══════════════════════════════════════
+var AC = new (window.AudioContext || window.webkitAudioContext)();
+
+function sndTone(freq, type, delay, dur, vol) {
+  var o = AC.createOscillator(), g = AC.createGain();
+  o.connect(g); g.connect(AC.destination);
+  o.type = type; o.frequency.value = freq;
+  var t = AC.currentTime + delay;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+function makeTrumpet(freq, delay, dur, vol) {
+  var o = AC.createOscillator();
+  o.type = 'sawtooth'; o.frequency.value = freq;
+  var lp = AC.createBiquadFilter();
+  lp.type = 'lowpass'; lp.Q.value = 3;
+  var pk = AC.createBiquadFilter();
+  pk.type = 'peaking'; pk.frequency.value = 1800; pk.gain.value = 9; pk.Q.value = 1.5;
+  var env = AC.createGain();
+  var t = AC.currentTime + delay;
+  lp.frequency.setValueAtTime(700, t);
+  lp.frequency.linearRampToValueAtTime(3000, t + 0.03);
+  lp.frequency.linearRampToValueAtTime(2000, t + dur * 0.6);
+  env.gain.setValueAtTime(0, t);
+  env.gain.linearRampToValueAtTime(vol, t + 0.025);
+  env.gain.linearRampToValueAtTime(vol * 0.82, t + 0.08);
+  env.gain.setValueAtTime(vol * 0.82, t + dur - 0.06);
+  env.gain.linearRampToValueAtTime(0, t + dur);
+  o.connect(lp); lp.connect(pk); pk.connect(env); env.connect(AC.destination);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+
+function sndWelcomeChime() {
+  [523,659,784].forEach(function(f,i){ sndTone(f,'sine',i*0.18,0.5,0.22); });
+}
+function sndWelcomeBack() {
+  [659,784,1047].forEach(function(f,i){ sndTone(f,'sine',i*0.15,0.4,0.22); });
+}
+function sndClick() { sndTone(880,'sine',0,0.07,0.12); }
+function sndError() {
+  sndTone(180,'sawtooth',0,0.13,0.35);
+  sndTone(160,'sawtooth',0.14,0.13,0.30);
+}
+function sndVerifying() {
+  [440,523,659].forEach(function(f,i){ sndTone(f,'sine',i*0.25,0.15,0.18); });
+}
+function sndSuccessFanfare() {
+  makeTrumpet(392,0.00,0.18,0.70);
+  makeTrumpet(523,0.20,0.18,0.75);
+  makeTrumpet(659,0.40,0.18,0.78);
+  makeTrumpet(784,0.60,0.55,0.88);
+  makeTrumpet(196,0.60,0.55,0.28);
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-GB'; u.rate = 0.92; u.pitch = 1.06; u.volume = 1;
+  // Let voices load first, then pick best one
+  function doSpeak() {
+    var voices = window.speechSynthesis.getVoices();
+    var v = voices.find(function(x){ return x.lang.startsWith('en-GB') && x.name.toLowerCase().includes('female'); })
+         || voices.find(function(x){ return x.lang.startsWith('en-GB'); })
+         || voices.find(function(x){ return x.lang.startsWith('en'); });
+    if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }
+  if (window.speechSynthesis.getVoices().length > 0) {
+    doSpeak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = doSpeak;
+  }
+}
+
+// ══════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  var name      = localStorage.getItem('cadetName');
+  var school    = localStorage.getItem('cadetSchool');
+  var gender    = localStorage.getItem('cadetGender');
+  var code      = localStorage.getItem('cmgCode');
+  var activated = localStorage.getItem('cmgActivated');
+  var alreadyOn = !!(name && school && gender && code && activated === 'true');
+
+  if (alreadyOn) {
+    // If already completed or submitted — skip everything, go straight to My Results
+    var SK = ['fire','police','ambulance','prisons','nadmo',
+              'immigration','customs','tourism','forest','gaf','narcotics'];
+    var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
+    var allDone   = SK.every(function(k){
+      return localStorage.getItem(k+'Completed') === 'true' && !!localStorage.getItem(k+'Score');
+    });
+    if (submitted || allDone) {
+      window.location.href = 'my_results.html';
+      return;
+    }
+
+    // Not yet completed — show verify card to continue quiz
+    document.getElementById('regCard').style.display = 'none';
+    document.getElementById('alreadyCard').style.display = 'flex';
+    var titleStr = gender === 'Female' ? 'Cadetess' : 'Cadet';
+    document.getElementById('alreadyText').innerHTML =
+      'This pendrive is registered to:<br>' +
+      '<strong style="color:#FFD700;font-size:18px;">' + titleStr + ' ' + name + '</strong><br>' +
+      school + '<br><br>You can continue your quiz from where you left off.';
+  }
+
+  // Input focus sounds
+  document.querySelectorAll('input, select').forEach(function(el) {
+    el.addEventListener('focus', function(){ sndClick(); });
+  });
+
+  // Build and show splash
+  buildSplash(alreadyOn, name, gender);
+});
+
+function buildSplash(alreadyOn, name, gender) {
+  var titleStr  = (gender === 'Female') ? 'Cadetess' : 'Cadet';
+  var firstName = name ? name.split(' ')[0] : '';
+
+  var emoji, heading, sub, btnLabel;
+  if (alreadyOn) {
+    emoji    = '👋';
+    heading  = 'Welcome Back!';
+    sub      = 'Good to see you again,<br><strong style="color:#FFD700;">' + titleStr + ' ' + firstName + '</strong>';
+    btnLabel = '▶ Continue';
+  } else {
+    emoji    = '🇬🇭';
+    heading  = 'Ghana Student Safety &amp; Service Challenge';
+    sub      = 'Tap to activate your pendrive<br>and begin your quiz journey.';
+    btnLabel = '🔐 Tap to Start';
+  }
+
+  var splash = document.createElement('div');
+  splash.id  = 'cmgSplash';
+  splash.style.cssText =
+    'position:fixed;inset:0;z-index:9999;' +
+    'background:linear-gradient(160deg,#060d1f,#0f2a5e,#1a3a6e);' +
+    'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+    'text-align:center;padding:30px;';
+
+  splash.innerHTML =
+    '<div style="font-size:72px;line-height:1;margin-bottom:14px;animation:sBounce 1.6s ease infinite;">' + emoji + '</div>' +
+    '<h2 style="font-size:22px;font-weight:900;letter-spacing:1px;margin-bottom:8px;' +
+      'background:linear-gradient(90deg,#FFD700,#fff,#FFD700);' +
+      '-webkit-background-clip:text;-webkit-text-fill-color:transparent;">' + heading + '</h2>' +
+    '<p style="font-size:14px;opacity:.75;line-height:1.7;margin-bottom:32px;">' + sub + '</p>' +
+    '<div style="position:relative;display:inline-block;">' +
+      '<div style="position:absolute;inset:-12px;border-radius:50%;background:rgba(255,215,0,0.2);animation:sRipple 1.6s ease-out infinite;"></div>' +
+      '<div style="position:absolute;inset:-6px;border-radius:50%;background:rgba(255,215,0,0.15);animation:sRipple 1.6s ease-out .55s infinite;"></div>' +
+      '<button id="splashBtn" style="position:relative;z-index:1;padding:18px 44px;' +
+        'background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;border:none;' +
+        'border-radius:50px;font-size:17px;font-weight:900;cursor:pointer;' +
+        'box-shadow:0 6px 28px rgba(255,215,0,0.55);font-family:Arial,sans-serif;">' + btnLabel + '</button>' +
+    '</div>' +
+    '<p style="font-size:11px;opacity:.3;margin-top:22px;">Tap anywhere to continue</p>';
+
+  document.body.appendChild(splash);
+
+  // THIS click on the button IS the user gesture — AudioContext will work
+  document.getElementById('splashBtn').onclick = function() {
+    // 1. Resume AudioContext — we are inside a click handler (user gesture)
+    if (AC.state === 'suspended') AC.resume();
+
+    // 2. Dismiss splash
+    splash.style.transition = 'opacity .35s';
+    splash.style.opacity = '0';
+    setTimeout(function(){ if (splash.parentNode) splash.parentNode.removeChild(splash); }, 380);
+
+    // 3. Play sound + speak
+    if (alreadyOn) {
+      sndWelcomeBack();
+      setTimeout(function(){
+        speak('Welcome back, ' + titleStr + ' ' + firstName + '! Please confirm your name, school and activation code to continue your quiz.');
+      }, 600);
+    } else {
+      sndWelcomeChime();
+      setTimeout(function(){
+        speak('Welcome to the Ghana Student Safety and Service Challenge, brought to you by Cadet Media Ghana. Please fill in your details and enter the activation code printed on your pendrive to get started.');
+      }, 750);
+    }
+  };
+}
+
+// ══════════════════════════════════════
+//  ACTIVATION LOGIC
+// ══════════════════════════════════════
+function activatePendrive() {
+  var name   = document.getElementById('inName').value.trim();
+  var gender = document.getElementById('inGender').value;
+  var school = document.getElementById('inSchool').value.trim();
+  var region = document.getElementById('inRegion').value;
+  var code   = document.getElementById('inCode').value.trim().toUpperCase();
+  document.getElementById('errMsg').style.display = 'none';
+
+  if (!name)   { sndError(); showErr('Please enter your full name.'); return; }
+  if (!gender) { sndError(); showErr('Please select your gender.'); return; }
+  if (!school) { sndError(); showErr('Please enter your school or institution.'); return; }
+  if (!region) { sndError(); showErr('Please select your region.'); return; }
+  if (!code)   { sndError(); showErr('Please enter your pendrive activation code.'); return; }
+  if (!code.startsWith('CMG-')) {
+    sndError();
+    showErr('❌ Invalid code format. Your code should start with CMG- and is printed on your pendrive label.');
+    return;
+  }
+
+  if (!navigator.onLine || !APPS_SCRIPT_URL) {
+    activateOffline(name, gender, school, region, code); return;
+  }
+
+  sndVerifying();
+  document.getElementById('activateBtn').disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+
+  var url = APPS_SCRIPT_URL +
+    '?action=activateCode&code=' + encodeURIComponent(code) +
+    '&name='   + encodeURIComponent(name) +
+    '&gender=' + encodeURIComponent(gender) +
+    '&school=' + encodeURIComponent(school) +
+    '&region=' + encodeURIComponent(region) +
+    '&date='   + encodeURIComponent(new Date().toISOString());
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      document.getElementById('spinner').style.display = 'none';
+      if (data.status === 'ok') {
+        saveAndLaunch(name, gender, school, region, code);
+      } else if (data.status === 'already_used') {
+        document.getElementById('activateBtn').disabled = false;
+        var usedBy = (data.usedBy || '').trim();
+        var serverSaysSubmitted = (data.submitted === true || data.submitted === 'true');
+
+        // ── CASE 1: Server confirms submitted → straight to my_results, no name check ──
+        if (serverSaysSubmitted) {
+          localStorage.setItem('cadetName',           usedBy || name);
+          localStorage.setItem('cadetGender',         gender);
+          localStorage.setItem('cadetSchool',         school);
+          if (region) localStorage.setItem('cadetRegion', region);
+          localStorage.setItem('cmgCode',             code);
+          localStorage.setItem('cmgActivated',        'true');
+          localStorage.setItem('cmgResultsSubmitted', 'true');
+          localStorage.setItem('cmgSessionKey',       (usedBy || name) + '|' + code);
+          sndSuccessFanfare();
+          var fn1 = (usedBy || name).split(' ')[0];
+          var ts1 = gender === 'Female' ? 'Cadetess' : 'Cadet';
+          setTimeout(function(){
+            speak('Welcome back, ' + ts1 + ' ' + fn1 +
+              '! Your quiz results are ready. Taking you to your results page now.');
+          }, 1800);
+          setTimeout(function(){ window.location.href = 'my_results.html'; }, 3400);
+
+        } else {
+          // ── CASE 2: Code used but not yet submitted → check name, continue quiz ──
+          var enteredName    = name.trim().toLowerCase();
+          var registeredName = usedBy.toLowerCase();
+          var nameEmpty      = !registeredName;
+          var exactMatch     = enteredName === registeredName;
+          var partialMatch   = registeredName.split(' ')[0] === enteredName.split(' ')[0]
+                            && enteredName.split(' ')[0].length >= 3;
+          var isOwner = nameEmpty || exactMatch || partialMatch;
+
+          if (isOwner) {
+            saveAndLaunch(name, gender, school, region, code, true);
+          } else {
+            sndError();
+            setTimeout(function(){
+              speak('Sorry. This activation code has already been used by ' + (usedBy || 'another student') +
+                '. Each code can only be used once. Please use your own activation code.');
+            }, 300);
+            showErr(
+              '🚫 Access Denied. This code is already registered to: ' +
+              '<strong style="color:#FFD700;">' + (usedBy || 'another student') + '</strong>. ' +
+              'Each pendrive code can only be used by one person. Please use your own code.'
+            );
+          }
+        }
+      } else if (data.status === 'invalid') {
+        document.getElementById('activateBtn').disabled = false;
+        sndError();
+        showErr('❌ Invalid code. This code is not in the CMG system. Please check your pendrive label.');
+      } else {
+        activateOffline(name, gender, school, region, code);
+      }
+    })
+    .catch(function(){
+      document.getElementById('spinner').style.display = 'none';
+      activateOffline(name, gender, school, region, code);
+    });
+}
+
+function activateOffline(name, gender, school, region, code) {
+  document.getElementById('successMsg').textContent =
+    '✅ Activated offline. Your results will be verified when you submit.';
+  document.getElementById('successMsg').style.display = 'block';
+  setTimeout(function(){ saveAndLaunch(name, gender, school, region, code); }, 1500);
+}
+
+function saveAndLaunch(name, gender, school, region, code, isReturning) {
+  // Only set identity keys — NEVER touch score/completed keys
+  localStorage.setItem('cadetName',    name);
+  localStorage.setItem('cadetGender',  gender);
+  localStorage.setItem('cadetSchool',  school);
+  if (region) localStorage.setItem('cadetRegion', region);
+  localStorage.setItem('cmgCode',      code);
+  localStorage.setItem('cmgActivated', 'true');
+
+  sndSuccessFanfare();
+  var firstName = name.split(' ')[0];
+  var gender2   = gender || localStorage.getItem('cadetGender') || 'Male';
+  var titleStr  = gender2 === 'Female' ? 'Cadetess' : 'Cadet';
+
+  // Route: completed/submitted users always go to my_results, others to quiz hub
+  var SERVICE_KEYS = ['fire','police','ambulance','prisons','nadmo',
+                      'immigration','customs','tourism','forest','gaf','narcotics'];
+  var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
+  var allDone   = SERVICE_KEYS.every(function(k){
+    return localStorage.getItem(k+'Completed') === 'true' && !!localStorage.getItem(k+'Score');
+  });
+  var destination = (submitted || allDone) ? 'my_results.html' : 'cadetnationalquiz.html';
+
+  setTimeout(function(){
+    if (isReturning) {
+      if (submitted || allDone) {
+        speak('Welcome back, ' + titleStr + ' ' + firstName +
+          '! Your quiz results are ready. Taking you to your results page now.');
+      } else {
+        speak('Welcome back, ' + titleStr + ' ' + firstName +
+          '! Identity confirmed. Continuing your quiz now. Good luck!');
+      }
+    } else {
+      speak('Welcome to the Ghana Student Safety and Service Challenge! You are now registered as Cadet ' +
+        firstName + '. Get ready to begin your quiz. Good luck!');
+    }
+  }, 1800);
+  setTimeout(function(){
+    window.location.href = destination;
+  }, 3400);
+}
+
+function verifyAndContinue() {
+  var enteredName   = document.getElementById('verifyName').value.trim().toLowerCase();
+  var enteredSchool = document.getElementById('verifySchool').value.trim().toLowerCase();
+  var enteredCode   = document.getElementById('verifyCode').value.trim().toUpperCase();
+
+  var savedName   = (localStorage.getItem('cadetName')   || '').toLowerCase();
+  var savedSchool = (localStorage.getItem('cadetSchool') || '').toLowerCase();
+  var savedCode   = (localStorage.getItem('cmgCode')     || '').toUpperCase();
+
+  var errEl = document.getElementById('verifyErr');
+  errEl.style.display = 'none';
+
+  if (!enteredName || !enteredSchool || !enteredCode) {
+    sndError();
+    errEl.textContent = '❌ Please fill in all three fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Check all three match
+  var nameMatch   = enteredName === savedName;
+  var schoolMatch = enteredSchool === savedSchool;
+  var codeMatch   = enteredCode === savedCode;
+
+  if (nameMatch && schoolMatch && codeMatch) {
+    // Identity confirmed — saveAndLaunch handles routing (results or quiz)
+    var gender   = localStorage.getItem('cadetGender') || 'Male';
+    var region   = localStorage.getItem('cadetRegion') || '';
+    var fullName = localStorage.getItem('cadetName') || '';
+    var school2  = localStorage.getItem('cadetSchool') || '';
+    saveAndLaunch(fullName, gender, school2, region, savedCode, true);
+  } else {
+    // Identity mismatch — tell them what's wrong
+    sndError();
+    var msg = '❌ ';
+    if (!nameMatch)   msg += 'Name does not match. ';
+    if (!schoolMatch) msg += 'School does not match. ';
+    if (!codeMatch)   msg += 'Activation code does not match. ';
+    msg += 'Please check and try again.';
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    setTimeout(function() {
+      speak('Sorry, the details you entered do not match our records. Please check your name, school and activation code and try again.');
+    }, 300);
+  }
+}
+
+function clearAndRegister() {
+  sndError();
+  // Step 1 — strong warning
+  var step1 = confirm(
+    '⚠️ STOP — READ THIS CAREFULLY ⚠️\n\n' +
+    'This will PERMANENTLY DELETE the current student\'s registration AND all their quiz scores from this pendrive.\n\n' +
+    'This CANNOT be undone.\n\n' +
+    'Only proceed if you are a completely NEW student who has never used this pendrive before AND you have your own activation code.\n\n' +
+    'Are you absolutely sure you want to erase everything?'
+  );
+  if (!step1) return;
+
+  // Step 2 — type CONFIRM to prevent fat-finger accidents
+  var typed = prompt('Type the word  CONFIRM  (in capitals) to erase all data:');
+  if (!typed || typed.trim() !== 'CONFIRM') {
+    alert('❌ Cancelled. No data was erased.\n\nIf you are the registered student, use the identity verification fields above to continue your quiz.');
+    return;
+  }
+
+  // Wipe everything
+  ['cadetName','cadetGender','cadetSchool','cadetRegion','cmgCode','cmgActivated','cmgSessionKey',
+   'generalScore','generalCompleted','fireScore','fireCompleted',
+   'policeScore','policeCompleted','ambulanceScore','ambulanceCompleted',
+   'prisonsScore','prisonsCompleted','nadmoScore','nadmoCompleted',
+   'immigrationScore','immigrationCompleted','customsScore','customsCompleted',
+   'tourismScore','tourismCompleted','forestScore','forestCompleted',
+   'gafScore','gafCompleted','narcoticsScore','narcoticsCompleted'
+  ].forEach(function(k){ localStorage.removeItem(k); });
+
+  document.getElementById('alreadyCard').style.display = 'none';
+  document.getElementById('regCard').style.display = 'flex';
+  sndWelcomeChime();
+  setTimeout(function(){
+    speak('Pendrive cleared. Welcome! Please fill in your details and enter your own activation code to register.');
+  }, 700);
+}
+
+function showErr(msg) {
+  var el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+</script>
+</body>
+</html>
