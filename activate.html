@@ -421,16 +421,26 @@ function activatePendrive() {
 
         // ── CASE 1: Server confirms submitted → straight to my_results, no name check ──
         if (serverSaysSubmitted) {
-          localStorage.setItem('cadetName',           usedBy || name);
+          // IMPORTANT: use usedBy (registered name) not the typed name
+          // so my_results.html can match records in Form Responses sheet
+          var registeredName = usedBy || name;
+          localStorage.setItem('cadetName',           registeredName);
           localStorage.setItem('cadetGender',         gender);
           localStorage.setItem('cadetSchool',         school);
           if (region) localStorage.setItem('cadetRegion', region);
           localStorage.setItem('cmgCode',             code);
           localStorage.setItem('cmgActivated',        'true');
           localStorage.setItem('cmgResultsSubmitted', 'true');
-          localStorage.setItem('cmgSessionKey',       (usedBy || name) + '|' + code);
+          localStorage.setItem('cmgSessionKey',       registeredName + '|' + code);
+          // Clear any old scores so my_results.html fetches fresh from server
+          var SK2 = ['general','fire','police','ambulance','prisons','nadmo',
+                     'immigration','customs','tourism','forest','gaf','narcotics'];
+          SK2.forEach(function(k){
+            localStorage.removeItem(k + 'Score');
+            localStorage.removeItem(k + 'Completed');
+          });
           sndSuccessFanfare();
-          var fn1 = (usedBy || name).split(' ')[0];
+          var fn1 = registeredName.split(' ')[0];
           var ts1 = gender === 'Female' ? 'Cadetess' : 'Cadet';
           setTimeout(function(){
             speak('Welcome back, ' + ts1 + ' ' + fn1 +
