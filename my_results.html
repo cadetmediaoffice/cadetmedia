@@ -314,7 +314,7 @@ function getScore(row, key) {
 
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
 
-// ── Try to load scores from localStorage first, then fall back to server ──
+// ── Load local scores ──
 var localScoreMap = {};
 var hasLocalScores = false;
 SERVICES.forEach(function(s){
@@ -323,6 +323,12 @@ SERVICES.forEach(function(s){
   localScoreMap[s.key] = sc;
   if(sc > 0) hasLocalScores = true;
 });
+
+// If submitted=true but no local scores → ALWAYS fetch from server
+// (handles admin reset, new device, cleared localStorage)
+if(submitted && !hasLocalScores) {
+  hasLocalScores = false; // force server fetch
+}
 
 function buildPage(scoreMap) {
   var titleStr  = gender === 'Female' ? 'Cadetess' : 'Cadet';
@@ -422,47 +428,44 @@ if(hasLocalScores) {
       if(rows.length > 0) console.log('Server columns:', Object.keys(rows[0]));
       console.log('Total rows:', rows.length);
       console.log('Looking for name:', name, '| code:', code);
-      // Find this cadet's most recent submission
-      // Try matching by code first (most reliable), then by name
       var myName = (name || '').trim().toLowerCase();
       var myCode = (code || '').trim().toUpperCase();
       var match  = null;
 
-      // Search from end to get most recent entry
+      // Helper: get name from a row regardless of column key spacing
+      function getRowName(row){
+        return (row['Full Name '] || row['Full Name'] || row[' Full Name '] || '').trim().toLowerCase();
+      }
+
+      // Helper: names are similar if one starts with the other (handles truncation)
+      function namesSimilar(a, b){
+        if(!a || !b) return false;
+        if(a === b) return true;
+        // Handle truncation: "jonathan mo" vs "jonathan moo"
+        if(a.startsWith(b) || b.startsWith(a)) return true;
+        // First word match (at least 4 chars)
+        var af = a.split(' ')[0], bf = b.split(' ')[0];
+        if(af.length >= 4 && af === bf) return true;
+        return false;
+      }
+
+      // Pass 1: exact code match
       for(var i = rows.length - 1; i >= 0; i--){
-        var row = rows[i];
+        var rowCode = (rows[i]['Column 1'] || '').toString().trim().toUpperCase();
+        if(myCode && rowCode === myCode){ match = rows[i]; break; }
+      }
 
-        // Try code match first (Column 1 field)
-        var rowCode = (row['Column 1'] || '').toString().trim().toUpperCase();
-        if(myCode && rowCode === myCode){
-          match = row;
-          break;
-        }
-
-        // Fall back to name match — try all possible key variations
-        var rowName = (
-          row['Full Name '] ||
-          row['Full Name'] ||
-          row[' Full Name '] ||
-          ''
-        ).trim().toLowerCase();
-
-        // Match exact or first+last name match
-        if(rowName && rowName === myName){
-          match = row;
-          // Don't break — keep looking for a code match
+      // Pass 2: exact name match
+      if(!match){
+        for(var i = rows.length - 1; i >= 0; i--){
+          if(getRowName(rows[i]) === myName){ match = rows[i]; break; }
         }
       }
 
+      // Pass 3: fuzzy name match (truncation, partial)
       if(!match){
-        // Last resort — fuzzy first name match
-        var myFirst = myName.split(' ')[0];
-        for(var j = rows.length - 1; j >= 0; j--){
-          var rn = (rows[j]['Full Name '] || rows[j]['Full Name'] || '').trim().toLowerCase();
-          if(rn.split(' ')[0] === myFirst && myFirst.length >= 3){
-            match = rows[j];
-            break;
-          }
+        for(var i = rows.length - 1; i >= 0; i--){
+          if(namesSimilar(getRowName(rows[i]), myName)){ match = rows[i]; break; }
         }
       }
 
