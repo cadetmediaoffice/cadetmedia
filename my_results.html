@@ -283,6 +283,7 @@ if(!name || !code || activated !== 'true'){
 }
 
 // ── Score keys mapped to Form Responses column headers ──
+// Column names from Form Responses 1 — with exact spacing as in your sheet
 var SCORE_KEYS = {
   general:     '  General Safety Quiz Score  ',
   fire:        '  Fire Safety Quiz Score  ',
@@ -297,6 +298,19 @@ var SCORE_KEYS = {
   gaf:         '  National Defence (GAF) Quiz Score  ',
   narcotics:   '  Narcotics Control Quiz Score  '
 };
+
+// Helper: find score from row trying multiple key formats
+function getScore(row, key) {
+  var val = row[SCORE_KEYS[key]];
+  if(val !== undefined && val !== '') return val.toString().trim();
+  // Try trimmed version
+  for(var k in row) {
+    if(k.trim().toLowerCase().indexOf(key.toLowerCase()) !== -1 && k.indexOf('Score') !== -1) {
+      if(row[k] !== '') return row[k].toString().trim();
+    }
+  }
+  return '0';
+}
 
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
 
@@ -398,32 +412,65 @@ if(hasLocalScores) {
   fetch(SCRIPT_URL)
     .then(function(r){ return r.json(); })
     .then(function(rows){
-      // Find this cadet's most recent submission by matching name
+      // Find this cadet's most recent submission
+      // Try matching by code first (most reliable), then by name
       var myName = (name || '').trim().toLowerCase();
+      var myCode = (code || '').trim().toUpperCase();
       var match  = null;
+
       // Search from end to get most recent entry
       for(var i = rows.length - 1; i >= 0; i--){
-        var rowName = (rows[i]['Full Name '] || '').trim().toLowerCase();
-        if(rowName === myName){
-          match = rows[i];
+        var row = rows[i];
+
+        // Try code match first (Column 1 field)
+        var rowCode = (row['Column 1'] || '').toString().trim().toUpperCase();
+        if(myCode && rowCode === myCode){
+          match = row;
           break;
+        }
+
+        // Fall back to name match — try all possible key variations
+        var rowName = (
+          row['Full Name '] ||
+          row['Full Name'] ||
+          row[' Full Name '] ||
+          ''
+        ).trim().toLowerCase();
+
+        // Match exact or first+last name match
+        if(rowName && rowName === myName){
+          match = row;
+          // Don't break — keep looking for a code match
+        }
+      }
+
+      if(!match){
+        // Last resort — fuzzy first name match
+        var myFirst = myName.split(' ')[0];
+        for(var j = rows.length - 1; j >= 0; j--){
+          var rn = (rows[j]['Full Name '] || rows[j]['Full Name'] || '').trim().toLowerCase();
+          if(rn.split(' ')[0] === myFirst && myFirst.length >= 3){
+            match = rows[j];
+            break;
+          }
         }
       }
 
       if(!match){
         document.getElementById('scoreGrid').innerHTML =
           '<div style="color:#aaa;text-align:center;padding:30px;grid-column:1/-1">' +
-          '⚠️ Could not find your results on the server. Please contact your administrator.</div>';
-        buildPage(localScoreMap); // show zeros at least
+          '⚠️ Could not find your results on the server.<br>' +
+          '<small style="opacity:.6">Looking for: ' + name + ' / ' + code + '</small><br><br>' +
+          'Please contact your administrator.</div>';
+        buildPage(localScoreMap);
         return;
       }
 
-      // Parse scores from server row
+      // Parse scores from server row using flexible helper
       var serverScoreMap = {};
       SERVICES.forEach(function(s){
-        var colName = SCORE_KEYS[s.key];
-        var raw     = (match[colName] || '0').toString().trim();
-        var sc      = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
+        var raw = getScore(match, s.key);
+        var sc  = parseInt(raw.includes('/') ? raw.split('/')[0] : raw) || 0;
         serverScoreMap[s.key] = sc;
         // Save to localStorage so future loads are instant
         localStorage.setItem(s.key + 'Score', sc + '/' + MAX_PER_QUIZ);
