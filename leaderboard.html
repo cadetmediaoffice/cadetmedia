@@ -316,9 +316,10 @@ body{
 
 /* ── JHS/SHS SUMMARY CARD ── */
 .level-summary{
-  display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px;
 }
-@media(max-width:500px){.level-summary{grid-template-columns:1fr;}}
+@media(max-width:700px){.level-summary{grid-template-columns:1fr 1fr;}}
+@media(max-width:400px){.level-summary{grid-template-columns:1fr;}}
 .level-card{
   background:var(--card);border:1px solid var(--card-border);
   border-radius:16px;padding:20px;animation:fadeUp .4s ease both;
@@ -326,6 +327,7 @@ body{
 }
 .level-card.jhs-card{border-color:rgba(79,195,247,0.3);}
 .level-card.shs-card{border-color:rgba(255,183,77,0.3);}
+.level-card.tertiary-card{border-color:rgba(167,139,250,0.3);}
 .level-card::after{content:'';position:absolute;inset:0;
   background:linear-gradient(135deg,rgba(255,215,0,0.02),transparent);pointer-events:none;}
 .lc-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
@@ -333,6 +335,7 @@ body{
 .lc-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;}
 .lc-title.jhs-c{color:var(--male);}
 .lc-title.shs-c{color:var(--gold);}
+.lc-title.tertiary-c{color:#a78bfa;}
 .lc-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .lc-stat{text-align:center;background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 6px;}
 .lc-stat .val{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--gold);}
@@ -569,6 +572,8 @@ body{
     <!-- SHS Rankings -->
     <div class="lb-title" style="margin-top:20px;">🏫 SHS School Rankings</div>
     <div class="rank-grid" id="shsSchoolGrid"></div>
+    <!-- Tertiary -->
+    <div id="tertiaryLevelWrap"></div>
     <!-- Other/Unknown -->
     <div id="otherLevelWrap"></div>
   </div>
@@ -604,7 +609,7 @@ function connectData(){
 // ── Auto-load on page open ──
 window.addEventListener('DOMContentLoaded', ()=>{
   // URL is hardcoded — loads automatically on any browser
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbymdUalj8ZKA87-zYJV3lJ_4IKO84z37W-RGK08RiW2ZH764zoeKWEcimgKqir8zo9s/exec';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEkb-1Y1pjTRTgxNSDMXWSb9JfgL36Gi5yAiYhxNrDstifi4swIaF/exec';
   document.getElementById('appsScriptUrl').value = SHEET_URL;
   document.getElementById('setupBox').style.display = 'none';
   loadData(SHEET_URL);
@@ -648,7 +653,7 @@ async function loadData(url){
 
 // ── Debug: fetch raw and show in console ──
 async function debugRaw(){
-  const url = 'https://script.google.com/macros/s/AKfycbymdUalj8ZKA87-zYJV3lJ_4IKO84z37W-RGK08RiW2ZH764zoeKWEcimgKqir8zo9s/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEkb-1Y1pjTRTgxNSDMXWSb9JfgL36Gi5yAiYhxNrDstifi4swIaF/exec';
   try {
     const res = await fetch(url, {mode:'cors'});
     const text = await res.text();
@@ -1020,19 +1025,26 @@ function renderGender(ranked){
 
 // ── JHS / SHS Levels ──
 function renderLevels(ranked){
-  // Classify each cadet
-  function getLevel(school){
+  // Classify each cadet — use explicit level field first, fall back to school name
+  function getLevel(school, row){
+    const explicit = getField(row, ['school level','level']).toUpperCase();
+    if(explicit === 'JHS' || explicit === 'JUNIOR') return 'JHS';
+    if(explicit === 'SHS' || explicit === 'SENIOR') return 'SHS';
+    if(explicit === 'TERTIARY' || explicit === 'UNIVERSITY') return 'Tertiary';
+    // Fallback: guess from school name
     const s = (school||'').toUpperCase();
     if(s.includes('JHS') || s.includes('JUNIOR')) return 'JHS';
     if(s.includes('SHS') || s.includes('SENIOR') || s.includes('SECONDARY')) return 'SHS';
+    if(s.includes('UNIVERSITY') || s.includes('POLYTECHNIC') || s.includes('COLLEGE') || s.includes('TERTIARY')) return 'Tertiary';
     return 'OTHER';
   }
 
-  const jhs=[], shs=[], other=[];
+  const jhs=[], shs=[], tertiary=[], other=[];
   ranked.forEach(r=>{
-    const lv = getLevel(r.school);
+    const lv = getLevel(r.school, r.raw);
     if(lv==='JHS') jhs.push(r);
     else if(lv==='SHS') shs.push(r);
+    else if(lv==='Tertiary') tertiary.push(r);
     else other.push(r);
   });
 
@@ -1073,8 +1085,9 @@ function renderLevels(ranked){
   }
 
   document.getElementById('levelSummary').innerHTML =
-    summaryCard(jhs, 'JUNIOR HIGH SCHOOLS', 'jhs-card', '📚', 'jhs-c') +
-    summaryCard(shs, 'SENIOR HIGH SCHOOLS', 'shs-card', '🎓', 'shs-c');
+    summaryCard(jhs,      'JUNIOR HIGH SCHOOLS',   'jhs-card',      '📚', 'jhs-c') +
+    summaryCard(shs,      'SENIOR HIGH SCHOOLS',   'shs-card',      '🎓', 'shs-c') +
+    summaryCard(tertiary, 'TERTIARY / UNIVERSITY', 'tertiary-card', '🏛️', 'tertiary-c');
 
   // ── School Rankings per level ──
   function schoolRankGrid(arr){
@@ -1109,6 +1122,14 @@ function renderLevels(ranked){
 
   document.getElementById('jhsSchoolGrid').innerHTML = schoolRankGrid(jhs);
   document.getElementById('shsSchoolGrid').innerHTML = schoolRankGrid(shs);
+
+  // ── Tertiary ──
+  const tertiaryWrap = document.getElementById('tertiaryLevelWrap');
+  if(tertiary.length){
+    tertiaryWrap.innerHTML =
+      `<div class="lb-title" style="margin-top:20px;">🎓 Tertiary / Universities (${tertiary.length} cadet${tertiary.length>1?'s':''})</div>
+       <div class="rank-grid">${schoolRankGrid(tertiary)}</div>`;
+  } else { tertiaryWrap.innerHTML = ''; }
 
   // ── Other/Unknown ──
   if(other.length){
