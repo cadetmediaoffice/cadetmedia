@@ -100,6 +100,14 @@ select option{background:#1a1a2e;color:#fff;}
     </select></div>
   <div><label>School / Institution</label>
     <input type="text" id="inSchool" placeholder="e.g. Accra Academy SHS" maxlength="80"></div>
+  <div><label>School Level</label>
+    <select id="inLevel">
+      <option value="">— Select Level —</option>
+      <option value="JHS">Junior High School (JHS)</option>
+      <option value="SHS">Senior High School (SHS)</option>
+      <option value="Tertiary">Tertiary / University</option>
+      <option value="Other">Other / Training Institution</option>
+    </select></div>
   <div><label>Region</label>
     <select id="inRegion">
       <option value="">— Select Region —</option>
@@ -377,6 +385,7 @@ function activatePendrive() {
   var name   = document.getElementById('inName').value.trim();
   var gender = document.getElementById('inGender').value;
   var school = document.getElementById('inSchool').value.trim();
+  var level  = document.getElementById('inLevel').value;
   var region = document.getElementById('inRegion').value;
   var code   = document.getElementById('inCode').value.trim().toUpperCase();
   document.getElementById('errMsg').style.display = 'none';
@@ -384,6 +393,7 @@ function activatePendrive() {
   if (!name)   { sndError(); showErr('Please enter your full name.'); return; }
   if (!gender) { sndError(); showErr('Please select your gender.'); return; }
   if (!school) { sndError(); showErr('Please enter your school or institution.'); return; }
+  if (!level)  { sndError(); showErr('Please select your school level.'); return; }
   if (!region) { sndError(); showErr('Please select your region.'); return; }
   if (!code)   { sndError(); showErr('Please enter your pendrive activation code.'); return; }
   if (!code.startsWith('CMG-')) {
@@ -393,7 +403,7 @@ function activatePendrive() {
   }
 
   if (!navigator.onLine || !APPS_SCRIPT_URL) {
-    activateOffline(name, gender, school, region, code); return;
+    activateOffline(name, gender, school, level, region, code); return;
   }
 
   sndVerifying();
@@ -405,6 +415,7 @@ function activatePendrive() {
     '&name='   + encodeURIComponent(name) +
     '&gender=' + encodeURIComponent(gender) +
     '&school=' + encodeURIComponent(school) +
+    '&level='  + encodeURIComponent(level) +
     '&region=' + encodeURIComponent(region) +
     '&date='   + encodeURIComponent(new Date().toISOString());
 
@@ -413,7 +424,7 @@ function activatePendrive() {
     .then(function(data){
       document.getElementById('spinner').style.display = 'none';
       if (data.status === 'ok') {
-        saveAndLaunch(name, gender, school, region, code);
+        saveAndLaunch(name, gender, school, level, region, code);
       } else if (data.status === 'already_used') {
         document.getElementById('activateBtn').disabled = false;
         var usedBy = (data.usedBy || '').trim();
@@ -454,7 +465,7 @@ function activatePendrive() {
           var isOwner = nameEmpty || exactMatch || partialMatch;
 
           if (isOwner) {
-            saveAndLaunch(name, gender, school, region, code, true);
+            saveAndLaunch(name, gender, school, level, region, code, true);
           } else {
             sndError();
             setTimeout(function(){
@@ -482,14 +493,14 @@ function activatePendrive() {
     });
 }
 
-function activateOffline(name, gender, school, region, code) {
+function activateOffline(name, gender, school, level, region, code) {
   document.getElementById('successMsg').textContent =
     '✅ Activated offline. Your results will be verified when you submit.';
   document.getElementById('successMsg').style.display = 'block';
-  setTimeout(function(){ saveAndLaunch(name, gender, school, region, code); }, 1500);
+  setTimeout(function(){ saveAndLaunch(name, gender, school, level, region, code); }, 1500);
 }
 
-function saveAndLaunch(name, gender, school, region, code, isReturning) {
+function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
   // For a new user (isReturning=false), wipe ALL previous user data first
   // This handles the case where admin reset was not done before a new user registers
   if (!isReturning) {
@@ -506,6 +517,7 @@ function saveAndLaunch(name, gender, school, region, code, isReturning) {
   localStorage.setItem('cadetName',    name);
   localStorage.setItem('cadetGender',  gender);
   localStorage.setItem('cadetSchool',  school);
+  localStorage.setItem('cadetLevel',   level || '');
   if (region) localStorage.setItem('cadetRegion', region);
   localStorage.setItem('cmgCode',      code);
   localStorage.setItem('cmgActivated', 'true');
@@ -571,9 +583,10 @@ function verifyAndContinue() {
     // Identity confirmed — saveAndLaunch handles routing (results or quiz)
     var gender   = localStorage.getItem('cadetGender') || 'Male';
     var region   = localStorage.getItem('cadetRegion') || '';
+    var level2   = localStorage.getItem('cadetLevel')  || '';
     var fullName = localStorage.getItem('cadetName') || '';
     var school2  = localStorage.getItem('cadetSchool') || '';
-    saveAndLaunch(fullName, gender, school2, region, savedCode, true);
+    saveAndLaunch(fullName, gender, school2, level2, region, savedCode, true);
   } else {
     // Identity mismatch — tell them what's wrong
     sndError();
@@ -610,7 +623,7 @@ function clearAndRegister() {
   }
 
   // Wipe everything
-  ['cadetName','cadetGender','cadetSchool','cadetRegion','cmgCode','cmgActivated','cmgSessionKey',
+  ['cadetName','cadetGender','cadetSchool','cadetLevel','cadetRegion','cmgCode','cmgActivated','cmgSessionKey',
    'generalScore','generalCompleted','fireScore','fireCompleted',
    'policeScore','policeCompleted','ambulanceScore','ambulanceCompleted',
    'prisonsScore','prisonsCompleted','nadmoScore','nadmoCompleted',
