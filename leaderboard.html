@@ -632,7 +632,7 @@ async function loadData(url){
     document.getElementById('liveStatus').textContent = `Live · Last updated ${t}`;
     document.getElementById('lastRefresh').textContent = `Data last refreshed at ${t}`;
     renderAll();
-    highlightFromURL();
+    setTimeout(function(){ if(typeof highlightFromURL==='function') highlightFromURL(); }, 0);
     // Auto-refresh every 3 minutes
     setTimeout(()=> loadData(url), 3 * 60 * 1000);
   } catch(e){
@@ -734,6 +734,7 @@ function getModuleField(row, keywords){
 // Module keyword maps — matches sheet header names
 const MOD_KEYS = [
   ['general safety'],
+  ['student safety','rights','awareness'],
   ['fire safety','gnfs'],
   ['community safety','police'],
   ['health','ambulance'],
@@ -1239,7 +1240,7 @@ const BADGE_CFG = {
 };
 
 const MOD_NAMES = [
-  'General Safety','Fire Safety','Police / Community',
+  'General Safety','Student Safety','Fire Safety','Police / Community',
   'Health & Ambulance','Prisons Service','NADMO',
   'Immigration','Customs / GRA','Tourism & Arts',
   'Forest Conservation','Armed Forces (GAF)','NACOC'
@@ -1347,8 +1348,9 @@ function _doDownloadCert(_bannerImg){
     if(pct>0){rr(mx,my+16,Math.round(pct/100*bw),5,3);c.fillStyle=bc;c.fill();}
   });
 
-  // Serial box
-  const qrY=msy+6*mh+10;
+  // Serial box — position dynamically based on number of modules
+  const modRows = Math.ceil(MOD_NAMES.length / 2);
+  const qrY=msy+modRows*mh+10;
   rr(lx,qrY,lw,90,6);c.strokeStyle='rgba(255,215,0,0.1)';c.lineWidth=1;c.stroke();
   c.font='400 9px Orbitron,monospace';c.fillStyle='rgba(255,215,0,0.4)';c.textAlign='left';
   c.fillText('CERTIFICATE ID',lx+8,qrY+14);
@@ -1407,7 +1409,7 @@ function _doDownloadCert(_bannerImg){
     c.font='600 15px Georgia,serif';c.fillStyle='rgba(255,255,255,0.7)';
     c.fillText('CADET MEDIA GHANA NATIONAL PUBLIC SAFETY QUIZ',rx+rw/2,lineY+170);
     c.font='italic 400 13px Georgia,serif';c.fillStyle='rgba(255,255,255,0.35)';
-    c.fillText('covering all 12 Ghana Public Safety Service Modules',rx+rw/2,lineY+190);
+    c.fillText('covering all 13 Ghana Public Safety Service Modules',rx+rw/2,lineY+190);
 
     // Score box
     const scoreY=lineY+238;
