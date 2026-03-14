@@ -280,7 +280,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   if (alreadyOn) {
     // If already completed or submitted — skip everything, go straight to My Results
-    var SK = ['fire','police','ambulance','prisons','nadmo',
+    var SK = ['general','studentSafety','fire','police','ambulance','prisons','nadmo',
               'immigration','customs','tourism','forest','gaf','narcotics'];
     var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
     var allDone   = SK.every(function(k){
@@ -504,7 +504,7 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
   // For a new user (isReturning=false), wipe ALL previous user data first
   // This handles the case where admin reset was not done before a new user registers
   if (!isReturning) {
-    var WIPE_KEYS = ['general','fire','police','ambulance','prisons',
+    var WIPE_KEYS = ['general','studentSafety','fire','police','ambulance','prisons',
                      'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
     WIPE_KEYS.forEach(function(k){
       localStorage.removeItem(k + 'Score');
@@ -528,7 +528,7 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
   var titleStr  = gender2 === 'Female' ? 'Cadetess' : 'Cadet';
 
   // Route: completed/submitted users always go to my_results, others to quiz hub
-  var SERVICE_KEYS = ['fire','police','ambulance','prisons','nadmo',
+  var SERVICE_KEYS = ['general','studentSafety','fire','police','ambulance','prisons','nadmo',
                       'immigration','customs','tourism','forest','gaf','narcotics'];
   var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
   var allDone   = SERVICE_KEYS.every(function(k){
@@ -624,7 +624,9 @@ function clearAndRegister() {
 
   // Wipe everything
   ['cadetName','cadetGender','cadetSchool','cadetLevel','cadetRegion','cmgCode','cmgActivated','cmgSessionKey',
-   'generalScore','generalCompleted','fireScore','fireCompleted',
+   'generalScore','generalCompleted',
+   'studentSafetyScore','studentSafetyCompleted',
+   'fireScore','fireCompleted',
    'policeScore','policeCompleted','ambulanceScore','ambulanceCompleted',
    'prisonsScore','prisonsCompleted','nadmoScore','nadmoCompleted',
    'immigrationScore','immigrationCompleted','customsScore','customsCompleted',
