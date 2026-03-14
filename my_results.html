@@ -305,12 +305,16 @@ window.addEventListener('DOMContentLoaded', function(){
   
   // Helper: find score from row trying multiple key formats
   function getScore(row, key) {
+    // 1. Try exact SCORE_KEYS match first
     var val = row[SCORE_KEYS[key]];
-    if(val !== undefined && val !== '') return val.toString().trim();
-    // Try trimmed version
+    if(val !== undefined && val !== null && val.toString().trim() !== '') return val.toString().trim();
+    // 2. Try all column keys — search by words (handles camelCase like 'studentSafety' -> 'student safety')
+    var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase(); // 'studentSafety' -> 'student safety'
     for(var k in row) {
-      if(k.trim().toLowerCase().indexOf(key.toLowerCase()) !== -1 && k.indexOf('Score') !== -1) {
-        if(row[k] !== '') return row[k].toString().trim();
+      var kl = k.trim().toLowerCase();
+      if(kl.indexOf(searchWords) !== -1 && kl.indexOf('score') !== -1) {
+        var v = (row[k] || '').toString().trim();
+        if(v !== '') return v;
       }
     }
     return '0';
