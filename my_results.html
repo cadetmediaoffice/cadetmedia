@@ -254,21 +254,22 @@ function speak(text,rate,pitch){
 
 // ── Score data ──
 var SERVICES = [
-  {key:'general',   name:'General Safety',       logo:'../MEDIA/logo_quiz.png'},
-  {key:'fire',      name:'Fire Safety',           logo:'../MEDIA/logo_gnfs.png'},
-  {key:'police',    name:'Community Safety',      logo:'../MEDIA/logo_police.png'},
-  {key:'ambulance', name:'Health & Ambulance',    logo:'../MEDIA/logo_health.png'},
-  {key:'prisons',   name:'Prisons Service',       logo:'../MEDIA/logo_prisons.png'},
-  {key:'nadmo',     name:'NADMO / Disaster',      logo:'../MEDIA/logo_nadmo.png'},
-  {key:'immigration',name:'Immigration',          logo:'../MEDIA/logo_immigration.png'},
-  {key:'customs',   name:'Customs / GRA',         logo:'../MEDIA/logo_customs.png'},
-  {key:'tourism',   name:'Tourism & Arts',        logo:'../MEDIA/logo_tourism.png'},
-  {key:'forest',    name:'Forest Commission',     logo:'../MEDIA/logo_forest.png'},
-  {key:'gaf',       name:'Ghana Armed Forces',    logo:'../MEDIA/logo_gaf.png'},
-  {key:'narcotics', name:'NACOC / Drug Safety',   logo:'../MEDIA/logo_nacoc.png'}
+  {key:'general',       name:'General Safety',       logo:'../MEDIA/logo_quiz.png'},
+  {key:'studentSafety', name:'Student Safety',        logo:'../MEDIA/logo_quiz.png'},
+  {key:'fire',          name:'Fire Safety',           logo:'../MEDIA/logo_gnfs.png'},
+  {key:'police',        name:'Community Safety',      logo:'../MEDIA/logo_police.png'},
+  {key:'ambulance',     name:'Health & Ambulance',    logo:'../MEDIA/logo_health.png'},
+  {key:'prisons',       name:'Prisons Service',       logo:'../MEDIA/logo_prisons.png'},
+  {key:'nadmo',         name:'NADMO / Disaster',      logo:'../MEDIA/logo_nadmo.png'},
+  {key:'immigration',   name:'Immigration',           logo:'../MEDIA/logo_immigration.png'},
+  {key:'customs',       name:'Customs / GRA',         logo:'../MEDIA/logo_customs.png'},
+  {key:'tourism',       name:'Tourism & Arts',        logo:'../MEDIA/logo_tourism.png'},
+  {key:'forest',        name:'Forest Commission',     logo:'../MEDIA/logo_forest.png'},
+  {key:'gaf',           name:'Ghana Armed Forces',    logo:'../MEDIA/logo_gaf.png'},
+  {key:'narcotics',     name:'NACOC / Drug Safety',   logo:'../MEDIA/logo_nacoc.png'}
 ];
 var MAX_PER_QUIZ = 30;
-var TOTAL_MAX    = SERVICES.length * MAX_PER_QUIZ; // 360
+var TOTAL_MAX    = SERVICES.length * MAX_PER_QUIZ; // 390
 
 
 window.addEventListener('DOMContentLoaded', function(){
@@ -287,18 +288,19 @@ window.addEventListener('DOMContentLoaded', function(){
   // ── Score keys mapped to Form Responses column headers ──
   // Column names from Form Responses 1 — with exact spacing as in your sheet
   var SCORE_KEYS = {
-    general:     '  General Safety Quiz Score  ',
-    fire:        '  Fire Safety Quiz Score  ',
-    police:      '  Community Safety (Police) Quiz Score  ',
-    ambulance:   '  Health & Ambulance Quiz Score  ',
-    prisons:     '  Prisons Service Quiz Score  ',
-    nadmo:       '  Disaster Preparedness (NADMO) Quiz Score  ',
-    immigration: '  Immigration Service Quiz Score  ',
-    customs:     '  Customs Division Quiz Score  ',
-    tourism:     '  Tourism & Creative Arts Quiz Score  ',
-    forest:      '  Forest Conservation Quiz Score  ',
-    gaf:         '  National Defence (GAF) Quiz Score  ',
-    narcotics:   '  Narcotics Control Quiz Score  '
+    general:       '  General Safety Quiz Score  ',
+    studentSafety: '  Student Safety Quiz Score  ',
+    fire:          '  Fire Safety Quiz Score  ',
+    police:        '  Community Safety (Police) Quiz Score  ',
+    ambulance:     '  Health & Ambulance Quiz Score  ',
+    prisons:       '  Prisons Service Quiz Score  ',
+    nadmo:         '  Disaster Preparedness (NADMO) Quiz Score  ',
+    immigration:   '  Immigration Service Quiz Score  ',
+    customs:       '  Customs Division Quiz Score  ',
+    tourism:       '  Tourism & Creative Arts Quiz Score  ',
+    forest:        '  Forest Conservation Quiz Score  ',
+    gaf:           '  National Defence (GAF) Quiz Score  ',
+    narcotics:     '  Narcotics Control Quiz Score  '
   };
   
   // Helper: find score from row trying multiple key formats
@@ -420,36 +422,17 @@ window.addEventListener('DOMContentLoaded', function(){
     return false;
   }
   
-  // ── Use local scores if available, otherwise fetch from server ──
-  if(hasLocalScores) {
-    buildPage(localScoreMap);
-  } else {
-    // No local scores — fetch from server (after admin reset or new device)
-    document.getElementById('scoreGrid').innerHTML =
-      '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
-      'background:rgba(0,180,100,0.25);border-radius:12px;font-size:14px;">' +
-      '🔄 <strong>Loading your results...</strong><br>' +
-      '<small style="opacity:.6">' + (name||'') + ' | ' + (code||'') + '</small></div>';
-  }
-
-  if(!hasLocalScores)
-  fetch(SCRIPT_URL, {redirect: 'follow'})
-    .then(function(r){ return r.text(); })
-    .then(function(txt){
-      console.log('Raw response (first 200):', txt.substring(0,200));
-      var rows;
-      try {
-        var parsed = JSON.parse(txt);
-        // Handle both plain array and wrapped {data:[...]} formats
-        rows = Array.isArray(parsed) ? parsed : (parsed.data || parsed.rows || []);
-      } catch(e) {
-        console.log('JSON parse error:', e.message);
-        rows = [];
-      }
-      console.log('Rows from server:', rows.length);
-      console.log('Searching name:', name, '| code:', code);
-      if(rows.length > 0) console.log('First row keys:', JSON.stringify(Object.keys(rows[0])));
-
+  // ── ALWAYS fetch from server for submitted users ──
+  // Shows latest scores even after admin reset or new device
+  document.getElementById('scoreGrid').innerHTML =
+    '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
+    'background:rgba(0,180,100,0.25);border-radius:12px;font-size:14px;">' +
+    '🔄 <strong>Loading your results...</strong><br>' +
+    '<small style="opacity:.6">' + (name||'') + ' | ' + (code||'') + '</small></div>';
+  
+  fetch(SCRIPT_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
       var myName = (name || '').trim().toLowerCase();
       var myCode = (code || '').trim().toUpperCase();
       var match  = null;

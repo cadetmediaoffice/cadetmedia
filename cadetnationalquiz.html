@@ -240,40 +240,17 @@ ul.modules-list li {
 
 <script>
 window.addEventListener('DOMContentLoaded',function(){
-
   // ── CMG Activation Check ──
-  var name      = localStorage.getItem('cadetName');
-  var school    = localStorage.getItem('cadetSchool');
-  var gender    = localStorage.getItem('cadetGender');
-  var code      = localStorage.getItem('cmgCode');
-  var activated = localStorage.getItem('cmgActivated');
-  if(!name || !school || !gender || !code || activated !== 'true'){
-    window.location.href = 'activate.html';
-    return;
-  }
-
-  // ── Completed / Submitted Check ──
-  // ── 2. Completed / Submitted → My Results (checked BEFORE session guard) ──
-  var SERVICE_KEYS = ['fire','police','ambulance','prisons','nadmo',
-                      'immigration','customs','tourism','forest','gaf','narcotics'];
-  var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
-  // Only redirect to my_results if submitted — not just allDone
-  // If allDone but not submitted, student must go through congratulations.html first
-  if(submitted){
-    window.location.href = 'my_results.html';
-    return;
-  }
-
-  // ── 3. Session Integrity — prevent new user bypassing activate.html ──
-  // If sessionKey doesn't match current identity, scores belong to someone else.
-  // Block access — the new user must register through activate.html first.
-  var sessionKey    = name + '|' + code;
-  var storedSession = localStorage.getItem('cmgSessionKey');
-  if(storedSession && storedSession !== sessionKey){
-    window.location.href = 'activate.html';
-    return;
-  }
-
+  (function(){
+    var name    = localStorage.getItem('cadetName');
+    var school  = localStorage.getItem('cadetSchool');
+    var gender  = localStorage.getItem('cadetGender');
+    var code    = localStorage.getItem('cmgCode');
+    var activated = localStorage.getItem('cmgActivated');
+    if(!name || !school || !gender || !code || activated !== 'true'){
+      window.location.href = 'activate.html';
+    }
+  })();
 });
 const startBtn   = document.getElementById('startQuizBtn');
 const hoverSound = document.getElementById('hoverSound');

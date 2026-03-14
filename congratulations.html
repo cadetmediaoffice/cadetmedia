@@ -500,7 +500,7 @@ function speak(text, rate, pitch){
 //  CONFIG
 // ══════════════════════════════════════════════
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb2Nkc19rLDOoCeR_GLABuG5aY2I-g/formResponse";
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec';
 
 const SERVICES = [
   {key:"general",   name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
@@ -934,9 +934,7 @@ function submitResults(){
 
   // Also submit to Apps Script
   const params=new URLSearchParams({
-    action:'submitResults',
-    code: localStorage.getItem('cmgCode') || '',   // ← needed to mark Codes sheet H column
-    name:window.cadetName,gender:window.cadetGender,
+    action:'submitResults',name:window.cadetName,gender:window.cadetGender,
     school:window.cadetSchool,phone,email,region,district,
     total:`${window.pct}%`,badge:badgeText,date:dateStr,
     ...Object.fromEntries(SERVICES.map(s=>[s.key,`${window.scoreMap[s.key]}/${MAX_PER_QUIZ}`]))
