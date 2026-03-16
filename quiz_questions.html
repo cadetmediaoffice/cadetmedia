@@ -162,8 +162,15 @@ footer{margin-top:auto;padding-top:24px;font-size:11px;
 <div class="section-label">📚 Service Modules — One Attempt Each</div>
 <div class="grid" id="serviceGrid">
 
+  <a class="qcard" href="student_safety_quiz.html"
+     data-key="studentSafety" data-prev="general">
+    <img src="../MEDIA/logo_quiz.png" alt="Student Safety">
+    <span class="txt">Student Safety<span class="sub">Rights &amp; Awareness</span></span>
+    <span class="status"></span>
+  </a>
+
   <a class="qcard" href="fire_quiz.html"
-     data-key="fire" data-prev="general">
+     data-key="fire" data-prev="studentSafety">
     <img src="../MEDIA/logo_gnfs.png" alt="Fire">
     <span class="txt">Fire Safety<span class="sub">Ghana National Fire Service</span></span>
     <span class="status"></span>
@@ -241,39 +248,10 @@ footer{margin-top:auto;padding-top:24px;font-size:11px;
 
 </div>
 
-<!-- Shows only when ALL 11 service quizzes are done but NOT yet submitted -->
+<!-- Shows only when ALL 11 service quizzes are done -->
 <a id="congratsBtn" href="congratulations.html">
   🏆 View My Full Results &amp; Certificate
 </a>
-
-<!-- Shows only for users who have ALREADY submitted their results -->
-<div id="submittedBanner" style="display:none;margin-top:22px;width:100%;max-width:620px;
-  background:linear-gradient(135deg,rgba(255,215,0,0.12),rgba(255,215,0,0.05));
-  border:1.5px solid rgba(255,215,0,0.35);border-radius:16px;
-  padding:22px 20px;text-align:center;">
-  <div style="font-size:32px;margin-bottom:8px;">🏅</div>
-  <h2 style="color:#FFD700;font-size:17px;margin-bottom:6px;">Quiz Completed &amp; Submitted!</h2>
-  <p style="font-size:13px;opacity:.75;line-height:1.7;margin-bottom:18px;">
-    Your results have been officially submitted to Cadet Media Ghana.<br>
-    All institutional quizzes are now closed. You may still practise on the General Quiz above.
-  </p>
-  <div style="display:flex;flex-direction:column;gap:10px;">
-    <a id="leaderboardLink" href="#" style="
-      display:block;padding:13px 20px;
-      background:linear-gradient(45deg,#FFD700,#e6a800);
-      color:#000;border-radius:11px;font-weight:bold;font-size:14px;
-      text-decoration:none;">
-      🏆 View Leaderboard
-    </a>
-    <a href="congratulations.html" style="
-      display:block;padding:13px 20px;
-      background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.2);
-      color:#fff;border-radius:11px;font-weight:bold;font-size:14px;
-      text-decoration:none;">
-      📋 View My Results &amp; Certificate
-    </a>
-  </div>
-</div>
 
 <!-- ── FOOTER ── -->
 <footer>
@@ -300,7 +278,7 @@ footer{margin-top:auto;padding-top:24px;font-size:11px;
 <script>
 const ADMIN_PW = "CadetMedia@2025!";
 
-const ALL_KEYS = ['general','fire','police','ambulance','prisons',
+const ALL_KEYS = ['general','studentSafety','fire','police','ambulance','prisons',
                   'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
 const SERVICE_KEYS = ALL_KEYS.slice(1);
 
@@ -329,10 +307,13 @@ function doReset(){
     localStorage.removeItem('cadetName');
     localStorage.removeItem('cadetGender');
     localStorage.removeItem('cadetSchool');
+    localStorage.removeItem('cadetLevel');
+    localStorage.removeItem('cadetRegion');
     localStorage.removeItem('cmgCode');
     localStorage.removeItem('cmgActivated');
-    localStorage.removeItem('cmgResultsSubmitted');
     localStorage.removeItem('cmgSessionKey');
+    localStorage.removeItem('cmgResultsSubmitted');
+    localStorage.removeItem('cmgLastPage');
     closeModal();
     alert('✅ All progress and registration cleared. The pendrive is ready for a new student.');
     window.location.href = 'activate.html';
@@ -345,7 +326,7 @@ function doReset(){
 
 window.addEventListener('DOMContentLoaded', function(){
 
-  // ── 1. Activation Check — must have valid identity in localStorage ──
+  // ── 1. Activation Check ──
   var name      = localStorage.getItem('cadetName');
   var school    = localStorage.getItem('cadetSchool');
   var gender    = localStorage.getItem('cadetGender');
@@ -356,30 +337,22 @@ window.addEventListener('DOMContentLoaded', function(){
     return;
   }
 
-  // ── 2. Already submitted → send to My Results ──
-  //    Only redirect if SUBMITTED. If all done but not submitted,
-  //    stay on this page so they can click the congratulations button.
-  var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
-  if(submitted){
-    window.location.href = 'my_results.html';
-    return;
-  }
-
-  // ── 3. Session Integrity Check ──
-  //    If the stored session key doesn't match the current identity,
-  //    this pendrive has been passed to a new user WITHOUT going through activate.html.
-  //    BLOCK access — do NOT wipe scores, redirect to activate.html to register properly.
-  var sessionKey    = name + '|' + code;
+  // ── 2. Stale Progress Check ──
+  // If a new student activated (different name+code), wipe old quiz progress
+  var sessionKey = name + '|' + code;
   var storedSession = localStorage.getItem('cmgSessionKey');
   if(storedSession && storedSession !== sessionKey){
-    // Identity mismatch — scores belong to the previous owner, protect them.
-    // Force the new user to go through activation to register their own identity.
-    window.location.href = 'activate.html';
-    return;
+    // New student detected — clear all previous quiz progress
+    ALL_KEYS.forEach(function(k){
+      localStorage.removeItem(k+'Score');
+      localStorage.removeItem(k+'Completed');
+    });
   }
   localStorage.setItem('cmgSessionKey', sessionKey);
+  // User is at the quiz hub — clear last page so next activate goes here, not a specific quiz
+  localStorage.removeItem('cmgLastPage');
 
-  // ── 4. ACTIVE / IN-PROGRESS USER — sequential unlock ──
+  // ── 2. Apply card states ──
   var allDone = true;
 
   document.querySelectorAll('.qcard').forEach(function(card){
@@ -405,7 +378,7 @@ window.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  // Show congrats/submit button once all 11 service modules are done
+  // ── 3. Show congrats button when all 12 service modules done ──
   if(allDone) document.getElementById('congratsBtn').style.display = 'inline-block';
 
   // ── 4. Admin modal trigger ──
