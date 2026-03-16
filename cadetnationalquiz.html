@@ -2,272 +2,1005 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>National Public Safety Quiz — Cadet Media Ghana</title>
+<title>Congratulations – Cadet Media Ghana</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    min-height: 100vh;
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 12px 20px 20px;
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#FFD700;--gold2:#e6a800;--dark:#060d1f;--blue:#0f2a5e;
+  --card:rgba(255,255,255,0.05);--border:rgba(255,215,0,0.2);
+}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--dark);
+  color:#fff;min-height:100vh;
+  overflow-x:hidden;
 }
 
-/* ── Top bar: logo + banner side by side ── */
-.top-bar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    width: 100%;
-    max-width: 1100px;
-    margin-bottom: 14px;
-}
-.logo {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    border: 2px solid rgba(255,215,0,0.4);
-}
-.banner {
-    flex: 1;
-    height: auto;
-    max-height: 100px;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.4);
-    object-fit: cover;
+/* ── STARFIELD ── */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:twinkle var(--d) ease-in-out infinite var(--delay);}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(1);}50%{opacity:1;transform:scale(1.5);}}
+
+/* ── CONFETTI BURST (CSS only) ── */
+.confetti-wrap{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:1;pointer-events:none;}
+.conf{position:absolute;width:8px;height:14px;border-radius:2px;opacity:0;animation:confettiFall var(--cd) ease-in var(--cdelay) forwards;}
+@keyframes confettiFall{
+  0%{opacity:1;transform:translateX(var(--cx)) translateY(-20px) rotate(0deg);}
+  100%{opacity:0;transform:translateX(calc(var(--cx) + var(--cx2))) translateY(100vh) rotate(var(--cr));}
 }
 
-/* ── Two-column landscape layout ── */
-.landscape {
-    display: flex;
-    gap: 20px;
-    width: 100%;
-    max-width: 1100px;
-    align-items: flex-start;
+/* ── MAIN LAYOUT ── */
+.page{position:relative;z-index:2;max-width:860px;margin:0 auto;padding:20px 16px 60px;}
+
+/* ── BANNER ── */
+.banner-wrap{width:100%;margin-bottom:16px;}
+.banner-wrap img{width:100%;border-radius:14px;box-shadow:0 0 40px rgba(255,215,0,0.35);}
+
+/* ── HERO GREETING ── */
+.hero{text-align:center;padding:10px 0 4px;position:relative;}
+.trophy-wrap{font-size:70px;line-height:1;margin-bottom:8px;display:inline-block;
+  animation:trophyPop .6s cubic-bezier(.34,1.56,.64,1) both .3s;}
+@keyframes trophyPop{from{transform:scale(0) rotate(-20deg);opacity:0;}to{transform:scale(1) rotate(0deg);opacity:1;}}
+.hero h1{
+  font-family:'Oswald',sans-serif;
+  font-size:clamp(22px,5vw,36px);
+  letter-spacing:1px;
+  background:linear-gradient(90deg,#FFD700,#fff 40%,#FFD700);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1.2;margin-bottom:6px;
+  animation:slideUp .5s ease both .5s;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.hero .school-tag{
+  display:inline-block;background:rgba(255,215,0,0.12);
+  border:1px solid var(--border);border-radius:20px;
+  padding:5px 16px;font-size:13px;opacity:.85;
+  animation:slideUp .5s ease both .7s;
 }
 
-/* LEFT column */
-.left-col {
-    flex: 1.1;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+/* ── SCORE CARD ── */
+.score-card{
+  background:linear-gradient(135deg,rgba(255,215,0,0.08),rgba(15,42,94,0.6));
+  border:2px solid rgba(255,215,0,0.3);border-radius:20px;
+  padding:24px 20px;text-align:center;margin:18px 0;
+  box-shadow:0 0 40px rgba(255,215,0,0.1);
+  animation:slideUp .5s ease both .9s;
 }
-.title-block { text-align: left; }
-h1 {
-    font-size: 24px;
-    letter-spacing: 0.4px;
-    margin-bottom: 3px;
+.score-pct{
+  font-family:'Oswald',sans-serif;
+  font-size:72px;font-weight:700;line-height:1;
+  background:linear-gradient(45deg,#FFD700,#fff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.edition {
-    font-size: 14px;
-    color: #FFD700;
-    font-weight: bold;
+.score-pts{font-size:15px;opacity:.65;margin:4px 0 14px;}
+.overall-badge{
+  display:inline-block;padding:10px 28px;border-radius:30px;
+  font-size:17px;font-weight:900;letter-spacing:.5px;
+  animation:badgePulse 2.5s ease infinite 2s;
 }
-.intro-para {
-    font-size: 13px;
-    line-height: 1.8;
-    opacity: 0.92;
-}
-.award-box {
-    font-size: 12.5px;
-    background: rgba(255,215,0,0.1);
-    border: 1px solid rgba(255,215,0,0.35);
-    border-radius: 12px;
-    padding: 12px 16px;
-    line-height: 1.85;
-}
-.medals {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-.medal-tag {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    font-weight: bold;
-}
-button {
-    padding: 13px 30px;
-    font-size: 17px;
-    font-weight: bold;
-    border: none;
-    border-radius: 10px;
-    background: linear-gradient(45deg, #f2c300, #e6a800);
-    color: #000;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 18px rgba(242,195,0,0.4);
-    width: 100%;
-    letter-spacing: 0.3px;
-}
-button:hover {
-    transform: scale(1.03);
-    box-shadow: 0 6px 24px rgba(242,195,0,0.6);
-}
+@keyframes badgePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
 
-/* RIGHT column */
-.right-col {
-    flex: 0.9;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+/* ── VOICE CTA BOX ── */
+.voice-cta{
+  background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.25);
+  border-radius:14px;padding:14px 18px;margin:0 0 18px;
+  display:flex;align-items:center;gap:14px;
+  animation:slideUp .5s ease both 1.1s;
 }
-.modules-label {
-    font-size: 13px;
-    color: #c8e6ff;
-    font-weight: bold;
-    margin-bottom: 2px;
-}
-ul.modules-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-ul.modules-list li {
-    font-size: 12.5px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 6px 12px;
-    line-height: 1.4;
-}
+.voice-cta .mic{font-size:32px;flex-shrink:0;animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
+.voice-cta p{font-size:13px;line-height:1.6;opacity:.9;}
+.voice-cta strong{color:var(--gold);}
 
-/* Footer */
-.footer {
-    margin-top: 16px;
-    font-size: 11.5px;
-    color: #cce0ff;
-    text-align: center;
-    opacity: 0.7;
-    line-height: 1.6;
+/* ── BADGES GRID ── */
+.section-title{
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  opacity:.45;margin:18px 0 10px;padding-left:2px;
 }
+.badges-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  margin-bottom:24px;
+}
+@media(max-width:600px){.badges-grid{grid-template-columns:repeat(2,1fr);}}
+.badge-card{
+  background:var(--card);border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;padding:12px 8px;text-align:center;
+  transition:transform .2s;opacity:0;
+  animation:cardPop .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+.badge-card:hover{transform:scale(1.05);}
+@keyframes cardPop{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+.badge-card img{width:38px;height:38px;border-radius:50%;background:#fff;
+  padding:2px;object-fit:contain;margin-bottom:5px;}
+.badge-card .svc-name{font-size:10px;font-weight:700;opacity:.75;line-height:1.3;margin-bottom:4px;}
+.badge-card .medal{font-size:20px;line-height:1;}
+.badge-card .pts-small{font-size:10px;opacity:.5;margin-top:2px;}
+.badge-card.gold{border-color:rgba(255,215,0,0.5);background:rgba(255,215,0,0.08);}
+.badge-card.silver{border-color:rgba(192,192,192,0.4);background:rgba(192,192,192,0.05);}
+.badge-card.bronze{border-color:rgba(205,127,50,0.4);background:rgba(205,127,50,0.05);}
+.badge-card.incomplete{opacity:.3;filter:grayscale(80%);}
 
-/* Fallback for narrow screens */
-@media(max-width: 680px){
-    .landscape { flex-direction: column; }
-    .top-bar { flex-direction: column; align-items: center; }
-    .logo { width: 90px; height: 90px; }
-    .banner { max-height: 80px; width: 100%; }
-    h1 { font-size: 20px; text-align: center; }
-    .title-block { text-align: center; }
-    button { font-size: 15px; }
+/* ── SUBMIT CTA ── */
+.submit-section{
+  background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(15,42,94,0.4));
+  border:2px solid rgba(255,215,0,0.4);border-radius:20px;
+  padding:24px 20px;text-align:center;margin-top:8px;
+  animation:slideUp .5s ease both 1.3s;
+}
+.submit-section h3{
+  font-family:'Oswald',sans-serif;font-size:20px;
+  color:var(--gold);margin-bottom:8px;letter-spacing:.5px;
+}
+.submit-section p{font-size:13px;opacity:.8;line-height:1.7;margin-bottom:18px;}
+.submit-btn{
+  display:inline-block;padding:16px 40px;
+  background:linear-gradient(45deg,#FFD700,#e6a800);
+  color:#000;border:none;border-radius:14px;
+  font-size:17px;font-weight:900;cursor:pointer;
+  font-family:'Nunito',sans-serif;
+  box-shadow:0 6px 28px rgba(255,215,0,0.5);
+  animation:pulseBtn 2s ease infinite;
+  width:100%;max-width:360px;
+}
+@keyframes pulseBtn{0%,100%{box-shadow:0 6px 28px rgba(255,215,0,0.4);}50%{box-shadow:0 6px 44px rgba(255,215,0,0.9);}}
+.submit-btn:hover{transform:scale(1.03);}
+
+/* ── MODAL OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,0.88);justify-content:center;align-items:center;padding:12px;}
+.overlay.show{display:flex;}
+.form-modal{
+  background:linear-gradient(160deg,#0d1f42,#1a3a6e);
+  border:2px solid rgba(255,215,0,0.3);border-radius:18px;
+  padding:26px 22px;width:100%;max-width:420px;max-height:90vh;
+  overflow-y:auto;display:flex;flex-direction:column;gap:13px;
+  box-shadow:0 0 60px rgba(255,215,0,0.15);
+}
+.form-modal h3{font-family:'Oswald',sans-serif;font-size:20px;text-align:center;
+  background:linear-gradient(90deg,#FFD700,#fff,#FFD700);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px;}
+.form-modal .sub{font-size:12px;opacity:.65;text-align:center;line-height:1.5;}
+.step-dots{display:flex;justify-content:center;gap:7px;}
+.dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all .3s;}
+.dot.active{background:#FFD700;transform:scale(1.3);}
+.dot.done{background:rgba(0,200,80,0.7);}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-group label{font-size:11px;font-weight:700;opacity:.7;letter-spacing:.5px;text-transform:uppercase;}
+.field-group input,.field-group select{
+  padding:11px 13px;border-radius:9px;
+  border:1.5px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-size:14px;outline:none;width:100%;
+  font-family:'Nunito',sans-serif;
+  transition:border-color .2s;
+}
+.field-group input:focus,.field-group select:focus{border-color:#FFD700;}
+.field-group input::placeholder{opacity:.4;}
+.field-group select option{background:#1a3a6e;}
+.step-display{font-size:12px;opacity:.5;text-align:center;}
+.modal-btns{display:flex;gap:9px;}
+.modal-btns button{
+  flex:1;padding:11px;border:none;border-radius:9px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:'Nunito',sans-serif;
+}
+.btn-next{background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;}
+.btn-back{background:rgba(255,255,255,0.1);color:#fff;display:none;}
+.err{color:#ff7070;font-size:12px;display:none;text-align:center;}
+.success{display:none;text-align:center;padding:10px 0;}
+.success .big{font-size:54px;}
+.success h3{font-family:'Oswald',sans-serif;font-size:22px;margin:8px 0 6px;
+  background:linear-gradient(90deg,#FFD700,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.success p{font-size:13px;opacity:.7;line-height:1.7;}
+
+/* ── REDIRECT SCREEN ── */
+#redirectScreen{
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#060d1f 0%,#0f2a5e 60%,#1a3a6e 100%);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:30px 20px;text-align:center;
 }
 </style>
 </head>
 <body>
 
-<!-- Top bar -->
-<div class="top-bar">
-    <img src="../MEDIA/logo_quiz.png" alt="Cadet Media Ghana" class="logo">
-    <img src="../MEDIA/all_services_banner.png" alt="Ghana Public Safety Services" class="banner">
-</div>
+<!-- Starfield -->
+<div id="stars"></div>
 
-<!-- Landscape two-column layout -->
-<div class="landscape">
+<!-- Confetti layer -->
+<div class="confetti-wrap" id="confettiWrap"></div>
 
-    <!-- LEFT: title, intro, awards, button -->
-    <div class="left-col">
-        <div class="title-block">
-            <h1>🇬🇭 National Public Safety Quiz</h1>
-            <p class="edition">Cadet Media Ghana &nbsp;·&nbsp; 2026 Edition</p>
-        </div>
+<div class="page">
 
-        <p class="intro-para">
-            This competition tests your understanding of Ghana's public safety institutions and the
-            vital roles they play in protecting lives, maintaining order, and building safer communities.
-            You will be assessed across <strong>13 dedicated service modules</strong> — each representing
-            a key national agency working to keep Ghana safe.
-        </p>
+  <!-- Banner -->
+  <div class="banner-wrap">
+    <img src="../MEDIA/all_services_banner.png" alt="All Services Banner">
+  </div>
 
-        <div class="award-box">
-            🏆 <strong>Outstanding performers will be honoured and awarded</strong> at the
-            <strong>Cadet Personality Awards Day</strong> held at the
-            <strong>Fire Academy and Training Centre (FATS)</strong>.<br><br>
-            Certificates of achievement are awarded to <em>all</em> participating cadets.
-            <div class="medals">
-                <span class="medal-tag">🥇 Gold — 85% &amp; above</span>
-                <span class="medal-tag">🥈 Silver — 70–84%</span>
-                <span class="medal-tag">🥉 Bronze — 50–69%</span>
-            </div>
-        </div>
+  <!-- Hero Greeting -->
+  <div class="hero">
+    <div class="trophy-wrap">🏆</div>
+    <h1 id="greetingText">Congratulations, Cadet!</h1>
+    <div class="school-tag" id="greetingSchool">Ghana Student Safety & Service Challenge</div>
+  </div>
 
-        <button id="startQuizBtn">🚀 Begin the Challenge</button>
+  <!-- Score Card -->
+  <div class="score-card">
+    <div class="score-pct" id="totalPct">0%</div>
+    <div class="score-pts" id="totalPts">0 / 360 points</div>
+    <div class="overall-badge" id="overallBadge">🎓 Calculating...</div>
+  </div>
+
+  <!-- Voice / audio note -->
+  <div class="voice-cta">
+    <div class="mic">🎙️</div>
+    <p id="voiceCTAText">
+      <strong>Listen up!</strong> Your results are in. Tap the button below to complete your registration and officially submit your scores for the <strong>Cadet Personality Awards</strong>.
+    </p>
+  </div>
+
+  <!-- Service badges -->
+  <div class="section-title">📋 Your Service Module Results</div>
+  <div class="badges-grid" id="badgesGrid"></div>
+
+  <!-- Submit CTA -->
+  <div class="submit-section">
+    <h3>📋 You're Almost Done!</h3>
+    <p>Complete your registration and submit your results to be considered for the<br>
+    <strong style="color:#FFD700;">🇬🇭 Cadet Personality Awards</strong> at the Fire Academy &amp; Training Centre.</p>
+    <button class="submit-btn" onclick="openForm()">
+      ✅ Complete Registration &amp; Submit Results
+    </button>
+  </div>
+
+</div><!-- /page -->
+
+<!-- Submission Modal -->
+<div class="overlay" id="formOverlay">
+  <div class="form-modal" id="formModal">
+    <div class="step-dots" id="stepDots"></div>
+    <div class="step-display" id="stepDisplay"></div>
+    <div id="stepsContainer"></div>
+    <div class="err" id="formErr">Please fill in this field.</div>
+    <div class="modal-btns">
+      <button class="btn-back" id="btnBack" onclick="prevStep()">← Back</button>
+      <button class="btn-next" id="btnNext" onclick="nextStep()">Next →</button>
     </div>
-
-    <!-- RIGHT: modules list -->
-    <div class="right-col">
-        <p class="modules-label">📚 Service modules in this competition:</p>
-        <ul class="modules-list">
-            <li>🛡️ General Public Safety &amp; Emergency Awareness</li>
-            <li>🎓 Student Safety — Rights &amp; Awareness</li>
-            <li>🔥 Fire Safety &amp; Prevention — Ghana National Fire Service</li>
-            <li>👮 Community Policing — Ghana Police Service</li>
-            <li>🚑 Health &amp; First Aid — National Ambulance Service</li>
-            <li>⚖️ Discipline &amp; Corrections — Ghana Prisons Service</li>
-            <li>🌪️ Disaster Preparedness — NADMO</li>
-            <li>✈️ Border &amp; Travel Safety — Ghana Immigration Service</li>
-            <li>📦 Trade &amp; Customs — Ghana Revenue Authority</li>
-            <li>🏛️ Heritage, Tourism &amp; Arts — Ministry of Tourism, Arts and Culture</li>
-            <li>🌿 Environmental Protection — Forestry Commission</li>
-            <li>🎖️ National Defence — Ghana Armed Forces</li>
-            <li>🚫 Drug &amp; Substance Awareness — NACOC</li>
-        </ul>
+    <div class="success" id="successScreen">
+      <div class="big">🏆</div>
+      <h3>Submitted Successfully!</h3>
+      <p>Your results have been recorded.<br>
+         We will see you at the<br>
+         <strong>Cadet Personality Awards</strong><br>
+         at Fire Academy &amp; Training Centre! 🇬🇭</p>
     </div>
-
+  </div>
 </div>
 
-<div class="footer">
-    An educational initiative by <strong>Cadet Media Ghana</strong>
-    in collaboration with Ghana's national public safety institutions
+<!-- Redirect Screen -->
+<div id="redirectScreen" style="display:none;position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#060d1f 0%,#0f2a5e 60%,#1a3a6e 100%);
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:30px 20px;text-align:center;">
+  <div style="font-size:64px;margin-bottom:10px;animation:trophyPop .6s cubic-bezier(.34,1.56,.64,1) both;">🏆</div>
+  <h2 style="font-family:'Oswald',sans-serif;font-size:28px;margin-bottom:8px;
+    background:linear-gradient(90deg,#FFD700,#fff,#FFD700);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;">Results Submitted!</h2>
+  <p style="font-size:15px;opacity:.8;margin-bottom:24px;line-height:1.6;">
+    Taking you to the <strong style="color:#FFD700;">Live Leaderboard</strong><br>
+    to view your rank &amp; download your certificate 🎖️
+  </p>
+  <div style="position:relative;width:110px;height:110px;margin:0 auto 24px;">
+    <svg width="110" height="110" style="transform:rotate(-90deg);">
+      <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+      <circle id="countdownCircle" cx="55" cy="55" r="48" fill="none"
+        stroke="#FFD700" stroke-width="8"
+        stroke-dasharray="301.6" stroke-dashoffset="0"
+        style="transition:stroke-dashoffset 1s linear;"/>
+    </svg>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <span id="countdownNum" style="font-family:'Oswald',sans-serif;font-size:38px;color:#FFD700;line-height:1;">5</span>
+      <span style="font-size:11px;opacity:.6;">seconds</span>
+    </div>
+  </div>
+  <button onclick="goToLeaderboard()" style="
+    padding:15px 36px;background:linear-gradient(45deg,#FFD700,#e6a800);
+    color:#000;border:none;border-radius:14px;font-size:16px;font-weight:900;
+    cursor:pointer;font-family:'Nunito',sans-serif;
+    box-shadow:0 6px 24px rgba(255,215,0,0.5);
+    margin-bottom:14px;width:100%;max-width:320px;">
+    🏆 Go to Leaderboard Now
+  </button>
+  <p style="font-size:12px;opacity:.4;">View rankings · Download certificate · Share results</p>
 </div>
 
-<!-- Click Sound -->
-<audio id="hoverSound">
-    <source src="../MEDIA/hover.mp3" type="audio/mpeg">
-</audio>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-window.addEventListener('DOMContentLoaded',function(){
-  // ── CMG Activation Check ──
-  (function(){
-    var name    = localStorage.getItem('cadetName');
-    var school  = localStorage.getItem('cadetSchool');
-    var gender  = localStorage.getItem('cadetGender');
-    var code    = localStorage.getItem('cmgCode');
-    var activated = localStorage.getItem('cmgActivated');
-    if(!name || !school || !gender || !code || activated !== 'true'){
-      window.location.href = 'activate.html';
-    }
-  })();
-});
-const startBtn   = document.getElementById('startQuizBtn');
-const hoverSound = document.getElementById('hoverSound');
+// ══════════════════════════════════════════════
+//  WEB AUDIO ENGINE
+// ══════════════════════════════════════════════
+const AC = new (window.AudioContext || window.webkitAudioContext)();
 
-function playClickSound(){
-    hoverSound.pause();
-    hoverSound.currentTime = 0;
-    hoverSound.play().catch(()=>{});
+function sndTone(freq, type, start, dur, gainPeak){
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.connect(g); g.connect(AC.destination);
+  o.type = type; o.frequency.setValueAtTime(freq, AC.currentTime + start);
+  g.gain.setValueAtTime(0, AC.currentTime + start);
+  g.gain.linearRampToValueAtTime(gainPeak, AC.currentTime + start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + start + dur);
+  o.start(AC.currentTime + start);
+  o.stop(AC.currentTime + start + dur + 0.05);
 }
 
-startBtn.addEventListener('click', () => {
-    playClickSound();
-    setTimeout(() => {
-        window.location.href = 'quiz_questions.html';
-    }, 150);
+function sndFanfare(){
+  // Triumphant rising trumpet arpeggio
+  const t = AC.currentTime;
+  const notes = [523,659,784,1047,1319,1568,2093];
+  notes.forEach((f,i) => makeTrumpetNote(f, t + i*0.13, 0.32, 0.6));
+  // Bass harmony
+  [131,165,196].forEach((f,i) => makeTrumpetNote(f, t + i*0.06, 0.9, 0.22));
+}
+
+// ══════════════════════════════════════════════
+//  TRUMPET ENGINE
+//  A trumpet-like tone uses sawtooth + heavy
+//  low-pass filter + brass-style ADSR envelope
+// ══════════════════════════════════════════════
+
+function makeTrumpetNote(freq, startTime, duration, vol=0.7){
+  // Sawtooth is rich in harmonics — the core of brass tone
+  const osc = AC.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(freq, startTime);
+
+  // Slight vibrato after attack (natural trumpet wobble)
+  const vibratoOsc = AC.createOscillator();
+  vibratoOsc.frequency.value = 5.5; // 5.5 Hz vibrato rate
+  const vibratoGain = AC.createGain();
+  vibratoGain.gain.setValueAtTime(0, startTime);
+  vibratoGain.gain.linearRampToValueAtTime(freq * 0.008, startTime + duration * 0.4); // kicks in at 40%
+  vibratoOsc.connect(vibratoGain);
+  vibratoGain.connect(osc.frequency);
+  vibratoOsc.start(startTime);
+  vibratoOsc.stop(startTime + duration + 0.1);
+
+  // Brass resonance: low-pass shapes the bright saw into a warmer brass sound
+  const lp = AC.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(800, startTime);         // starts muffled (like valve pressing)
+  lp.frequency.linearRampToValueAtTime(3200, startTime + 0.04); // opens up fast on attack
+  lp.frequency.linearRampToValueAtTime(2200, startTime + duration * 0.6); // settles mid-sustain
+  lp.Q.value = 3.5;
+
+  // Presence boost — gives that bright trumpet "cut"
+  const peak = AC.createBiquadFilter();
+  peak.type = 'peaking';
+  peak.frequency.value = 1800;
+  peak.gain.value = 10;
+  peak.Q.value = 1.5;
+
+  // ADSR envelope
+  const env = AC.createGain();
+  env.gain.setValueAtTime(0, startTime);
+  env.gain.linearRampToValueAtTime(vol, startTime + 0.025);          // Attack: snappy
+  env.gain.linearRampToValueAtTime(vol * 0.85, startTime + 0.07);   // Decay
+  env.gain.setValueAtTime(vol * 0.85, startTime + duration - 0.06); // Sustain
+  env.gain.linearRampToValueAtTime(0, startTime + duration);         // Release
+
+  osc.connect(lp); lp.connect(peak); peak.connect(env); env.connect(AC.destination);
+  osc.start(startTime); osc.stop(startTime + duration + 0.05);
+}
+
+// ── SHORT CELEBRATORY FANFARE (ta-da!) ──
+// Classic 2-note "ta-DA!" trumpet stab
+function sndApplause(){
+  const t = AC.currentTime;
+  // "Ta-DA!" — short note then long accented note (G → C)
+  makeTrumpetNote(392, t,        0.18, 0.65);  // G4  short
+  makeTrumpetNote(523, t + 0.20, 0.55, 0.80);  // C5  accent hit
+}
+
+// ── FULL TRUMPET FANFARE (extended celebration) ──
+// "Dun dun da-DA-DUN!" Royal fanfare pattern
+function sndCrowd(){
+  const t = AC.currentTime;
+  // Phrase 1: rising call
+  makeTrumpetNote(392, t + 0.00, 0.20, 0.70);  // G4
+  makeTrumpetNote(523, t + 0.22, 0.20, 0.70);  // C5
+  makeTrumpetNote(659, t + 0.44, 0.20, 0.75);  // E5
+  // Big accent
+  makeTrumpetNote(784, t + 0.68, 0.45, 0.90);  // G5 — the peak
+  // Phrase 2: resolution
+  makeTrumpetNote(659, t + 1.18, 0.18, 0.70);  // E5
+  makeTrumpetNote(784, t + 1.40, 0.18, 0.70);  // G5
+  makeTrumpetNote(1047,t + 1.62, 0.70, 0.85);  // C6 — triumphant hold
+  // Low harmony underneath
+  makeTrumpetNote(196, t + 0.68, 0.45, 0.35);  // G3 bass
+  makeTrumpetNote(262, t + 1.62, 0.70, 0.30);  // C4 bass hold
+}
+
+function sndGoldFanfare(){
+  // Most dramatic — full royal trumpet fanfare
+  const t = AC.currentTime;
+  // Call: G E C G (descending call)
+  makeTrumpetNote(784, t + 0.00, 0.18, 0.75);  // G5
+  makeTrumpetNote(659, t + 0.20, 0.18, 0.72);  // E5
+  makeTrumpetNote(523, t + 0.40, 0.18, 0.72);  // C5
+  makeTrumpetNote(392, t + 0.60, 0.35, 0.80);  // G4 held
+  // Response: rising triumphant finish
+  makeTrumpetNote(523, t + 1.00, 0.16, 0.75);  // C5
+  makeTrumpetNote(659, t + 1.18, 0.16, 0.78);  // E5
+  makeTrumpetNote(784, t + 1.36, 0.16, 0.82);  // G5
+  makeTrumpetNote(1047,t + 1.55, 0.80, 0.90);  // C6 — big hold
+  // Bass line
+  makeTrumpetNote(131, t + 0.60, 0.35, 0.28);
+  makeTrumpetNote(196, t + 1.00, 0.70, 0.28);
+  makeTrumpetNote(262, t + 1.55, 0.80, 0.30);
+}
+
+function sndChime(){
+  // Silver — bright 3-note trumpet call
+  const t = AC.currentTime;
+  makeTrumpetNote(659, t + 0.00, 0.22, 0.65);  // E5
+  makeTrumpetNote(784, t + 0.24, 0.22, 0.68);  // G5
+  makeTrumpetNote(1047,t + 0.48, 0.50, 0.72);  // C6
+}
+
+function sndBell(){
+  // Bronze — short warm 2-note trumpet
+  const t = AC.currentTime;
+  makeTrumpetNote(523, t + 0.00, 0.22, 0.60);  // C5
+  makeTrumpetNote(659, t + 0.25, 0.45, 0.65);  // E5
+}
+
+// ── VOICE ANNOUNCER ──
+function speak(text, rate, pitch){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang   = 'en-GB';
+  u.rate   = rate  || 0.92;
+  u.pitch  = pitch || 1.05;
+  u.volume = 1;
+
+  function pickVoice(){
+    const vs = window.speechSynthesis.getVoices();
+    return vs.find(v => v.lang.startsWith('en-GB') && v.name.toLowerCase().includes('female'))
+        || vs.find(v => v.lang.startsWith('en-GB'))
+        || vs.find(v => v.lang.startsWith('en'));
+  }
+
+  function doSpeak(){
+    const v = pickVoice();
+    if(v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }
+
+  // Always register onvoiceschanged first (catches async load on mobile/Chrome)
+  window.speechSynthesis.onvoiceschanged = function(){
+    window.speechSynthesis.onvoiceschanged = null; // fire once only
+    window.speechSynthesis.cancel();
+    const v = pickVoice();
+    if(v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  };
+
+  // If voices already available, speak immediately
+  if(window.speechSynthesis.getVoices().length > 0){
+    window.speechSynthesis.onvoiceschanged = null; // not needed
+    doSpeak();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb2Nkc19rLDOoCeR_GLABuG5aY2I-g/formResponse";
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec';
+
+const SERVICES = [
+  {key:"general",       name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
+  {key:"studentSafety", name:"Student Safety",       logo:"../MEDIA/logo_quiz.png",        entry:"entry.1958967378"},
+  {key:"fire",          name:"Fire Safety – GNFS",   logo:"../MEDIA/logo_gnfs.png",        entry:"entry.1366036710"},
+  {key:"police",        name:"Police / Community",   logo:"../MEDIA/logo_police.png",      entry:"entry.22414501"},
+  {key:"ambulance",     name:"Ambulance / Health",   logo:"../MEDIA/logo_health.png",      entry:"entry.174470758"},
+  {key:"prisons",       name:"Prisons / Discipline", logo:"../MEDIA/logo_prisons.png",     entry:"entry.1755285931"},
+  {key:"nadmo",         name:"NADMO / Disaster",     logo:"../MEDIA/logo_nadmo.png",       entry:"entry.173528320"},
+  {key:"immigration",   name:"Immigration",          logo:"../MEDIA/logo_immigration.png", entry:"entry.1558874461"},
+  {key:"customs",       name:"Customs / GRA",        logo:"../MEDIA/logo_customs.png",     entry:"entry.2043827561"},
+  {key:"tourism",       name:"Tourism & Arts",       logo:"../MEDIA/logo_tourism.png",     entry:"entry.387208737"},
+  {key:"forest",        name:"Forest Commission",    logo:"../MEDIA/logo_forest.png",      entry:"entry.192995498"},
+  {key:"gaf",           name:"Ghana Armed Forces",   logo:"../MEDIA/logo_gaf.png",         entry:"entry.1803385068"},
+  {key:"narcotics",     name:"NACOC / Drug Safety",  logo:"../MEDIA/logo_nacoc.png",       entry:"entry.1510755760"},
+];
+
+const MAX_PER_QUIZ = 30;
+const TOTAL_MAX    = SERVICES.length * MAX_PER_QUIZ; // 390
+
+// ══════════════════════════════════════════════
+//  STARFIELD
+// ══════════════════════════════════════════════
+(function(){
+  const wrap = document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --d:${2+Math.random()*4}s;--delay:${-Math.random()*4}s;
+      width:${Math.random()<0.3?3:2}px;height:${Math.random()<0.3?3:2}px;`;
+    wrap.appendChild(s);
+  }
+})();
+
+// ══════════════════════════════════════════════
+//  CSS CONFETTI BURST
+// ══════════════════════════════════════════════
+function launchCSSConfetti(){
+  const wrap = document.getElementById('confettiWrap');
+  const colors = ['#FFD700','#ff4757','#2ed573','#1e90ff','#ff6b81','#eccc68','#fff'];
+  for(let i=0;i<60;i++){
+    const c = document.createElement('div');
+    c.className = 'conf';
+    const cx  = (Math.random()-0.5)*600;
+    const cx2 = (Math.random()-0.5)*200;
+    const cr  = (Math.random()-0.5)*720;
+    const cd  = 2 + Math.random()*2;
+    const cdelay = Math.random()*0.8;
+    c.style.cssText = `left:50%;background:${colors[i%colors.length]};
+      --cx:${cx}px;--cx2:${cx2}px;--cr:${cr}deg;
+      --cd:${cd}s;--cdelay:${cdelay}s;`;
+    wrap.appendChild(c);
+  }
+  setTimeout(()=>{ wrap.innerHTML=''; },5000);
+}
+
+// ══════════════════════════════════════════════
+//  ACTIVATION CHECK + LOAD DATA
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function(){
+  // Guard
+  const _n=localStorage.getItem('cadetName');
+  const _s=localStorage.getItem('cadetSchool');
+  const _g=localStorage.getItem('cadetGender');
+  const _c=localStorage.getItem('cmgCode');
+  const _a=localStorage.getItem('cmgActivated');
+  if(!_n||!_s||!_g||!_c||_a!=='true'){
+    window.location.href='activate.html'; return;
+  }
+
+  // Load cadet info
+  window.cadetName   = _n;
+  window.cadetGender = _g;
+  window.cadetSchool = _s;
+  const title = _g==='Female'?'Cadetess':'Cadet';
+  const firstName = _n.split(' ')[0];
+
+  // Load scores
+  let totalScore=0;
+  window.scoreMap={};
+  SERVICES.forEach(s=>{
+    const raw=localStorage.getItem(s.key+'Score')||'0';
+    const sc=parseInt(raw.includes('/')?raw.split('/')[0]:raw)||0;
+    window.scoreMap[s.key]=sc;
+    totalScore+=sc;
+  });
+  window.totalScore=totalScore;
+
+  // Greeting
+  document.getElementById('greetingText').textContent =
+    `Congratulations, ${title} ${_n}!`;
+  document.getElementById('greetingSchool').textContent =
+    _s ? `Ghana Student Safety & Service Challenge · ${_s}` : 'Ghana Student Safety & Service Challenge';
+
+  // Score card
+  const pct = Math.round((totalScore/TOTAL_MAX)*100);
+  window.pct = pct;
+  document.getElementById('totalPct').textContent = pct+'%';
+  document.getElementById('totalPts').textContent = `${totalScore} / ${TOTAL_MAX} points`;
+
+  // Overall badge
+  let overallLabel, overallStyle, tier;
+  if(pct>=85){
+    tier='gold';
+    overallLabel='🏅 GOLD DISTINCTION — Outstanding Cadet!';
+    overallStyle='background:linear-gradient(45deg,#FFD700,#ffb300);color:#000;';
+  } else if(pct>=70){
+    tier='silver';
+    overallLabel='🥈 SILVER HONOURS — Excellent Cadet!';
+    overallStyle='background:linear-gradient(45deg,#c0c0c0,#e0e0e0);color:#000;';
+  } else if(pct>=50){
+    tier='bronze';
+    overallLabel='🥉 BRONZE CREDIT — Good Cadet!';
+    overallStyle='background:linear-gradient(45deg,#cd7f32,#b87333);color:#fff;';
+  } else {
+    tier='participant';
+    overallLabel='🎓 PARTICIPANT — Keep Studying!';
+    overallStyle='background:rgba(255,255,255,0.12);color:#fff;';
+  }
+  window.overallLabel=overallLabel; window.tier=tier;
+  const ob=document.getElementById('overallBadge');
+  ob.textContent=overallLabel; ob.style.cssText+=overallStyle;
+
+  // Service badge grid
+  const grid=document.getElementById('badgesGrid');
+  SERVICES.forEach((s,idx)=>{
+    const sc=window.scoreMap[s.key];
+    const raw=localStorage.getItem(s.key+'Score');
+    const done=localStorage.getItem(s.key+'Completed')==='true'||(raw&&parseInt(raw)>0);
+    const card=document.createElement('div');
+    let cls='badge-card',medal='—',ptsText=done?`${sc}/${MAX_PER_QUIZ}`:'Not done';
+    if(!done){cls+=' incomplete';}
+    else if(sc>=MAX_PER_QUIZ*0.85){cls+=' gold';medal='🏅';}
+    else if(sc>=MAX_PER_QUIZ*0.5){cls+=' silver';medal='🥈';}
+    else{cls+=' bronze';medal='🥉';}
+    card.className=cls;
+    card.style.animationDelay = (1.4 + idx*0.07)+'s';
+    card.innerHTML=`<img src="${s.logo}" alt="${s.name}">
+      <div class="svc-name">${s.name}</div>
+      <div class="medal">${medal}</div>
+      <div class="pts-small">${ptsText}</div>`;
+    grid.appendChild(card);
+  });
+
+  // Voice CTA text
+  const ctaMsg = tier==='gold'
+    ? `<strong>🏅 Gold Distinction!</strong> You've truly excelled, ${title} ${firstName}. Now complete your registration below to claim your award at the <strong>Cadet Personality Awards</strong>.`
+    : tier==='silver'
+    ? `<strong>🥈 Silver Honours!</strong> Well done, ${title} ${firstName}! Submit your results below to be considered for the <strong>Cadet Personality Awards</strong>.`
+    : tier==='bronze'
+    ? `<strong>🥉 Bronze Credit!</strong> Good work, ${title} ${firstName}. Complete your registration below to officially enter the <strong>Cadet Personality Awards</strong>.`
+    : `<strong>🎓 Good effort, ${title} ${firstName}!</strong> Complete your registration below to officially submit your results for the <strong>Cadet Personality Awards</strong>.`;
+  document.getElementById('voiceCTAText').innerHTML = ctaMsg;
+
+  // ── STORE for tap handler ──
+  window._celebData = { tier, firstName, title, pct };
+
+  // ── SHOW TAP OVERLAY ──
+  showTapOverlay(tier, firstName, title);
 });
+
+// ══════════════════════════════════════════════
+//  TAP-TO-CELEBRATE OVERLAY
+// ══════════════════════════════════════════════
+function showTapOverlay(tier, firstName, title){
+  const overlay = document.createElement('div');
+  overlay.id = 'tapOverlay';
+
+  const emoji = tier==='gold'?'🏅':tier==='silver'?'🥈':tier==='bronze'?'🥉':'🎓';
+  const msg   = tier==='gold'?'Gold Distinction!':tier==='silver'?'Silver Honours!':tier==='bronze'?'Bronze Credit!':'You Did It!';
+
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:8000;
+    background:linear-gradient(160deg,rgba(6,13,31,0.97),rgba(15,42,94,0.97));
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:30px;cursor:pointer;
+    animation:fadeIn .4s ease;
+  `;
+  overlay.innerHTML = `
+    <style>@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    @keyframes tapBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+    @keyframes ripple{0%{transform:scale(1);opacity:.6;}100%{transform:scale(2.5);opacity:0;}}
+    </style>
+    <div style="font-size:90px;line-height:1;margin-bottom:14px;
+      animation:tapBounce 1.4s ease infinite;">${emoji}</div>
+    <h2 style="font-family:'Oswald',sans-serif;font-size:clamp(24px,6vw,40px);
+      background:linear-gradient(90deg,#FFD700,#fff,#FFD700);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      margin-bottom:8px;letter-spacing:1px;">${msg}</h2>
+    <p style="font-size:15px;opacity:.75;margin-bottom:32px;line-height:1.6;">
+      Congratulations, <strong style="color:#FFD700;">${title} ${firstName}</strong>!<br>
+      Your results are ready.
+    </p>
+    <div style="position:relative;display:inline-block;">
+      <div style="position:absolute;inset:-8px;border-radius:50%;background:rgba(255,215,0,0.3);
+        animation:ripple 1.5s ease-out infinite;"></div>
+      <div style="position:absolute;inset:-4px;border-radius:50%;background:rgba(255,215,0,0.2);
+        animation:ripple 1.5s ease-out .4s infinite;"></div>
+      <button id="tapBtn" style="
+        position:relative;z-index:1;
+        width:150px;height:150px;border-radius:50%;border:none;cursor:pointer;
+        background:linear-gradient(45deg,#FFD700,#e6a800);
+        font-size:42px;line-height:1;
+        box-shadow:0 0 40px rgba(255,215,0,0.6);
+        font-family:'Nunito',sans-serif;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+        <span>🎉</span>
+        <span style="font-size:13px;font-weight:900;color:#000;line-height:1.2;">TAP TO<br>CELEBRATE!</span>
+      </button>
+    </div>
+    <p style="font-size:11px;opacity:.35;margin-top:24px;">Tap anywhere to continue</p>
+  `;
+
+  document.body.appendChild(overlay);
+
+  function fireIt(){
+    // Resume AudioContext (requires user gesture)
+    if(AC.state==='suspended') AC.resume();
+
+    // Dismiss overlay with fade
+    overlay.style.transition='opacity .4s';
+    overlay.style.opacity='0';
+    setTimeout(()=>{ if(overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 400);
+
+    // Fire full celebration
+    const d = window._celebData;
+    celebrate(d.tier, d.firstName, d.title, d.pct);
+  }
+
+  overlay.addEventListener('click', fireIt, {once:true});
+}
+
+// ══════════════════════════════════════════════
+//  CELEBRATION SEQUENCE
+// ══════════════════════════════════════════════
+function celebrate(tier, firstName, title, pct){
+  // 1. Audio fanfare based on tier
+  if(tier==='gold'){
+    sndGoldFanfare();
+    setTimeout(sndApplause, 100);   // clapping starts almost immediately
+    setTimeout(sndCrowd, 800);      // crowd sustained applause after claps
+  } else if(tier==='silver'){
+    sndFanfare();
+    setTimeout(sndApplause, 100);
+    setTimeout(sndCrowd, 700);
+  } else if(tier==='bronze'){
+    sndChime();
+    setTimeout(sndApplause, 100);
+    setTimeout(sndCrowd, 600);
+  } else {
+    sndBell();
+    setTimeout(sndApplause, 100);
+    setTimeout(sndCrowd, 500);
+  }
+
+  // 2. Canvas confetti
+  if(tier==='gold'||tier==='silver'){
+    setTimeout(()=>{
+      confetti({particleCount:200,spread:140,origin:{y:0.5},colors:['#FFD700','#fff','#ff6b81','#2ed573']});
+      confetti({particleCount:100,spread:80,origin:{x:0.1,y:0.6}});
+      confetti({particleCount:100,spread:80,origin:{x:0.9,y:0.6}});
+    }, 400);
+  } else {
+    setTimeout(()=>{
+      confetti({particleCount:80,spread:100,origin:{y:0.6}});
+    }, 300);
+  }
+
+  // 3. CSS confetti
+  launchCSSConfetti();
+
+  // 4. Voice announcement — after fanfare settles
+  const voiceDelay = tier==='gold' ? 2200 : tier==='silver' ? 1800 : 1400;
+  setTimeout(()=>{
+    const badgeName = tier==='gold' ? 'Gold Distinction'
+      : tier==='silver' ? 'Silver Honours'
+      : tier==='bronze' ? 'Bronze Credit'
+      : 'Participant';
+    const msgs = [
+      `Congratulations ${title} ${firstName}! You have completed all your quizzes in the Ghana Student Safety and Service Challenge with ${pct} percent. You have earned the ${badgeName} badge. Please complete your registration and submit your results to be considered for the Cadet Personality Awards.`,
+      `Well done, ${title} ${firstName}! Your final score is ${pct} percent — ${badgeName}. Don't forget to scroll down, complete your registration, and submit your results. We look forward to seeing you at the awards!`,
+      `Outstanding, ${title} ${firstName}! You scored ${pct} percent and earned ${badgeName}. Tap the button below to complete your registration and officially submit your scores for the Cadet Personality Awards.`
+    ];
+    const msg = msgs[Math.floor(Math.random()*msgs.length)];
+    speak(msg, 0.9, 1.08);
+  }, voiceDelay);
+}
+
+// ══════════════════════════════════════════════
+//  SUBMISSION FORM
+// ══════════════════════════════════════════════
+const STEPS = [
+  {html:'<div class="field-group"><label>Contact Number (WhatsApp)</label><input type="tel" id="f_phone" placeholder="+233 XX XXX XXXX" maxlength="20"></div>'},
+  {html:'<div class="field-group"><label>Email Address</label><input type="email" id="f_email" placeholder="youremail@gmail.com" maxlength="80"></div>'},
+  {html:`<div class="field-group"><label>Region</label><select id="f_region"><option value="">Select your region…</option>${['Ahafo','Ashanti','Bono','Bono East','Central','Eastern','Greater Accra','North East','Northern','Oti','Savannah','Upper East','Upper West','Volta','Western','Western North'].map(r=>`<option>${r}</option>`).join('')}</select></div>`},
+  {html:'<div class="field-group"><label>District</label><input type="text" id="f_district" placeholder="e.g. Kumasi Metro" maxlength="60"></div>'},
+];
+
+let currentStep=0;
+const savedVals={f_phone:'',f_email:'',f_region:'',f_district:''};
+let headerAdded=false;
+
+function ensureHeader(){
+  if(headerAdded) return; headerAdded=true;
+  const title=window.cadetGender==='Female'?'Cadetess':'Cadet';
+  const modal=document.getElementById('formModal');
+  const hdr=document.createElement('div');
+  hdr.innerHTML=`
+    <h3>Complete Your Registration</h3>
+    <div style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);
+      border-radius:10px;padding:10px 12px;font-size:13px;text-align:center;line-height:1.6;">
+      <strong style="color:#FFD700;">🎖️ ${title} ${window.cadetName}</strong><br>
+      <span style="opacity:.7">${window.cadetSchool}</span><br>
+      <span style="color:#FFD700;font-weight:700;">${window.pct}% — ${window.overallLabel.replace(/🏅|🥈|🥉|🎓/g,'').trim()}</span>
+    </div>
+    <p class="sub">Just 4 more details and your results will be officially submitted to CMG.</p>`;
+  modal.insertBefore(hdr,modal.firstChild);
+}
+
+function buildDots(){
+  const c=document.getElementById('stepDots'); c.innerHTML='';
+  STEPS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='dot'+(i===currentStep?' active':i<currentStep?' done':'');
+    c.appendChild(d);
+  });
+}
+
+function showStep(idx){
+  const c=document.getElementById('stepsContainer'); c.innerHTML='';
+  if(idx<STEPS.length){
+    c.innerHTML=STEPS[idx].html;
+    document.getElementById('stepDisplay').textContent=`Step ${idx+1} of ${STEPS.length}`;
+    document.getElementById('btnNext').textContent=idx===STEPS.length-1?'✅ Submit Results':'Next →';
+    document.getElementById('btnBack').style.display=idx>0?'block':'none';
+    // Restore saved value
+    const ids=['f_phone','f_email','f_region','f_district'];
+    const el=document.getElementById(ids[idx]);
+    if(el) el.value=savedVals[ids[idx]]||'';
+  }
+  buildDots();
+  document.getElementById('formErr').style.display='none';
+  setTimeout(()=>{const inp=document.querySelector('#stepsContainer input,#stepsContainer select');if(inp)inp.focus();},100);
+}
+
+function openForm(){
+  ensureHeader();
+  currentStep=0;
+  document.getElementById('successScreen').style.display='none';
+  document.getElementById('stepsContainer').style.display='';
+  document.getElementById('stepDots').style.display='flex';
+  document.getElementById('stepDisplay').style.display='';
+  document.querySelector('.modal-btns').style.display='flex';
+  showStep(0);
+  document.getElementById('formOverlay').classList.add('show');
+  // Prompt via voice
+  setTimeout(()=>{
+    speak("Please fill in your contact details so we can register you for the Cadet Personality Awards.", 0.92, 1.05);
+  }, 400);
+}
+
+function saveCurrentVal(){
+  const ids=['f_phone','f_email','f_region','f_district'];
+  const el=document.getElementById(ids[currentStep]);
+  if(el) savedVals[ids[currentStep]]=el.value.trim();
+}
+
+function getVal(idx){
+  const ids=['f_phone','f_email','f_region','f_district'];
+  const el=document.getElementById(ids[idx]);
+  return el?el.value.trim():savedVals[ids[idx]];
+}
+
+function nextStep(){
+  saveCurrentVal();
+  if(!getVal(currentStep)){document.getElementById('formErr').style.display='block';return;}
+  document.getElementById('formErr').style.display='none';
+  if(currentStep<STEPS.length-1){currentStep++;showStep(currentStep);}
+  else{submitResults();}
+}
+
+function prevStep(){
+  saveCurrentVal();
+  if(currentStep>0){currentStep--;showStep(currentStep);}
+}
+
+function submitResults(){
+  saveCurrentVal();
+  const phone=savedVals['f_phone'],email=savedVals['f_email'];
+  const region=savedVals['f_region'],district=savedVals['f_district'];
+  const today=new Date();
+  const dateStr=`${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
+  const badgeText=window.overallLabel.replace(/🏅|🥈|🥉|🎓/g,'').trim();
+
+  const fields={
+    'entry.3054047':    window.cadetName,
+    'entry.1860716112': window.cadetGender,
+    'entry.1484437620': window.cadetSchool,
+    'entry.1458315546': phone,
+    'entry.1119628571': email,
+    'entry.233909781':  region,
+    'entry.2095001572': district,
+    'entry.1152731764': `${window.scoreMap['general']}/${MAX_PER_QUIZ}`,
+    'entry.1958967378': `${window.scoreMap['studentSafety']}/${MAX_PER_QUIZ}`,
+    'entry.1366036710': `${window.scoreMap['fire']}/${MAX_PER_QUIZ}`,
+    'entry.22414501':   `${window.scoreMap['police']}/${MAX_PER_QUIZ}`,
+    'entry.174470758':  `${window.scoreMap['ambulance']}/${MAX_PER_QUIZ}`,
+    'entry.1755285931': `${window.scoreMap['prisons']}/${MAX_PER_QUIZ}`,
+    'entry.173528320':  `${window.scoreMap['nadmo']}/${MAX_PER_QUIZ}`,
+    'entry.1558874461': `${window.scoreMap['immigration']}/${MAX_PER_QUIZ}`,
+    'entry.2043827561': `${window.scoreMap['customs']}/${MAX_PER_QUIZ}`,
+    'entry.387208737':  `${window.scoreMap['tourism']}/${MAX_PER_QUIZ}`,
+    'entry.192995498':  `${window.scoreMap['forest']}/${MAX_PER_QUIZ}`,
+    'entry.1803385068': `${window.scoreMap['gaf']}/${MAX_PER_QUIZ}`,
+    'entry.1510755760': `${window.scoreMap['narcotics']}/${MAX_PER_QUIZ}`,
+    'entry.1633198439': `${window.pct}%`,
+    'entry.1557878665': badgeText,
+    'entry.609362363':  dateStr,
+  };
+
+  // Submit via hidden iframe POST
+  const form=document.createElement('form');
+  form.method='POST'; form.action=FORM_URL; form.target='hiddenFrame';
+  form.style.display='none';
+  Object.entries(fields).forEach(([n,v])=>{
+    const inp=document.createElement('input');
+    inp.type='hidden'; inp.name=n; inp.value=v||'';
+    form.appendChild(inp);
+  });
+  document.body.appendChild(form); form.submit();
+  setTimeout(()=>document.body.removeChild(form),2000);
+
+  // Also submit to Apps Script
+  const params=new URLSearchParams({
+    action:'submitResults',name:window.cadetName,gender:window.cadetGender,
+    school:window.cadetSchool,phone,email,region,district,
+    total:`${window.pct}%`,badge:badgeText,date:dateStr,
+    ...Object.fromEntries(SERVICES.map(s=>[s.key,`${window.scoreMap[s.key]}/${MAX_PER_QUIZ}`]))
+  });
+  fetch(SCRIPT_URL+'?'+params.toString(),{mode:'no-cors'}).catch(()=>{});
+
+  showSuccess();
+}
+
+function showSuccess(){
+  // Mark this student as fully submitted — quiz_questions will use this
+  localStorage.setItem('cmgResultsSubmitted', 'true');
+
+  document.getElementById('stepsContainer').style.display='none';
+  document.getElementById('stepDots').style.display='none';
+  document.getElementById('stepDisplay').style.display='none';
+  document.querySelector('.modal-btns').style.display='none';
+  document.getElementById('formErr').style.display='none';
+  document.getElementById('successScreen').style.display='block';
+
+  confetti({particleCount:180,spread:130,origin:{y:0.5}});
+
+  // Voice success message
+  const title=window.cadetGender==='Female'?'Cadetess':'Cadet';
+  const firstName=window.cadetName.split(' ')[0];
+  setTimeout(()=>{
+    speak(`Results submitted successfully! Well done ${title} ${firstName}. We will see you at the Cadet Personality Awards at the Fire Academy and Training Centre!`, 0.9, 1.08);
+  }, 600);
+
+  startLeaderboardCountdown();
+}
+
+function startLeaderboardCountdown(){
+  const screen=document.getElementById('redirectScreen');
+  screen.style.display='flex';
+  document.getElementById('formOverlay').classList.remove('show');
+  const circle=document.getElementById('countdownCircle');
+  const numEl=document.getElementById('countdownNum');
+  const total=301.6;
+  let secs=5;
+  const tick=setInterval(()=>{
+    secs--;
+    if(numEl) numEl.textContent=secs;
+    if(circle) circle.style.strokeDashoffset=total-(total*secs/5);
+    if(secs<=0){clearInterval(tick);goToLeaderboard();}
+  },1000);
+}
+
+function goToLeaderboard(){
+  window.location.href='https://cadetmediaoffice.github.io/cadetmedia/leaderboard.html?cadet='+encodeURIComponent(window.cadetName);
+}
+
+// Close modal on backdrop click
+document.getElementById('formOverlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('formOverlay'))
+    document.getElementById('formOverlay').classList.remove('show');
+});
+
+// Hidden iframe
+const iframe=document.createElement('iframe');
+iframe.name='hiddenFrame'; iframe.style.display='none';
+document.body.appendChild(iframe);
+
+// AudioContext is resumed inside the tap overlay handler
 </script>
 </body>
 </html>
