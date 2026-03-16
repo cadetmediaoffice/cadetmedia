@@ -279,19 +279,10 @@ window.addEventListener('DOMContentLoaded', function() {
   var alreadyOn = !!(name && school && gender && code && activated === 'true');
 
   if (alreadyOn) {
-    // If already completed or submitted — skip everything, go straight to My Results
-    var SK = ['general','studentSafety','fire','police','ambulance','prisons','nadmo',
-              'immigration','customs','tourism','forest','gaf','narcotics'];
-    var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
-    var allDone   = SK.every(function(k){
-      return localStorage.getItem(k+'Completed') === 'true' && !!localStorage.getItem(k+'Score');
-    });
-    if (submitted || allDone) {
-      window.location.href = 'my_results.html';
-      return;
-    }
+    // Always show verify card — server will confirm real submission status via verifyAndContinue
+    // Never skip straight to my_results based on localStorage alone (can be stale/wrong)
 
-    // Not yet completed — show verify card to continue quiz
+    // Show verify card to continue quiz
     document.getElementById('regCard').style.display = 'none';
     document.getElementById('alreadyCard').style.display = 'flex';
     var titleStr = gender === 'Female' ? 'Cadetess' : 'Cadet';
@@ -513,6 +504,7 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
     localStorage.removeItem('cmgResultsSubmitted');
     localStorage.removeItem('cmgSessionKey');
     localStorage.removeItem('cadetRegion');
+    localStorage.removeItem('cmgLastPage');
   }
   localStorage.setItem('cadetName',    name);
   localStorage.setItem('cadetGender',  gender);
@@ -527,20 +519,37 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
   var gender2   = gender || localStorage.getItem('cadetGender') || 'Male';
   var titleStr  = gender2 === 'Female' ? 'Cadetess' : 'Cadet';
 
-  // Route: completed/submitted users always go to my_results, others to quiz hub
+  // Route: submitted → my_results, allDone (not submitted) → congratulations,
+  // returning mid-quiz → last page they were on, new → cadetnationalquiz hub
   var SERVICE_KEYS = ['general','studentSafety','fire','police','ambulance','prisons','nadmo',
                       'immigration','customs','tourism','forest','gaf','narcotics'];
   var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
   var allDone   = SERVICE_KEYS.every(function(k){
     return localStorage.getItem(k+'Completed') === 'true' && !!localStorage.getItem(k+'Score');
   });
-  var destination = (submitted || allDone) ? 'my_results.html' : 'cadetnationalquiz.html';
+  var lastPage  = localStorage.getItem('cmgLastPage') || '';
+  var destination;
+  if (submitted) {
+    destination = 'my_results.html';
+  } else if (allDone) {
+    destination = 'congratulations.html';
+  } else if (isReturning && lastPage) {
+    destination = lastPage;
+  } else {
+    destination = 'cadetnationalquiz.html';
+  }
 
   setTimeout(function(){
     if (isReturning) {
-      if (submitted || allDone) {
+      if (submitted) {
         speak('Welcome back, ' + titleStr + ' ' + firstName +
           '! Your quiz results are ready. Taking you to your results page now.');
+      } else if (allDone) {
+        speak('Welcome back, ' + titleStr + ' ' + firstName +
+          '! You have completed all your quizzes. Taking you to submit your results now.');
+      } else if (lastPage) {
+        speak('Welcome back, ' + titleStr + ' ' + firstName +
+          '! Identity confirmed. Returning you to where you left off. Good luck!');
       } else {
         speak('Welcome back, ' + titleStr + ' ' + firstName +
           '! Identity confirmed. Continuing your quiz now. Good luck!');
