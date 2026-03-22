@@ -323,17 +323,44 @@ window.addEventListener('DOMContentLoaded', function(){
   };
   
   // Helper: find score from row trying multiple key formats
+  // Column index fallback for each score key (0-based, matches sheet structure)
+  var SCORE_COL_IDX = {
+    general:       7,
+    studentSafety: 8,
+    fire:          9,
+    police:        10,
+    ambulance:     11,
+    prisons:       12,
+    nadmo:         13,
+    immigration:   14,
+    customs:       15,
+    tourism:       16,
+    forest:        17,
+    gaf:           18,
+    narcotics:     19
+  };
+
   function getScore(row, key) {
-    // 1. Try exact SCORE_KEYS match first
+    // 1. Try direct __colN index first (most reliable — set by new Apps Script)
+    var colIdx = SCORE_COL_IDX[key];
+    if(colIdx !== undefined) {
+      var cv = (row['__col' + colIdx] || '').toString().trim();
+      if(cv && cv !== 'DATE_CONVERTED' && cv !== '' && /\d/.test(cv)) return cv;
+    }
+    // 2. Try exact SCORE_KEYS match
     var val = row[SCORE_KEYS[key]];
-    if(val !== undefined && val !== null && val.toString().trim() !== '') return val.toString().trim();
-    // 2. Try all column keys — search by words (handles camelCase like 'studentSafety' -> 'student safety')
-    var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase(); // 'studentSafety' -> 'student safety'
+    if(val !== undefined && val !== null) {
+      var vs = val.toString().trim();
+      if(vs !== '' && vs !== 'DATE_CONVERTED') return vs;
+    }
+    // 3. Search by keyword — skip DATE_CONVERTED values
+    var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase();
     for(var k in row) {
+      if(k.indexOf('__col') === 0) continue;
       var kl = k.trim().toLowerCase();
       if(kl.indexOf(searchWords) !== -1 && kl.indexOf('score') !== -1) {
         var v = (row[k] || '').toString().trim();
-        if(v !== '') return v;
+        if(v !== '' && v !== 'DATE_CONVERTED') return v;
       }
     }
     return '0';
