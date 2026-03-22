@@ -443,7 +443,7 @@ function activatePendrive() {
             speak('Welcome back, ' + ts1 + ' ' + fn1 +
               '! Your quiz results are ready. Taking you to your results page now.');
           }, 1800);
-          setTimeout(function(){ window.location.href = 'my_results.html'; }, 3400);
+          restoreScoresAndLaunch(registeredName, gender, school, level, region, code, true, true);
 
         } else {
           // ── CASE 2: Code used but not yet submitted → check name, continue quiz ──
@@ -456,7 +456,8 @@ function activatePendrive() {
           var isOwner = nameEmpty || exactMatch || partialMatch;
 
           if (isOwner) {
-            saveAndLaunch(name, gender, school, level, region, code, true);
+            // Fetch saved scores from server and restore before launching
+            restoreScoresAndLaunch(usedBy||name, gender, school, level, region, code);
           } else {
             sndError();
             setTimeout(function(){
@@ -491,7 +492,75 @@ function activateOffline(name, gender, school, level, region, code) {
   setTimeout(function(){ saveAndLaunch(name, gender, school, level, region, code); }, 1500);
 }
 
-function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
+
+function restoreScoresAndLaunch(name, gender, school, level, region, code, isReturning, goToResults) {
+  // Fetch saved scores from server and restore to localStorage
+  var RESULTS_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
+  var myName = (name||'').trim().toLowerCase();
+  var myCode = (code||'').trim().toUpperCase();
+  
+  // Show loading state
+  document.getElementById('spinner').style.display = 'block';
+  
+  fetch(RESULTS_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      document.getElementById('spinner').style.display = 'none';
+      // Find matching row by code first, then name
+      var match = null;
+      for(var i=rows.length-1;i>=0;i--){
+        var rc=(rows[i]['Column 1']||'').toString().trim().toUpperCase();
+        if(myCode && rc===myCode){ match=rows[i]; break; }
+      }
+      if(!match){
+        for(var i=rows.length-1;i>=0;i--){
+          var rn=(rows[i]['Full Name ']||rows[i]['Full Name']||'').trim().toLowerCase();
+          if(rn===myName){ match=rows[i]; break; }
+        }
+      }
+      if(match){
+        // Restore scores from server
+        var SCORE_MAP = {
+          general:'  General Safety Quiz Score  ',
+          studentSafety:'  Student Safety Quiz Score  ',
+          fire:'  Fire Safety Quiz Score  ',
+          police:'  Community Safety (Police) Quiz Score  ',
+          ambulance:'  Health & Ambulance Quiz Score  ',
+          prisons:'  Prisons Service Quiz Score  ',
+          nadmo:'  Disaster Preparedness (NADMO) Quiz Score  ',
+          immigration:'  Immigration Service Quiz Score  ',
+          customs:'  Customs Division Quiz Score  ',
+          tourism:'  Tourism & Creative Arts Quiz Score  ',
+          forest:'  Forest Conservation Quiz Score  ',
+          gaf:'  National Defence (GAF) Quiz Score  ',
+          narcotics:'  Narcotics Control Quiz Score  '
+        };
+        var MAX=30;
+        Object.keys(SCORE_MAP).forEach(function(k){
+          var raw=(match[SCORE_MAP[k]]||'0').toString().trim();
+          var sc=parseInt(raw.indexOf('/')>-1?raw.split('/')[0]:raw)||0;
+          if(sc>0){
+            localStorage.setItem(k+'Score', sc+'/'+MAX);
+            localStorage.setItem(k+'Completed','true');
+          }
+        });
+        // Check if submitted flag in server data
+        var serverSubmitted=(match['Submitted']||match['submitted']||'').toString().trim().toLowerCase();
+        if(serverSubmitted==='true'||serverSubmitted==='yes'||serverSubmitted==='1'){
+          localStorage.setItem('cmgResultsSubmitted','true');
+          goToResults=true;
+        }
+      }
+      saveAndLaunch(name, gender, school, level, region, code, isReturning, goToResults);
+    })
+    .catch(function(){
+      document.getElementById('spinner').style.display = 'none';
+      // Offline or error — just launch with whatever is in localStorage
+      saveAndLaunch(name, gender, school, level, region, code, isReturning, goToResults);
+    });
+}
+
+function saveAndLaunch(name, gender, school, level, region, code, isReturning, forceResults) {
   // For a new user (isReturning=false), wipe ALL previous user data first
   // This handles the case where admin reset was not done before a new user registers
   if (!isReturning) {
@@ -504,7 +573,6 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
     localStorage.removeItem('cmgResultsSubmitted');
     localStorage.removeItem('cmgSessionKey');
     localStorage.removeItem('cadetRegion');
-    localStorage.removeItem('cmgLastPage');
   }
   localStorage.setItem('cadetName',    name);
   localStorage.setItem('cadetGender',  gender);
@@ -519,25 +587,14 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
   var gender2   = gender || localStorage.getItem('cadetGender') || 'Male';
   var titleStr  = gender2 === 'Female' ? 'Cadetess' : 'Cadet';
 
-  // Route: submitted → my_results, allDone (not submitted) → congratulations,
-  // returning mid-quiz → last page they were on, new → cadetnationalquiz hub
+  // Route: submitted → my_results, allDone (not submitted) → congratulations, else → quiz hub
   var SERVICE_KEYS = ['general','studentSafety','fire','police','ambulance','prisons','nadmo',
                       'immigration','customs','tourism','forest','gaf','narcotics'];
   var submitted = localStorage.getItem('cmgResultsSubmitted') === 'true';
   var allDone   = SERVICE_KEYS.every(function(k){
     return localStorage.getItem(k+'Completed') === 'true' && !!localStorage.getItem(k+'Score');
   });
-  var lastPage  = localStorage.getItem('cmgLastPage') || '';
-  var destination;
-  if (submitted) {
-    destination = 'my_results.html';
-  } else if (allDone) {
-    destination = 'congratulations.html';
-  } else if (isReturning && lastPage) {
-    destination = lastPage;
-  } else {
-    destination = 'cadetnationalquiz.html';
-  }
+  var destination = (forceResults||submitted) ? 'my_results.html' : (allDone ? 'congratulations.html' : 'cadetnationalquiz.html');
 
   setTimeout(function(){
     if (isReturning) {
@@ -547,9 +604,6 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning) {
       } else if (allDone) {
         speak('Welcome back, ' + titleStr + ' ' + firstName +
           '! You have completed all your quizzes. Taking you to submit your results now.');
-      } else if (lastPage) {
-        speak('Welcome back, ' + titleStr + ' ' + firstName +
-          '! Identity confirmed. Returning you to where you left off. Good luck!');
       } else {
         speak('Welcome back, ' + titleStr + ' ' + firstName +
           '! Identity confirmed. Continuing your quiz now. Good luck!');
@@ -633,6 +687,7 @@ function clearAndRegister() {
 
   // Wipe everything
   ['cadetName','cadetGender','cadetSchool','cadetLevel','cadetRegion','cmgCode','cmgActivated','cmgSessionKey',
+   'cmgResultsSubmitted',
    'generalScore','generalCompleted',
    'studentSafetyScore','studentSafetyCompleted',
    'fireScore','fireCompleted',

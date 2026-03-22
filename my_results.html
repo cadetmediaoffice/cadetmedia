@@ -135,7 +135,7 @@ footer{font-size:11px;color:rgba(255,255,255,0.25);text-align:center;margin-top:
   <img src="../MEDIA/logo_quiz.png" alt="CMG" style="height:80px;border-radius:50%;
     box-shadow:0 0 20px rgba(255,215,0,0.4);margin-bottom:4px;">
   <h1>Ghana Student Safety &amp; Service Challenge</h1>
-  <span class="badge-submitted">✅ Results Submitted</span>
+  <span class="badge-submitted" id="submittedBadge" style="display:none;">✅ Results Submitted</span>
 </div>
 
 <!-- ── Top two-column section ── -->
@@ -280,9 +280,28 @@ window.addEventListener('DOMContentLoaded', function(){
   var code     = localStorage.getItem('cmgCode');
   var activated= localStorage.getItem('cmgActivated');
   var submitted= localStorage.getItem('cmgResultsSubmitted') === 'true';
+  var badgeEl=document.getElementById('submittedBadge');
+  if(badgeEl) badgeEl.style.display = submitted ? 'inline-block' : 'none';
   
   if(!name || !code || activated !== 'true'){
-    window.location.href = 'activate.html';
+    window.location.replace('activate.html'); return;
+  }
+  // If not submitted yet → check where to send them
+  if(!submitted){
+    // Check if all 12 service modules are done
+    var SVC=['studentSafety','fire','police','ambulance','prisons',
+      'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+    var allSvcDone=SVC.every(function(k){
+      return localStorage.getItem(k+'Completed')==='true'||
+        (function(){var r=localStorage.getItem(k+'Score');return r&&parseInt(r)>0;})();
+    });
+    if(allSvcDone){
+      // All done but not submitted → go to congratulations to submit
+      window.location.replace('congratulations.html'); return;
+    } else {
+      // Still in progress → go back to quiz hub
+      window.location.replace('quiz_questions.html'); return;
+    }
   }
   
   // ── Score keys mapped to Form Responses column headers ──
@@ -460,12 +479,21 @@ window.addEventListener('DOMContentLoaded', function(){
       }
   
       if(!match){
-        document.getElementById('scoreGrid').innerHTML =
-          '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
-          'background:rgba(255,100,0,0.2);border-radius:12px;">' +
-          '⚠️ Results not found on server.<br>' +
-          '<small style="opacity:.6">Name: ' + name + '<br>Code: ' + code + '</small></div>';
-        buildPage({}); return;
+        // No server record found — this user has NOT actually submitted
+        // Clear the false submitted flag and redirect them back
+        localStorage.removeItem('cmgResultsSubmitted');
+        var SVC=['studentSafety','fire','police','ambulance','prisons',
+          'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+        var allSvcDone=SVC.every(function(k){
+          return localStorage.getItem(k+'Completed')==='true'||
+            (function(){var r=localStorage.getItem(k+'Score');return r&&parseInt(r)>0;})();
+        });
+        if(allSvcDone){
+          window.location.replace('congratulations.html');
+        } else {
+          window.location.replace('quiz_questions.html');
+        }
+        return;
       }
   
       // Parse scores
@@ -475,7 +503,8 @@ window.addEventListener('DOMContentLoaded', function(){
         var sc  = parseInt(raw.indexOf('/') > -1 ? raw.split('/')[0] : raw) || 0;
         sm[s.key] = sc;
         localStorage.setItem(s.key+'Score', sc+'/'+MAX_PER_QUIZ);
-        localStorage.setItem(s.key+'Completed','true');
+        if(sc > 0) localStorage.setItem(s.key+'Completed','true');
+        else localStorage.removeItem(s.key+'Completed');
       });
   
       // Restore school if missing
@@ -486,16 +515,20 @@ window.addEventListener('DOMContentLoaded', function(){
     })
     .catch(function(err){
       if(hasLocalScores){
-        // Offline but has local scores — show them silently
+        // Offline but has local scores — show them
         buildPage(localScoreMap);
-      } else {
-        // Offline and no local scores — show message
+      } else if(submitted){
+        // Offline, no local scores, but submitted flag is set
+        // Could be false flag — show message and option to go back
         document.getElementById('scoreGrid').innerHTML =
           '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
           'background:rgba(255,100,0,0.25);border-radius:12px;">' +
           '📶 No internet connection.<br>' +
-          '<small>Connect to internet and reload to see your results.</small></div>';
+          '<small>Connect to internet to verify your results.<br>' +
+          '<a href="quiz_questions.html" style="color:#FFD700">← Back to Quiz Hub</a></small></div>';
         buildPage({});
+      } else {
+        window.location.replace('quiz_questions.html');
       }
     });
   

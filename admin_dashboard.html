@@ -433,48 +433,50 @@ const ADMIN_PW = "CadetMedia@2025!";
 // ══════════════════════════════════════
 
 const MODULES = [
-  {key:"general",   name:"General Safety",    icon:"🛡️"},
-  {key:"fire",      name:"Fire Safety",        icon:"🔥"},
-  {key:"police",    name:"Police / Community", icon:"👮"},
-  {key:"ambulance", name:"Ambulance",          icon:"🚑"},
-  {key:"prisons",   name:"Prisons",            icon:"⚖️"},
-  {key:"nadmo",     name:"NADMO",              icon:"🌪️"},
-  {key:"immigration",name:"Immigration",       icon:"✈️"},
-  {key:"customs",   name:"Customs / GRA",      icon:"📦"},
-  {key:"tourism",   name:"Tourism",            icon:"🏛️"},
-  {key:"forest",    name:"Forest",             icon:"🌿"},
-  {key:"gaf",       name:"Armed Forces",       icon:"🎖️"},
-  {key:"narcotics", name:"NACOC",              icon:"🚫"},
+  {key:"general",      name:"General Safety",    icon:"🛡️"},
+  {key:"studentSafety",name:"Student Safety",    icon:"🎓"},
+  {key:"fire",         name:"Fire Safety",        icon:"🔥"},
+  {key:"police",       name:"Police / Community", icon:"👮"},
+  {key:"ambulance",    name:"Ambulance",          icon:"🚑"},
+  {key:"prisons",      name:"Prisons",            icon:"⚖️"},
+  {key:"nadmo",        name:"NADMO",              icon:"🌪️"},
+  {key:"immigration",  name:"Immigration",        icon:"✈️"},
+  {key:"customs",      name:"Customs / GRA",      icon:"📦"},
+  {key:"tourism",      name:"Tourism",            icon:"🏛️"},
+  {key:"forest",       name:"Forest",             icon:"🌿"},
+  {key:"gaf",          name:"Armed Forces",       icon:"🎖️"},
+  {key:"narcotics",    name:"NACOC",              icon:"🚫"},
 ];
 
 // Column mapping — matches your Google Form field order exactly:
 // 0=Timestamp
-// 1=FullName        (entry.3054047)
-// 2=Gender          (entry.1860716112)
-// 3=School          (entry.1484437620)
-// 4=Phone           (entry.1458315546)
-// 5=Email           (entry.1119628571)
-// 6=General Score   (entry.1152731764)
-// 7=Fire Score      (entry.1366036710)
-// 8=Police Score    (entry.22414501)
-// 9=Ambulance Score (entry.174470758)
-// 10=Prisons Score  (entry.1755285931)
-// 11=NADMO Score    (entry.173528320)
-// 12=Immigration    (entry.1558874461)
-// 13=Customs        (entry.2043827561)
-// 14=Tourism        (entry.387208737)
-// 15=Forest         (entry.192995498)
-// 16=GAF            (entry.1803385068)
-// 17=NACOC          (entry.1510755760)
-// 18=Total Score %  (entry.1633198439)
-// 19=Badge          (entry.1557878665)
-// 20=Region         (entry.233909781)
-// 21=District       (entry.2095001572)
-// 22=Date           (entry.609362363)
+// 1=FullName             (entry.3054047)
+// 2=Gender               (entry.1860716112)
+// 3=School               (entry.1484437620)
+// 4=Phone                (entry.1458315546)
+// 5=Email                (entry.1119628571)
+// 6=General Score        (entry.1152731764)
+// 7=Student Safety Score (entry.1958967378)
+// 8=Fire Score           (entry.1366036710)
+// 9=Police Score         (entry.22414501)
+// 10=Ambulance Score     (entry.174470758)
+// 11=Prisons Score       (entry.1755285931)
+// 12=NADMO Score         (entry.173528320)
+// 13=Immigration         (entry.1558874461)
+// 14=Customs             (entry.2043827561)
+// 15=Tourism             (entry.387208737)
+// 16=Forest              (entry.192995498)
+// 17=GAF                 (entry.1803385068)
+// 18=NACOC               (entry.1510755760)
+// 19=Total Score %       (entry.1633198439)
+// 20=Badge               (entry.1557878665)
+// 21=Region              (entry.233909781)
+// 22=District            (entry.2095001572)
+// 23=Date                (entry.609362363)
 const COL = {
   name:1, gender:2, school:3, phone:4, email:5,
-  moduleStart:6,   // columns 6–17 are the 12 module scores
-  totalScore:18, badge:19, region:20, district:21, date:22,
+  moduleStart:6,   // columns 6–18 are the 13 module scores
+  totalScore:19, badge:20, region:21, district:22, date:23,
 };
 
 let allData = [];

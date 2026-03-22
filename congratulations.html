@@ -503,22 +503,23 @@ const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec';
 
 const SERVICES = [
-  {key:"general",   name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
-  {key:"fire",      name:"Fire Safety – GNFS",   logo:"../MEDIA/logo_gnfs.png",        entry:"entry.1366036710"},
-  {key:"police",    name:"Police / Community",   logo:"../MEDIA/logo_police.png",      entry:"entry.22414501"},
-  {key:"ambulance", name:"Ambulance / Health",   logo:"../MEDIA/logo_health.png",      entry:"entry.174470758"},
-  {key:"prisons",   name:"Prisons / Discipline", logo:"../MEDIA/logo_prisons.png",     entry:"entry.1755285931"},
-  {key:"nadmo",     name:"NADMO / Disaster",     logo:"../MEDIA/logo_nadmo.png",       entry:"entry.173528320"},
-  {key:"immigration",name:"Immigration",         logo:"../MEDIA/logo_immigration.png", entry:"entry.1558874461"},
-  {key:"customs",   name:"Customs / GRA",        logo:"../MEDIA/logo_customs.png",     entry:"entry.2043827561"},
-  {key:"tourism",   name:"Tourism & Arts",       logo:"../MEDIA/logo_tourism.png",     entry:"entry.387208737"},
-  {key:"forest",    name:"Forest Commission",    logo:"../MEDIA/logo_forest.png",      entry:"entry.192995498"},
-  {key:"gaf",       name:"Ghana Armed Forces",   logo:"../MEDIA/logo_gaf.png",         entry:"entry.1803385068"},
-  {key:"narcotics", name:"NACOC / Drug Safety",  logo:"../MEDIA/logo_nacoc.png",       entry:"entry.1510755760"},
+  {key:"general",       name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
+  {key:"studentSafety", name:"Student Safety",       logo:"../MEDIA/logo_quiz.png",        entry:"entry.1958967378"},
+  {key:"fire",          name:"Fire Safety – GNFS",   logo:"../MEDIA/logo_gnfs.png",        entry:"entry.1366036710"},
+  {key:"police",        name:"Police / Community",   logo:"../MEDIA/logo_police.png",      entry:"entry.22414501"},
+  {key:"ambulance",     name:"Ambulance / Health",   logo:"../MEDIA/logo_health.png",      entry:"entry.174470758"},
+  {key:"prisons",       name:"Prisons / Discipline", logo:"../MEDIA/logo_prisons.png",     entry:"entry.1755285931"},
+  {key:"nadmo",         name:"NADMO / Disaster",     logo:"../MEDIA/logo_nadmo.png",       entry:"entry.173528320"},
+  {key:"immigration",   name:"Immigration",          logo:"../MEDIA/logo_immigration.png", entry:"entry.1558874461"},
+  {key:"customs",       name:"Customs / GRA",        logo:"../MEDIA/logo_customs.png",     entry:"entry.2043827561"},
+  {key:"tourism",       name:"Tourism & Arts",       logo:"../MEDIA/logo_tourism.png",     entry:"entry.387208737"},
+  {key:"forest",        name:"Forest Commission",    logo:"../MEDIA/logo_forest.png",      entry:"entry.192995498"},
+  {key:"gaf",           name:"Ghana Armed Forces",   logo:"../MEDIA/logo_gaf.png",         entry:"entry.1803385068"},
+  {key:"narcotics",     name:"NACOC / Drug Safety",  logo:"../MEDIA/logo_nacoc.png",       entry:"entry.1510755760"},
 ];
 
 const MAX_PER_QUIZ = 30;
-const TOTAL_MAX    = SERVICES.length * MAX_PER_QUIZ; // 360
+const TOTAL_MAX    = SERVICES.length * MAX_PER_QUIZ; // 390
 
 // ══════════════════════════════════════════════
 //  STARFIELD
@@ -568,7 +569,20 @@ window.addEventListener('DOMContentLoaded', function(){
   const _c=localStorage.getItem('cmgCode');
   const _a=localStorage.getItem('cmgActivated');
   if(!_n||!_s||!_g||!_c||_a!=='true'){
-    window.location.href='activate.html'; return;
+    window.location.replace('activate.html'); return;
+  }
+  // All 12 SERVICE modules must be completed to access congratulations
+  var SERVICE_KEYS_C=['studentSafety','fire','police','ambulance','prisons',
+    'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+  var allDoneC=SERVICE_KEYS_C.every(function(k){
+    // Must have BOTH the Completed flag AND a score greater than 0
+    var completed = localStorage.getItem(k+'Completed')==='true';
+    var r = localStorage.getItem(k+'Score');
+    var hasScore = r && parseInt(r) > 0;
+    return completed && hasScore;
+  });
+  if(!allDoneC){
+    window.location.replace('quiz_questions.html'); return;
   }
 
   // Load cadet info
@@ -904,6 +918,7 @@ function submitResults(){
     'entry.233909781':  region,
     'entry.2095001572': district,
     'entry.1152731764': `${window.scoreMap['general']}/${MAX_PER_QUIZ}`,
+    'entry.1958967378': `${window.scoreMap['studentSafety']}/${MAX_PER_QUIZ}`,
     'entry.1366036710': `${window.scoreMap['fire']}/${MAX_PER_QUIZ}`,
     'entry.22414501':   `${window.scoreMap['police']}/${MAX_PER_QUIZ}`,
     'entry.174470758':  `${window.scoreMap['ambulance']}/${MAX_PER_QUIZ}`,
