@@ -447,7 +447,7 @@ body{
     <div class="sub">National Public Safety Quiz · Annual Rankings</div>
     <div class="live-pill">
       <span class="live-dot"></span>
-      <span id="liveStatus">Loading data…</span> <button onclick="debugRaw()" style="background:rgba(255,100,0,.15);border:1px solid rgba(255,100,0,.3);color:#ff9070;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:8px;">🔍 Debug</button>
+      <span id="liveStatus">Loading data…</span> <button onclick="debugRaw()" style="background:rgba(255,100,0,.15);border:1px solid rgba(255,100,0,.3);color:#ff9070;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:8px;">🔍 Debug</button> <button onclick="debugNacoc()" style="background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);color:#FFD700;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;">🔍 NACOC Debug</button>
     </div>
   </div>
 
@@ -672,13 +672,39 @@ async function debugRaw(){
     console.log('=== RAW RESPONSE (first 2000 chars) ===');
     console.log(text.substring(0,2000));
     console.log('=== RESPONSE LENGTH:', text.length);
-    // Show on screen
     const div = document.createElement('div');
     div.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#111;color:#0f0;padding:16px;border-radius:8px;z-index:9999;font-size:11px;max-height:60vh;overflow:auto;white-space:pre;border:1px solid #0f0;';
     div.innerHTML = '<b style="color:#ff0">RAW RESPONSE (first 1500 chars)</b><br><br>' + text.substring(0,1500).replace(/</g,'&lt;') + '<br><br><button onclick="this.parentNode.remove()" style="background:#f00;color:#fff;border:none;padding:4px 12px;cursor:pointer;border-radius:4px;">Close</button>';
     document.body.appendChild(div);
   } catch(err){
     alert('Fetch error: ' + err.message);
+  }
+}
+
+// ── Debug: show NACOC columns for all rows ──
+async function debugNacoc(){
+  const url = 'https://script.google.com/macros/s/AKfycbxATRpLBPXR_6rsFXBZX7ms_zIlV5XIXOsWzoIJwQ9NIsrkOfM0pDD61Dv4Lf0HFSIf/exec';
+  try {
+    const res  = await fetch(url, {mode:'cors'});
+    const text = await res.text();
+    const rows = JSON.parse(text);
+    let out = '<b style="color:#ff0">NACOC DEBUG — __col19 for each row</b><br><br>';
+    rows.forEach(function(r, i){
+      const name   = (r['Full Name']||r['full name']||'row'+i).trim();
+      const col19  = r['__col19'] || '(missing)';
+      const named  = r['Narcotics Control Quiz Score'] || r['  Narcotics Control Quiz Score  '] || '(missing)';
+      const total  = r['__col20'] || '(missing)';
+      out += '<span style="color:#0ff">' + name + '</span>  ' +
+             '__col19=' + JSON.stringify(col19) + '  ' +
+             'named=' + JSON.stringify(named) + '  ' +
+             '__col20(total)=' + JSON.stringify(total) + '<br>';
+    });
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#111;color:#0f0;padding:16px;border-radius:8px;z-index:9999;font-size:11px;max-height:80vh;overflow:auto;white-space:pre-wrap;border:2px solid #ff0;';
+    div.innerHTML = out + '<br><button onclick="this.parentNode.remove()" style="background:#f00;color:#fff;border:none;padding:6px 16px;cursor:pointer;border-radius:4px;font-weight:bold;">Close</button>';
+    document.body.appendChild(div);
+  } catch(err){
+    alert('Debug error: ' + err.message);
   }
 }
 
@@ -775,20 +801,22 @@ function getField(row, keywords){
 }
 
 // ── Get module score from row object ──
-// Priority 1: __colN direct index (most reliable — immune to duplicate headers)
-// Priority 2: keyword match on header name
+// Priority 1: named header keyword match (reliable regardless of column shifts)
+// Priority 2: __colN index only if value looks like a score (X/30)
 function getModuleField(row, keywords, colIndex){
-  // Priority 1: direct column index via __colN key
-  if(colIndex !== undefined){
-    const v = (row['__col' + colIndex] || '').trim();
-    if(v && /\d/.test(v)) return v; // must contain a digit (score-shaped)
-  }
-  // Priority 2: keyword match (fallback for CSV or old Apps Script)
+  // Priority 1: keyword match on named header key
   const key = Object.keys(row).find(k =>
     k !== '_cols' && !k.startsWith('__col') &&
     keywords.some(kw => k.trim().toLowerCase().includes(kw.toLowerCase()))
   );
-  return key ? (row[key]||'').toString().trim() : '';
+  const val = key ? (row[key]||'').toString().trim() : '';
+  if(val) return val;
+  // Priority 2: __colN index — only accept if it looks like a score (e.g. 20/30)
+  if(colIndex !== undefined){
+    const v = (row['__col' + colIndex] || '').trim();
+    if(v && /^\d+\/\d+$/.test(v)) return v;
+  }
+  return '';
 }
 
 // ── Score ──
@@ -843,24 +871,16 @@ function parseScore(s){
 }
 
 function getScorePct(row){
-  // Priority 1: direct column index __col20 = Total Score (%)
-  const directPct = (row['__col20'] || '').trim();
-  if(directPct){
-    if(/^\d{1,3}%$/.test(directPct)) return parseInt(directPct);
-    if(/^0\.\d+$/.test(directPct))   return Math.round(parseFloat(directPct)*100);
-    const m = directPct.match(/^(\d{1,3})$/);
-    if(m){ const v=parseInt(m[1]); if(v>=1&&v<=100) return v; }
-  }
-  // Priority 2: keyword match on Total Score column
+  // Priority 1: named Total Score (%) column — reliable regardless of column shifts
   const ts = getField(row, ['total score','total %','score (%)','score(%)']);
   if(ts){
     const clean = ts.trim();
-    if(/^0\.\d+$/.test(clean))   return Math.round(parseFloat(clean)*100);
     if(/^\d{1,3}%$/.test(clean)) return parseInt(clean);
+    if(/^0\.\d+$/.test(clean))   return Math.round(parseFloat(clean)*100);
     const m=clean.match(/^(\d{1,3})$/);
     if(m){const v=parseInt(m[1]);if(v>=1&&v<=100)return v;}
   }
-  // Priority 3: sum module scores
+  // Priority 2: sum module scores
   let sum=0,max=0;
   MOD_KEYS.forEach(m=>{
     const s=getModuleField(row,m.kw,m.col);

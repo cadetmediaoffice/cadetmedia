@@ -341,19 +341,13 @@ window.addEventListener('DOMContentLoaded', function(){
   };
 
   function getScore(row, key) {
-    // 1. Try direct __colN index first (most reliable)
-    var colIdx = SCORE_COL_IDX[key];
-    if(colIdx !== undefined) {
-      var cv = (row['__col' + colIdx] || '').toString().trim();
-      if(cv && cv !== '' && /\d/.test(cv)) return cv;
-    }
-    // 2. Try exact SCORE_KEYS match
+    // 1. Try exact SCORE_KEYS named header match (reliable regardless of column shifts)
     var val = row[SCORE_KEYS[key]];
     if(val !== undefined && val !== null) {
       var vs = val.toString().trim();
       if(vs !== '') return vs;
     }
-    // 3. Search by keyword
+    // 2. Search by keyword in all named headers
     var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase();
     for(var k in row) {
       if(k.indexOf('__col') === 0) continue;
@@ -362,6 +356,12 @@ window.addEventListener('DOMContentLoaded', function(){
         var v = (row[k] || '').toString().trim();
         if(v !== '') return v;
       }
+    }
+    // 3. __colN fallback — only accept X/30 shaped values
+    var colIdx = SCORE_COL_IDX[key];
+    if(colIdx !== undefined) {
+      var cv = (row['__col' + colIdx] || '').toString().trim();
+      if(cv && /^\d+\/\d+$/.test(cv)) return cv;
     }
     return '0';
   }
