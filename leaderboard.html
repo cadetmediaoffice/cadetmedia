@@ -470,8 +470,20 @@ body{
   var rows = [];
   for(var i=1;i&lt;data.length;i++){
     var row = {};
+    var seen = {};
     for(var j=0;j&lt;headers.length;j++){
-      row[headers[j]] = data[i][j] !== undefined ? String(data[i][j]) : '';
+      var h = String(headers[j]).trim();
+      if(!h) continue;
+      var val = data[i][j] !== undefined ? String(data[i][j]) : '';
+      if(seen[h] === undefined){
+        seen[h] = 1;
+        row[h] = val;
+        row['__col'+j] = val; // also store by column index
+      } else {
+        // Duplicate header — store with index suffix AND fill original if empty
+        row['__col'+j] = val;
+        if(!row[h] || row[h]==='') row[h] = val; // fill if first was empty
+      }
     }
     rows.push(row);
   }
@@ -711,23 +723,34 @@ function parseData(text){
   }
 
   // ── Try JSON first ──
+  // ── Try JSON first ──
   if(text.startsWith('[')){
     try {
       const rawRows = JSON.parse(text);
       const rows = rawRows.map(r => {
         const clean = {};
-        Object.keys(r).forEach(k => { clean[k.trim()] = (r[k]||'').toString().trim(); });
-        // For JSON, duplicate keys are already collapsed by JS engine (last wins)
-        // We need to rebuild from scratch using column order — fall through to CSV
+        Object.keys(r).forEach(k => {
+          const kt = k.trim();
+          clean[kt] = (r[k]||'').toString().trim();
+        });
+        // If __col keys are present (new Apps Script), they're already in clean
+        // If not, synthesize them by scanning score-shaped values in key order
+        if(!Object.keys(clean).some(k=>k.startsWith('__col'))){
+          // Old Apps Script: walk keys in insertion order, assign __colN to score-shaped values
+          let scoreColIdx = 0;
+          const SCORE_COLS = [7,8,9,10,11,12,13,14,15,16,17,18,19]; // known module col positions
+          const scoreKeys = Object.keys(clean).filter(k=>{
+            const v = clean[k];
+            return /^\d+\/30$/.test(v) || /^\d+\/\d+$/.test(v);
+          });
+          // Map the score keys positionally to __col7, __col8, ...
+          scoreKeys.forEach((k,i)=>{
+            if(i < SCORE_COLS.length) clean['__col'+SCORE_COLS[i]] = clean[k];
+          });
+        }
         return clean;
       });
-      // If JSON has the Student Safety issue, we may still get wrong data.
-      // Only use JSON if no duplicate header problem detected (check key count vs expected)
-      const sample = rows[0];
-      if(sample && Object.keys(sample).filter(k=>k.toLowerCase().includes('student safety')).length <= 1){
-        return rows.filter(r => (r['Full Name']||r['full name']||'').trim() !== '');
-      }
-      // Fall through to CSV if duplicate detected in JSON
+      return rows.filter(r => (r['Full Name']||r['full name']||'').trim() !== '');
     } catch(e){ console.warn('JSON parse failed', e); }
   }
 
@@ -757,12 +780,17 @@ function getField(row, keywords){
 function getModuleField(row, keywords, colIndex){
   // Try keyword match first
   const key = Object.keys(row).find(k =>
-    k !== '_cols' &&
+    k !== '_cols' && !k.startsWith('__col') &&
     keywords.some(kw => k.trim().toLowerCase().includes(kw.toLowerCase()))
   );
   const val = key ? (row[key]||'').toString().trim() : '';
   if(val) return val;
-  // Fallback: use raw column index if provided
+  // Fallback 1: use __colN key from new Apps Script format
+  if(colIndex !== undefined){
+    const colKey = '__col' + colIndex;
+    if(row[colKey] && row[colKey].trim()) return row[colKey].trim();
+  }
+  // Fallback 2: use raw _cols array (CSV path)
   if(colIndex !== undefined && row._cols && row._cols[colIndex]){
     return row._cols[colIndex].trim();
   }
