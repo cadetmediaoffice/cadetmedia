@@ -341,26 +341,26 @@ window.addEventListener('DOMContentLoaded', function(){
   };
 
   function getScore(row, key) {
-    // 1. Try direct __colN index first (most reliable — set by new Apps Script)
+    // 1. Try direct __colN index first (most reliable)
     var colIdx = SCORE_COL_IDX[key];
     if(colIdx !== undefined) {
       var cv = (row['__col' + colIdx] || '').toString().trim();
-      if(cv && cv !== 'DATE_CONVERTED' && cv !== '' && /\d/.test(cv)) return cv;
+      if(cv && cv !== '' && /\d/.test(cv)) return cv;
     }
     // 2. Try exact SCORE_KEYS match
     var val = row[SCORE_KEYS[key]];
     if(val !== undefined && val !== null) {
       var vs = val.toString().trim();
-      if(vs !== '' && vs !== 'DATE_CONVERTED') return vs;
+      if(vs !== '') return vs;
     }
-    // 3. Search by keyword — skip DATE_CONVERTED values
+    // 3. Search by keyword
     var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase();
     for(var k in row) {
       if(k.indexOf('__col') === 0) continue;
       var kl = k.trim().toLowerCase();
       if(kl.indexOf(searchWords) !== -1 && kl.indexOf('score') !== -1) {
         var v = (row[k] || '').toString().trim();
-        if(v !== '' && v !== 'DATE_CONVERTED') return v;
+        if(v !== '') return v;
       }
     }
     return '0';

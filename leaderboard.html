@@ -828,14 +828,15 @@ function parseScore(s){
   if(!s) return null;
   s = String(s).trim();
   if(!s) return null;
-  // Reject date strings (Google Sheets converts e.g. 11/30 to a date)
+  // Reject date strings just in case
   if(s.includes('GMT') || s.includes('00:00:00') || /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/.test(s)) return null;
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+  if(s === 'DATE_CONVERTED') return null;
   const parts = s.split('/');
   if(parts.length===2){
     const got=parseInt(parts[0])||0, tot=parseInt(parts[1])||30;
-    // Sanity check: scores must be 0-30
-    if(got>30||tot>30||tot===0) return null;
-    return {got,tot,pct:Math.round(got/tot*100),raw:s};
+    if(got<0||tot===0||tot>100) return null;
+    if(got<=30&&tot<=30) return {got,tot,pct:Math.round(got/tot*100),raw:s};
   }
   const v=parseInt(s)||0;
   return v>0&&v<=30 ? {got:v,tot:30,pct:Math.round(v/30*100),raw:s} : null;
