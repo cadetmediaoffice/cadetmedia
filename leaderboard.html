@@ -674,21 +674,7 @@ async function debugRaw(){
 function parseData(text){
   text = text.trim();
 
-  // ── Try JSON first (preferred — no column shift issues) ──
-  if(text.startsWith('[')){
-    try {
-      const rawRows = JSON.parse(text);
-      // Trim ALL keys — sheet headers have extra spaces e.g. "  Full Name  "
-      const rows = rawRows.map(r => {
-        const clean = {};
-        Object.keys(r).forEach(k => { clean[k.trim()] = (r[k]||'').toString().trim(); });
-        return clean;
-      });
-      return rows.filter(r => r && (r['Full Name']||r['full name']||'').trim() !== '');
-    } catch(e){ console.warn('JSON parse failed, falling back to CSV', e); }
-  }
-
-  // ── CSV fallback ──
+  // ── CSV line parser ──
   function parseLine(line){
     const cols=[];let cur='',inQ=false;
     for(let i=0;i<line.length;i++){
@@ -699,15 +685,58 @@ function parseData(text){
     cols.push(cur.replace(/^"|"$/g,'').trim());
     return cols;
   }
-  const lines = text.split('\n');
-  const headers = parseLine(lines[0]);
+
+  // ── Helper: merge duplicate headers — keep first non-empty value ──
+  // Also stores raw column array as row._cols for index-based fallback
+  function buildRow(headers, vals){
+    const obj = { _cols: vals };
+    // First pass: fill all headers (last value wins for duplicates)
+    headers.forEach((h,i) => { if(h) obj[h] = vals[i]||''; });
+    // Second pass: for duplicate headers, keep the FIRST non-empty value
+    const seen = {};
+    headers.forEach((h,i) => {
+      if(!h) return;
+      const k = h.trim();
+      if(seen[k] === undefined){
+        seen[k] = i;
+        obj[k] = (vals[i]||'').trim();
+      } else {
+        // Already seen — only overwrite if current slot is empty AND new slot has data
+        if((!obj[k] || obj[k]==='') && (vals[i]||'').trim()){
+          obj[k] = vals[i].trim();
+        }
+      }
+    });
+    return obj;
+  }
+
+  // ── Try JSON first ──
+  if(text.startsWith('[')){
+    try {
+      const rawRows = JSON.parse(text);
+      const rows = rawRows.map(r => {
+        const clean = {};
+        Object.keys(r).forEach(k => { clean[k.trim()] = (r[k]||'').toString().trim(); });
+        // For JSON, duplicate keys are already collapsed by JS engine (last wins)
+        // We need to rebuild from scratch using column order — fall through to CSV
+        return clean;
+      });
+      // If JSON has the Student Safety issue, we may still get wrong data.
+      // Only use JSON if no duplicate header problem detected (check key count vs expected)
+      const sample = rows[0];
+      if(sample && Object.keys(sample).filter(k=>k.toLowerCase().includes('student safety')).length <= 1){
+        return rows.filter(r => (r['Full Name']||r['full name']||'').trim() !== '');
+      }
+      // Fall through to CSV if duplicate detected in JSON
+    } catch(e){ console.warn('JSON parse failed', e); }
+  }
+
+  // ── CSV parsing (handles duplicate headers correctly) ──
+  const lines = text.startsWith('[') ? [] : text.split('\n');
+  if(!lines.length) return [];
+  const headers = parseLine(lines[0]).map(h=>h.trim());
   return lines.slice(1)
-    .map(l => {
-      const vals = parseLine(l);
-      const obj = {};
-      headers.forEach((h,i) => obj[h] = vals[i]||'');
-      return obj;
-    })
+    .map(l => buildRow(headers, parseLine(l)))
     .filter(r => {
       const name = r['Full Name']||r['full name']||'';
       return name.trim() !== '';
@@ -723,29 +752,39 @@ function getField(row, keywords){
 }
 
 // ── Get module score from row object ──
-function getModuleField(row, keywords){
+// keywords: array of strings to search in header names
+// colIndex: fallback column index (0-based) if keyword match is empty
+function getModuleField(row, keywords, colIndex){
+  // Try keyword match first
   const key = Object.keys(row).find(k =>
+    k !== '_cols' &&
     keywords.some(kw => k.trim().toLowerCase().includes(kw.toLowerCase()))
   );
-  return key ? (row[key]||'').toString().trim() : '';
+  const val = key ? (row[key]||'').toString().trim() : '';
+  if(val) return val;
+  // Fallback: use raw column index if provided
+  if(colIndex !== undefined && row._cols && row._cols[colIndex]){
+    return row._cols[colIndex].trim();
+  }
+  return '';
 }
 
 // ── Score ──
-// Module keyword maps — matches sheet header names
+// Module keyword maps — [keywords, colIndex(0-based)]
 const MOD_KEYS = [
-  ['general safety'],
-  ['student safety','rights','awareness'],
-  ['fire safety','gnfs'],
-  ['community safety','police'],
-  ['health','ambulance'],
-  ['prisons','discipline'],
-  ['nadmo','disaster'],
-  ['immigration'],
-  ['customs','gra','division'],
-  ['tourism','creative arts'],
-  ['forest conservation','forest'],
-  ['national defence','armed forces','gaf'],
-  ['narcotics','nacoc','drug'],
+  {kw:['general safety'],                   col:7},
+  {kw:['student safety','rights','awareness'],col:8},
+  {kw:['fire safety','gnfs'],               col:9},
+  {kw:['community safety','police'],        col:10},
+  {kw:['health','ambulance'],               col:11},
+  {kw:['prisons','discipline'],             col:12},
+  {kw:['nadmo','disaster'],                 col:13},
+  {kw:['immigration'],                      col:14},
+  {kw:['customs','gra','division'],         col:15},
+  {kw:['tourism','creative arts'],          col:16},
+  {kw:['forest conservation','forest'],     col:17},
+  {kw:['national defence','armed forces','gaf'],col:18},
+  {kw:['narcotics','nacoc','drug'],         col:19},
 ];
 
 const GHANA_REGIONS = ['Greater Accra','Ashanti','Western','Eastern','Central',
@@ -795,8 +834,8 @@ function getScorePct(row){
   }
   // Sum module scores (skip date values)
   let sum=0,max=0;
-  MOD_KEYS.forEach(kw=>{
-    const s=getModuleField(row,kw);
+  MOD_KEYS.forEach(m=>{
+    const s=getModuleField(row,m.kw,m.col);
     const ms=parseScore(s);
     if(ms){sum+=ms.got;max+=ms.tot;}
   });
@@ -1183,7 +1222,7 @@ const MODULES = [
 ];
 
 function getModuleScores(row){
-  return MOD_KEYS.map(kw => parseScore(getModuleField(row, kw)));
+  return MOD_KEYS.map(m => parseScore(getModuleField(row, m.kw, m.col)));
 }
 
 function showDetail(rowIdx){
