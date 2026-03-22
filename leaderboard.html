@@ -775,26 +775,20 @@ function getField(row, keywords){
 }
 
 // ── Get module score from row object ──
-// keywords: array of strings to search in header names
-// colIndex: fallback column index (0-based) if keyword match is empty
+// Priority 1: __colN direct index (most reliable — immune to duplicate headers)
+// Priority 2: keyword match on header name
 function getModuleField(row, keywords, colIndex){
-  // Try keyword match first
+  // Priority 1: direct column index via __colN key
+  if(colIndex !== undefined){
+    const v = (row['__col' + colIndex] || '').trim();
+    if(v && /\d/.test(v)) return v; // must contain a digit (score-shaped)
+  }
+  // Priority 2: keyword match (fallback for CSV or old Apps Script)
   const key = Object.keys(row).find(k =>
     k !== '_cols' && !k.startsWith('__col') &&
     keywords.some(kw => k.trim().toLowerCase().includes(kw.toLowerCase()))
   );
-  const val = key ? (row[key]||'').toString().trim() : '';
-  if(val) return val;
-  // Fallback 1: use __colN key from new Apps Script format
-  if(colIndex !== undefined){
-    const colKey = '__col' + colIndex;
-    if(row[colKey] && row[colKey].trim()) return row[colKey].trim();
-  }
-  // Fallback 2: use raw _cols array (CSV path)
-  if(colIndex !== undefined && row._cols && row._cols[colIndex]){
-    return row._cols[colIndex].trim();
-  }
-  return '';
+  return key ? (row[key]||'').toString().trim() : '';
 }
 
 // ── Score ──
@@ -848,19 +842,24 @@ function parseScore(s){
 }
 
 function getScorePct(row){
-  // Try Total Score (%) column — handles "98%", "0.98", "98"
+  // Priority 1: direct column index __col20 = Total Score (%)
+  const directPct = (row['__col20'] || '').trim();
+  if(directPct){
+    if(/^\d{1,3}%$/.test(directPct)) return parseInt(directPct);
+    if(/^0\.\d+$/.test(directPct))   return Math.round(parseFloat(directPct)*100);
+    const m = directPct.match(/^(\d{1,3})$/);
+    if(m){ const v=parseInt(m[1]); if(v>=1&&v<=100) return v; }
+  }
+  // Priority 2: keyword match on Total Score column
   const ts = getField(row, ['total score','total %','score (%)','score(%)']);
   if(ts){
     const clean = ts.trim();
-    // Decimal like 0.98
-    if(/^0\.\d+$/.test(clean)) return Math.round(parseFloat(clean)*100);
-    // Percentage like 98%
+    if(/^0\.\d+$/.test(clean))   return Math.round(parseFloat(clean)*100);
     if(/^\d{1,3}%$/.test(clean)) return parseInt(clean);
-    // Plain number like 98
     const m=clean.match(/^(\d{1,3})$/);
     if(m){const v=parseInt(m[1]);if(v>=1&&v<=100)return v;}
   }
-  // Sum module scores (skip date values)
+  // Priority 3: sum module scores
   let sum=0,max=0;
   MOD_KEYS.forEach(m=>{
     const s=getModuleField(row,m.kw,m.col);
