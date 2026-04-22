@@ -140,18 +140,17 @@ canvas#cert{width:100%;display:block;}
   <div class="section-title">📊 Module Scores (format: 27/30)</div>
   <div class="module-grid">
     <div class="mod-field"><label>🛡️ General</label><input id="m0" value="16/30"></div>
-    <div class="mod-field"><label>🎓 Student Safety</label><input id="m1" value="0/30"></div>
-    <div class="mod-field"><label>🔥 Fire</label><input id="m2" value="0/30"></div>
-    <div class="mod-field"><label>👮 Police</label><input id="m3" value="13/30"></div>
-    <div class="mod-field"><label>🚑 Health</label><input id="m4" value="14/30"></div>
-    <div class="mod-field"><label>⚖️ Prisons</label><input id="m5" value="10/30"></div>
-    <div class="mod-field"><label>🌪️ NADMO</label><input id="m6" value="25/30"></div>
-    <div class="mod-field"><label>✈️ Immigration</label><input id="m7" value="13/30"></div>
-    <div class="mod-field"><label>📦 Customs</label><input id="m8" value="14/30"></div>
-    <div class="mod-field"><label>🏛️ Tourism</label><input id="m9" value="24/30"></div>
-    <div class="mod-field"><label>🌿 Forest</label><input id="m10" value="1/30"></div>
-    <div class="mod-field"><label>🎖️ GAF</label><input id="m11" value="24/30"></div>
-    <div class="mod-field"><label>🚫 NACOC</label><input id="m12" value="12/30"></div>
+    <div class="mod-field"><label>🔥 Fire</label><input id="m1" value="0/30"></div>
+    <div class="mod-field"><label>👮 Police</label><input id="m2" value="13/30"></div>
+    <div class="mod-field"><label>🚑 Health</label><input id="m3" value="14/30"></div>
+    <div class="mod-field"><label>⚖️ Prisons</label><input id="m4" value="10/30"></div>
+    <div class="mod-field"><label>🌪️ NADMO</label><input id="m5" value="25/30"></div>
+    <div class="mod-field"><label>✈️ Immigration</label><input id="m6" value="13/30"></div>
+    <div class="mod-field"><label>📦 Customs</label><input id="m7" value="14/30"></div>
+    <div class="mod-field"><label>🏛️ Tourism</label><input id="m8" value="24/30"></div>
+    <div class="mod-field"><label>🌿 Forest</label><input id="m9" value="1/30"></div>
+    <div class="mod-field"><label>🎖️ GAF</label><input id="m10" value="24/30"></div>
+    <div class="mod-field"><label>🚫 NACOC</label><input id="m11" value="12/30"></div>
   </div>
 
   <div class="btn-row">
@@ -179,7 +178,7 @@ const BADGE_CONFIG = {
 };
 
 const MODULES = [
-  'General Safety','Student Safety','Fire Safety','Police / Community',
+  'General Safety','Fire Safety','Police / Community',
   'Health & Ambulance','Prisons Service','NADMO',
   'Immigration','Customs / GRA','Tourism & Arts',
   'Forest Conservation','Armed Forces (GAF)','NACOC'
@@ -213,7 +212,7 @@ function generate(){
     document.getElementById('iSerial').value = serial;
   }
 
-  const modules = Array.from({length:13},(_,i)=>{
+  const modules = Array.from({length:12},(_,i)=>{
     const v = document.getElementById('m'+i).value.trim();
     const parts = v.split('/');
     if(parts.length===2){
@@ -456,7 +455,7 @@ function finalizeCert(name,title,school,region,score,badge,date,cfg,serial,lx,lw
 
   ctx.font='italic 400 13px "EB Garamond", serif';
   ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.fillText('covering all 13 Ghana Public Safety Service Modules', rx+rw/2, lineY+192);
+  ctx.fillText('covering all 12 Ghana Public Safety Service Modules', rx+rw/2, lineY+192);
 
   // Score display
   const scoreY = lineY+240;

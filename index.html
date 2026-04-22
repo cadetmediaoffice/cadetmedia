@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>National Academic Assessment Drive – Safety Edition</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url("MEDIA/fire_service_tales_menu.jpg") center top / cover no-repeat;
+    min-height: 100vh;
+    color: #fff;
+}
+
+/* Popup Modal */
+#welcomeModal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+#welcomeContent {
+    background: #111;
+    padding: 20px 28px;
+    border-radius: 12px;
+    max-width: 620px;
+    width: 92%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+#welcomeContent h2 {
+    font-size: 21px;
+    margin-bottom: 10px;
+    letter-spacing: 0.03em;
+    line-height: 1.3;
+}
+
+#welcomeContent p {
+    font-size: 13.5px;
+    line-height: 1.7;
+    margin-bottom: 12px;
+    color: #e0e0e0;
+    letter-spacing: 0.02em;
+    padding: 0 4px;
+}
+
+/* Video wrapper — buttons sit on top of the video */
+#videoWrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    /* Rich fire-themed background visible before/behind the video */
+    background:
+        radial-gradient(ellipse at 20% 60%, rgba(184,0,0,0.55) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 40%, rgba(242,195,0,0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 100%, rgba(120,30,0,0.7) 0%, transparent 60%),
+        linear-gradient(160deg, #0d0000 0%, #2a0800 40%, #1a0400 70%, #000000 100%);
+    min-height: 220px;
+    box-shadow: 0 0 30px rgba(184,0,0,0.35), inset 0 0 40px rgba(0,0,0,0.6);
+}
+
+/* Subtle ember/grid texture over the background */
+#videoWrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 28px,
+            rgba(184,0,0,0.04) 28px,
+            rgba(184,0,0,0.04) 29px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 28px,
+            rgba(184,0,0,0.04) 28px,
+            rgba(184,0,0,0.04) 29px
+        );
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+/* Large centred GNFS watermark — always behind video, fills the background */
+#videoBgLogo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 72%;
+    max-width: 320px;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.13;
+    filter: brightness(2.5) saturate(0) drop-shadow(0 0 18px rgba(242,195,0,0.4));
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 0;
+}
+
+#welcomeVideo {
+    width: 100%;
+    display: block;
+    border-radius: 10px;
+    max-height: 260px;
+    object-fit: cover;
+    filter: brightness(1.15) contrast(1.05);
+    position: relative;
+    z-index: 3;
+}
+
+/* Overlay sits over the video — centre buttons (play/continue) */
+#videoOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(0,0,0,0.28);
+    border-radius: 10px;
+    transition: opacity 0.5s ease;
+    opacity: 1;
+    z-index: 5;
+}
+
+#videoOverlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#videoOverlay button {
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #f2c300;
+    color: #000;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    transition: transform 0.15s, background 0.2s;
+}
+
+#videoOverlay button:hover {
+    transform: scale(1.05);
+    background: #ffd740;
+}
+
+#exitBtn {
+    background: rgba(255,255,255,0.15) !important;
+    color: #fff !important;
+    border: 1.5px solid rgba(255,255,255,0.4) !important;
+}
+
+#exitBtn:hover {
+    background: rgba(255,255,255,0.3) !important;
+}
+
+/* GNFS logo — static watermark, larger and brighter */
+#videoGnfsLogo {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.96);
+    padding: 4px;
+    box-shadow:
+        0 0 0 3px rgba(242,195,0,0.85),
+        0 0 18px rgba(242,195,0,0.55),
+        0 0 6px rgba(0,0,0,0.7);
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 7;
+}
+
+/* Skip button — top-right corner, visible only while video is playing */
+#skipBtn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    z-index: 8;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, background 0.2s;
+}
+
+#skipBtn.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#skipBtn:hover {
+    background: rgba(180,0,0,0.75);
+    border-color: rgba(255,255,255,0.6);
+}
+
+/* Main menu content */
+.overlay { padding: 20px; }
+
+.header { text-align: center; margin-top: 4px; }
+.header h1 { font-size: 32px; }
+.header p { font-size: 16px; margin-bottom: 20px; }
+
+/* NAAD title bar */
+.naad-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(90deg, rgba(184,0,0,0.88), rgba(242,195,0,0.92), rgba(184,0,0,0.88));
+    color: #000;
+    padding: 7px 22px;
+    border-radius: 30px;
+    box-shadow: 0 3px 18px rgba(242,195,0,0.45), 0 1px 6px rgba(0,0,0,0.5);
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.naad-bar .naad-main {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.naad-bar .naad-badge {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    background: rgba(0,0,0,0.18);
+    padding: 2px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    border: 1px solid rgba(0,0,0,0.2);
+    white-space: nowrap;
+}
+
+/* PLAY FIRE SERVICE TALES */
+.play-section {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 50px;
+}
+
+.play-section img {
+    width: 160px;
+    height: auto;
+    cursor: pointer;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.6);
+}
+
+/* SAFETY EDUCATION RESOURCES */
+.resources {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+    gap: 25px 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    text-decoration: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.resource-item img {
+    width: 32px; height: 32px; object-fit: contain;
+    background: #fff; border-radius: 50%; padding: 2px;
+}
+
+.resource-item:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.02);
+}
+
+/* Footer */
+.footer { text-align: center; margin-top: 25px; font-size: 13px; }
+
+@media(max-width:600px){
+    .play-section { justify-content: center; margin-bottom: 20px; }
+    .resources { gap: 14px 12px; }
+}
+
+/* Splash Screen */
+#splashScreen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 2.5s ease;
+}
+
+#splashScreen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#splashScreen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0; left: 0;
+    animation: splashPulse 1.2s ease-out forwards;
+}
+
+#splashLoader {
+    position: absolute;
+    top: 62%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+}
+
+#splashLoader p {
+    color: #b80000;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+    animation: blink 1.4s ease-in-out infinite;
+}
+
+.loader-bar {
+    width: 220px;
+    height: 5px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.loader-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #b80000, #f2c300, #b80000);
+    border-radius: 10px;
+    animation: loadFill 8s linear forwards;
+}
+
+@keyframes loadFill {
+    0%   { width: 0%; }
+    100% { width: 100%; }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+/* Continue Bar */
+#continueBar {
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    background: linear-gradient(90deg, #b80000, #f2c300, #b80000);
+    color: #000;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 14px;
+    cursor: pointer;
+    z-index: 11;
+    display: none;
+    animation: barPulse 1s ease-in-out infinite;
+}
+
+@keyframes splashPulse {
+    0%   { transform: scale(1.05); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- Splash Screen -->
+<div id="splashScreen">
+    <img src="MEDIA/splash.png" alt="NAAD Safety Edition">
+    <div id="splashLoader">
+        <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+        <p>⏳ Please wait, loading resources…</p>
+    </div>
+    <div id="continueBar">▶ &nbsp; Click to Continue</div>
+</div>
+
+<!-- Welcome Modal -->
+<div id="welcomeModal">
+    <div id="welcomeContent">
+
+        <!-- Video with overlay buttons -->
+        <div id="videoWrapper">
+            <!-- Large centred GNFS watermark in the background -->
+            <img id="videoBgLogo" src="MEDIA/logo_gnfs.png" alt="">
+            <video id="welcomeVideo" muted>
+                <source src="MEDIA/INTRO_FIRE_SERVICE_TALES.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <!-- Static GNFS logo always visible on the player -->
+            <img id="videoGnfsLogo" src="MEDIA/logo_gnfs.png" alt="GNFS">
+            <!-- Skip button — appears when video is playing -->
+            <button id="skipBtn">⏭ Skip</button>
+            <!-- Centre overlay: Play Intro + Continue -->
+            <div id="videoOverlay">
+                <button id="playIntroBtn">▶ Play Intro</button>
+                <button id="exitBtn">✕ Continue</button>
+            </div>
+        </div>
+
+        <h2>Welcome to the National Academic Assessment Drive</h2>
+        <div style="background: linear-gradient(90deg, #b80000, #f2c300, #b80000); padding: 6px 12px; border-radius: 6px; margin-bottom: 12px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow: 0 2px 10px rgba(242,195,0,0.4); white-space:nowrap; overflow:hidden;">
+            <span style="font-size:9.5px; font-weight:900; letter-spacing:0.09em; color:#000; text-transform:uppercase; white-space:nowrap;">National Academic Assessment Drive &nbsp;&mdash;&nbsp; Safety Edition</span>
+            <span style="width:1px; height:12px; background:#000; opacity:0.4; display:inline-block; flex-shrink:0;"></span>
+            <span style="font-size:11px; font-weight:900; letter-spacing:0.18em; color:#000; text-transform:uppercase; white-space:nowrap; flex-shrink:0;">(NAAD)</span>
+        </div>
+        <p>Ghana&#8217;s national safety education initiative &#8212; where storytelling meets action. Through Fire Service Tales, students learn fire safety, emergency response, and civic responsibility, guided by the Ghana National Fire Service and key national institutions. Under the NAAD Safety Edition, every student is assessed, celebrated, and rewarded &#8212; with outstanding performers earning national recognition at the prestigious Cadet Personality Awards.</p>
+    </div>
+</div>
+
+<!-- Background Music -->
+<audio id="bgMusic" loop>
+    <source src="MEDIA/menu_background.mp3" type="audio/mpeg">
+    Your browser does not support audio playback.
+</audio>
+
+<!-- Hover Sound -->
+<audio id="hoverSound">
+    <source src="MEDIA/hover.mp3" type="audio/mpeg">
+</audio>
+
+<div class="overlay">
+
+    <div class="header">
+        <div class="naad-bar">
+            <span class="naad-main">National Academic Assessment Drive</span>
+            <span class="naad-badge">(NAAD) Safety Edition</span>
+        </div>
+    </div>
+
+    <!-- Play Fire Service Tales -->
+    <div class="play-section">
+        <a href="fire-service-episodes.html">
+            <img src="MEDIA/play_fire_service_tales.jpg" alt="Play Fire Service Tales">
+        </a>
+    </div>
+
+    <!-- Safety Education Resources -->
+    <div class="resources">
+        <a href="FIRE_SAFETY/firesafety.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_gnfs.png" alt="GNFS"><span>Fire Safety – GNFS</span>
+        </a>
+        <a href="DISASTER_PREVENTION/disaster.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_nadmo.png" alt="NADMO"><span>Disaster Preparedness – NADMO</span>
+        </a>
+        <a href="HEALTH_SAFETY/health.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_health.png" alt="Health"><span>Health & Safety – Ghana Ambulance Service</span>
+        </a>
+        <a href="FORESTRY_SAFETY/forestry.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_forestry.png" alt="Forestry"><span>Environmental Protection – Forest Commission</span>
+        </a>
+        <a href="DISCIPLINE_SAFETY/discipline.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_prisons.png" alt="Prisons"><span>Discipline & Safety – Prisons Service</span>
+        </a>
+        <a href="TOURISM_CULTURE/tourism.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_tourism.png" alt="Tourism & Culture"><span>Tourism, Arts & Culture – Ministry of Tourism</span>
+        </a>
+        <a href="POLICE_SAFETY/police.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_police.png" alt="Police"><span>Community Safety – Ghana Police Service</span>
+        </a>
+        <a href="CUSTOMS_SERVICE/customs.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_customs.png" alt="Customs"><span>Customs Education – Customs Service</span>
+        </a>
+        <a href="IMMIGRATION_SERVICE/immigration.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_immigration.png" alt="Immigration"><span>Immigration Education – Immigration Service</span>
+        </a>
+        <!-- New Institutions -->
+        <a href="GAF_SERVICE/gaf.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_gaf.png" alt="GAF"><span>National Defense – Ghana Armed Forces</span>
+        </a>
+        <a href="NARCOTICS_SERVICE/narcotics.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_nacoc.png" alt="NACOC"><span>Drug Safety & Awareness – NACOC</span>
+        </a>
+        <!-- Public Safety Quiz -->
+        <a href="CADET_QUIZ/cadetnationalquiz.html" class="resource-item" onmouseenter="playHoverSound()">
+            <img src="MEDIA/logo_quiz.png" alt="Quiz"><span>Public Safety Competency Quiz</span>
+        </a>
+    </div>
+
+    <div class="footer">
+        National Academic Assessment Drive — Safety Edition &nbsp;|&nbsp; An initiative by Cadet Media Ghana
+    </div>
+
+</div>
+
+<script>
+
+const splashScreen  = document.getElementById('splashScreen');
+const continueBar   = document.getElementById('continueBar');
+const welcomeModal  = document.getElementById('welcomeModal');
+const welcomeVideo  = document.getElementById('welcomeVideo');
+const bgMusic       = document.getElementById('bgMusic');
+const playIntroBtn  = document.getElementById('playIntroBtn');
+const exitBtn       = document.getElementById('exitBtn');
+const hoverSound    = document.getElementById('hoverSound');
+
+// ─── Only speak once per browser session (not on back/refresh) ────────────────
+const isFirstVisit = !sessionStorage.getItem('naad_visited');
+if (isFirstVisit) sessionStorage.setItem('naad_visited', '1');
+
+// ─── Shared audio context ─────────────────────────────────────────────────────
+function makeAudioCtx() {
+    return new (window.AudioContext || window.webkitAudioContext)();
+}
+
+// ─── Splash intro sound (plays immediately when image appears) ────────────────
+function playIntroSound() {
+    try {
+        const ctx = makeAudioCtx();
+
+        function tone(freq, start, dur, type = 'sine', vol = 0.4) {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+            gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+            osc.start(ctx.currentTime + start);
+            osc.stop(ctx.currentTime + start + dur + 0.05);
+        }
+
+        // Deep dramatic rise — like a national anthem opening
+        tone(110,  0.0, 0.6, 'triangle', 0.3);  // deep rumble
+        tone(220,  0.5, 0.5, 'sine',     0.35); // rise
+        tone(330,  0.9, 0.5, 'sine',     0.4);  // climb
+        tone(440,  1.3, 0.6, 'sine',     0.45); // peak
+        tone(550,  1.8, 1.2, 'sine',     0.5);  // hold high
+        tone(440,  2.8, 0.8, 'sine',     0.3);  // settle
+    } catch(e) { console.warn('Intro sound error:', e); }
+}
+
+// Play intro sound as soon as page loads (first visit only — it's a wow moment)
+window.addEventListener('load', () => {
+    // Small delay so the splash image is visible first
+    setTimeout(playIntroSound, 400);
+});
+
+// ─── Loading done chime ───────────────────────────────────────────────────────
+function playDoneSound() {
+    try {
+        const ctx = makeAudioCtx();
+        function beep(freq, start, dur) {
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+            gain.gain.setValueAtTime(0.5, ctx.currentTime + start);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+            osc.start(ctx.currentTime + start);
+            osc.stop(ctx.currentTime + start + dur + 0.1);
+        }
+        beep(440, 0.0, 0.35);
+        beep(554, 0.4, 0.35);
+        beep(660, 0.8, 0.7);
+    } catch(e) { console.warn('Chime error:', e); }
+}
+
+// ─── Welcome speech ───────────────────────────────────────────────────────────
+function speakWelcome() {
+    if (!window.speechSynthesis || !isFirstVisit) return;
+    window.speechSynthesis.cancel();
+
+    const msg = new SpeechSynthesisUtterance(
+        "Welcome to the National Academic Assessment Drive, NAAD Safety Edition. " +
+        "An initiative by Cadet Media Ghana in partnership with key national institutions. " +
+        "We have a special message for you. " +
+        "Please press Play to begin."
+    );
+    msg.lang   = 'en-GB';
+    msg.rate   = 0.88;
+    msg.pitch  = 1.10;
+    msg.volume = 1;
+
+    function pickVoiceAndSpeak() {
+        const voices = window.speechSynthesis.getVoices();
+
+        // Priority list — most preferred UK female voices first
+        const ukFemalePriority = [
+            'Google UK English Female',
+            'Microsoft Libby Online (Natural) - English (United Kingdom)',
+            'Microsoft Sonia Online (Natural) - English (United Kingdom)',
+            'Microsoft Hazel - English (Great Britain)',
+            'Google UK English',
+            'Daniel',      // macOS UK voice (neutral but GB)
+        ];
+
+        let chosen = null;
+
+        // 1. Try each preferred name in order
+        for (const name of ukFemalePriority) {
+            chosen = voices.find(v => v.name.includes(name));
+            if (chosen) break;
+        }
+
+        // 2. Fallback — any en-GB voice
+        if (!chosen) {
+            chosen = voices.find(v => v.lang === 'en-GB');
+        }
+
+        // 3. Fallback — any en-GB-ish or en-GB female
+        if (!chosen) {
+            chosen = voices.find(v =>
+                v.lang.startsWith('en') && (
+                    v.name.toLowerCase().includes('female') ||
+                    v.name.toLowerCase().includes('woman')  ||
+                    v.name.toLowerCase().includes('girl')
+                )
+            );
+        }
+
+        if (chosen) msg.voice = chosen;
+        window.speechSynthesis.speak(msg);
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = pickVoiceAndSpeak;
+    } else {
+        pickVoiceAndSpeak();
+    }
+}
+
+// ─── Dismiss splash and trigger audio ────────────────────────────────────────
+function dismissSplash() {
+    // Mark this tab as having come through the menu.
+    // cadetnationalquiz.html checks for this token so that a student
+    // who opens the quiz URL directly (even on an already-activated machine)
+    // is always redirected back to activate.html first.
+    sessionStorage.setItem('cmgSession', 'true');
+    playDoneSound();
+    speakWelcome();
+    splashScreen.classList.add('fade-out');
+    setTimeout(() => {
+        splashScreen.style.display = 'none';
+    }, 2500);
+}
+
+// ─── Splash timeline ─────────────────────────────────────────────────────────
+setTimeout(() => {
+
+    const loaderText = document.querySelector('#splashLoader p');
+    if (loaderText) {
+        loaderText.style.color = '#006400';
+        loaderText.textContent = '✅ Ready!';
+    }
+
+    if (isFirstVisit) {
+        // First time — show continue bar, wait for click to trigger audio + speech
+        continueBar.style.display = 'block';
+        continueBar.addEventListener('click', dismissSplash, { once: true });
+    } else {
+        // Returning user — silently auto-dismiss, no bar, no speech
+        sessionStorage.setItem('cmgSession', 'true');
+        setTimeout(() => {
+            splashScreen.classList.add('fade-out');
+            setTimeout(() => splashScreen.style.display = 'none', 2500);
+        }, 1000);
+    }
+
+}, 8000);
+
+// ─── Hover sound ──────────────────────────────────────────────────────────────
+function playHoverSound() {
+    hoverSound.pause();
+    hoverSound.currentTime = 0;
+    hoverSound.play().catch(() => {});
+}
+
+// ─── Modal buttons ────────────────────────────────────────────────────────────
+const videoOverlay = document.getElementById('videoOverlay');
+const skipBtn      = document.getElementById('skipBtn');
+
+function closeModal() {
+    window.speechSynthesis.cancel();
+    welcomeVideo.pause();
+    welcomeVideo.currentTime = 0;
+    welcomeModal.style.display = 'none';
+    skipBtn.classList.remove('visible');
+    bgMusic.play().catch(e => console.log(e));
+}
+
+// ▶ Play Intro — hide overlay, show skip, start video
+playIntroBtn.addEventListener('click', () => {
+    window.speechSynthesis.cancel();
+    welcomeVideo.muted = false;
+    welcomeVideo.play().catch(e => console.log(e));
+    videoOverlay.classList.add('hidden');
+    skipBtn.classList.add('visible');
+});
+
+// ✕ Continue — close modal without playing
+exitBtn.addEventListener('click', closeModal);
+
+// ⏭ Skip — stop video and close modal
+skipBtn.addEventListener('click', closeModal);
+
+// Clicking outside the modal box also closes it
+welcomeModal.addEventListener('click', (e) => {
+    if (e.target === welcomeModal) closeModal();
+});
+
+// When video ends naturally, bring overlay back and hide skip
+welcomeVideo.addEventListener('ended', () => {
+    videoOverlay.classList.remove('hidden');
+    skipBtn.classList.remove('visible');
+});
+
+</script>
+
+</body>
+</html>

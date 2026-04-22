@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>National Public Safety Quiz — Cadet Media Ghana</title>
+<title>NAAD Safety Edition 2026 — Cadet Media Ghana</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -167,7 +167,33 @@ ul.modules-list li {
 }
 </style>
 </head>
-<body>
+<!-- body stays invisible until the activation check passes -->
+<body style="visibility:hidden">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ACTIVATION GUARD — runs synchronously before any paint.
+     Requires BOTH:
+       • localStorage flags set by activate.html  (persistent — who you are)
+       • sessionStorage token set by index.html   (per-tab — came through the menu)
+     A student opening this URL directly on a machine someone else
+     already activated will fail the session check and be redirected.
+     location.replace() is used so Back-button cannot bypass the gate.
+ ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+    var name      = localStorage.getItem('cadetName');
+    var school    = localStorage.getItem('cadetSchool');
+    var gender    = localStorage.getItem('cadetGender');
+    var code      = localStorage.getItem('cmgCode');
+    var activated = localStorage.getItem('cmgActivated');
+    var ok = name && school && gender && code && activated === 'true';
+    if (!ok) {
+        window.location.replace('activate.html');
+    } else {
+        document.body.style.visibility = 'visible';
+    }
+})();
+</script>
 
 <!-- Top bar -->
 <div class="top-bar">
@@ -181,13 +207,12 @@ ul.modules-list li {
     <!-- LEFT: title, intro, awards, button -->
     <div class="left-col">
         <div class="title-block">
-            <h1>🇬🇭 National Public Safety Quiz</h1>
-            <p class="edition">Cadet Media Ghana &nbsp;·&nbsp; 2026 Edition</p>
+            <h1>🇬🇭 National Academic Assessment Drive (NAAD)</h1>
+            <p class="edition">Safety Edition 2026 &nbsp;·&nbsp; Cadet Media Ghana</p>
         </div>
 
         <p class="intro-para">
-            This competition tests your understanding of Ghana's public safety institutions and the
-            vital roles they play in protecting lives, maintaining order, and building safer communities.
+            Welcome to the <strong>National Academic Assessment Drive (NAAD) Safety Edition 2026</strong> — an initiative by <strong>Cadet Media Ghana</strong> and <strong>Ghana National Fire Service</strong> to test and celebrate your knowledge of Ghana's public safety institutions and the vital roles they play in protecting lives, maintaining order, and building safer communities.
             You will be assessed across <strong>13 dedicated service modules</strong> — each representing
             a key national agency working to keep Ghana safe.
         </p>
@@ -230,7 +255,7 @@ ul.modules-list li {
 </div>
 
 <div class="footer">
-    An educational initiative by <strong>Cadet Media Ghana</strong>
+    An educational initiative by <strong>Cadet Media Ghana</strong> and <strong>Ghana National Fire Service</strong>
     in collaboration with Ghana's national public safety institutions
 </div>
 
@@ -240,28 +265,6 @@ ul.modules-list li {
 </audio>
 
 <script>
-window.addEventListener('DOMContentLoaded',function(){
-  // ── CMG Activation Check ──
-  (function(){
-    var name    = localStorage.getItem('cadetName');
-    var school  = localStorage.getItem('cadetSchool');
-    var gender  = localStorage.getItem('cadetGender');
-    var code    = localStorage.getItem('cmgCode');
-    var activated = localStorage.getItem('cmgActivated');
-    if(!name || !school || !gender || !code || activated !== 'true'){
-      window.location.replace('activate.html'); return;
-    }
-    // If already submitted → go straight to results
-    if(localStorage.getItem('cmgResultsSubmitted')==='true'){
-      window.location.replace('my_results.html'); return;
-    }
-    // If any quiz progress exists → skip landing, go straight to quiz hub
-    var hasProgress = localStorage.getItem('generalScore') || localStorage.getItem('generalCompleted');
-    if(hasProgress){
-      window.location.replace('quiz_questions.html'); return;
-    }
-  })();
-});
 const startBtn   = document.getElementById('startQuizBtn');
 const hoverSound = document.getElementById('hoverSound');
 

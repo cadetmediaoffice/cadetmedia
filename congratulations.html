@@ -500,7 +500,7 @@ function speak(text, rate, pitch){
 //  CONFIG
 // ══════════════════════════════════════════════
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb2Nkc19rLDOoCeR_GLABuG5aY2I-g/formResponse";
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxATRpLBPXR_6rsFXBZX7ms_zIlV5XIXOsWzoIJwQ9NIsrkOfM0pDD61Dv4Lf0HFSIf/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec';
 
 const SERVICES = [
   {key:"general",       name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
@@ -569,20 +569,7 @@ window.addEventListener('DOMContentLoaded', function(){
   const _c=localStorage.getItem('cmgCode');
   const _a=localStorage.getItem('cmgActivated');
   if(!_n||!_s||!_g||!_c||_a!=='true'){
-    window.location.replace('activate.html'); return;
-  }
-  // All 12 SERVICE modules must be completed to access congratulations
-  var SERVICE_KEYS_C=['studentSafety','fire','police','ambulance','prisons',
-    'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
-  var allDoneC=SERVICE_KEYS_C.every(function(k){
-    // Must have BOTH the Completed flag AND a score greater than 0
-    var completed = localStorage.getItem(k+'Completed')==='true';
-    var r = localStorage.getItem(k+'Score');
-    var hasScore = r && parseInt(r) > 0;
-    return completed && hasScore;
-  });
-  if(!allDoneC){
-    window.location.replace('quiz_questions.html'); return;
+    window.location.href='activate.html'; return;
   }
 
   // Load cadet info

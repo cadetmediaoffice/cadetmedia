@@ -135,7 +135,7 @@ footer{font-size:11px;color:rgba(255,255,255,0.25);text-align:center;margin-top:
   <img src="../MEDIA/logo_quiz.png" alt="CMG" style="height:80px;border-radius:50%;
     box-shadow:0 0 20px rgba(255,215,0,0.4);margin-bottom:4px;">
   <h1>Ghana Student Safety &amp; Service Challenge</h1>
-  <span class="badge-submitted" id="submittedBadge" style="display:none;">✅ Results Submitted</span>
+  <span class="badge-submitted">✅ Results Submitted</span>
 </div>
 
 <!-- ── Top two-column section ── -->
@@ -280,28 +280,9 @@ window.addEventListener('DOMContentLoaded', function(){
   var code     = localStorage.getItem('cmgCode');
   var activated= localStorage.getItem('cmgActivated');
   var submitted= localStorage.getItem('cmgResultsSubmitted') === 'true';
-  var badgeEl=document.getElementById('submittedBadge');
-  if(badgeEl) badgeEl.style.display = submitted ? 'inline-block' : 'none';
   
   if(!name || !code || activated !== 'true'){
-    window.location.replace('activate.html'); return;
-  }
-  // If not submitted yet → check where to send them
-  if(!submitted){
-    // Check if all 12 service modules are done
-    var SVC=['studentSafety','fire','police','ambulance','prisons',
-      'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
-    var allSvcDone=SVC.every(function(k){
-      return localStorage.getItem(k+'Completed')==='true'||
-        (function(){var r=localStorage.getItem(k+'Score');return r&&parseInt(r)>0;})();
-    });
-    if(allSvcDone){
-      // All done but not submitted → go to congratulations to submit
-      window.location.replace('congratulations.html'); return;
-    } else {
-      // Still in progress → go back to quiz hub
-      window.location.replace('quiz_questions.html'); return;
-    }
+    window.location.href = 'activate.html';
   }
   
   // ── Score keys mapped to Form Responses column headers ──
@@ -323,50 +304,23 @@ window.addEventListener('DOMContentLoaded', function(){
   };
   
   // Helper: find score from row trying multiple key formats
-  // Column index fallback for each score key (0-based, matches sheet structure)
-  var SCORE_COL_IDX = {
-    general:       7,
-    studentSafety: 8,
-    fire:          9,
-    police:        10,
-    ambulance:     11,
-    prisons:       12,
-    nadmo:         13,
-    immigration:   14,
-    customs:       15,
-    tourism:       16,
-    forest:        17,
-    gaf:           18,
-    narcotics:     19
-  };
-
   function getScore(row, key) {
-    // 1. Try exact SCORE_KEYS named header match (reliable regardless of column shifts)
+    // 1. Try exact SCORE_KEYS match first
     var val = row[SCORE_KEYS[key]];
-    if(val !== undefined && val !== null) {
-      var vs = val.toString().trim();
-      if(vs !== '') return vs;
-    }
-    // 2. Search by keyword in all named headers
-    var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase();
+    if(val !== undefined && val !== null && val.toString().trim() !== '') return val.toString().trim();
+    // 2. Try all column keys — search by words (handles camelCase like 'studentSafety' -> 'student safety')
+    var searchWords = key.replace(/([A-Z])/g,' $1').trim().toLowerCase(); // 'studentSafety' -> 'student safety'
     for(var k in row) {
-      if(k.indexOf('__col') === 0) continue;
       var kl = k.trim().toLowerCase();
       if(kl.indexOf(searchWords) !== -1 && kl.indexOf('score') !== -1) {
         var v = (row[k] || '').toString().trim();
         if(v !== '') return v;
       }
     }
-    // 3. __colN fallback — only accept X/30 shaped values
-    var colIdx = SCORE_COL_IDX[key];
-    if(colIdx !== undefined) {
-      var cv = (row['__col' + colIdx] || '').toString().trim();
-      if(cv && /^\d+\/\d+$/.test(cv)) return cv;
-    }
     return '0';
   }
   
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxATRpLBPXR_6rsFXBZX7ms_zIlV5XIXOsWzoIJwQ9NIsrkOfM0pDD61Dv4Lf0HFSIf/exec';
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
   
   // ── Load local scores ──
   var localScoreMap = {};
@@ -506,21 +460,12 @@ window.addEventListener('DOMContentLoaded', function(){
       }
   
       if(!match){
-        // No server record found — this user has NOT actually submitted
-        // Clear the false submitted flag and redirect them back
-        localStorage.removeItem('cmgResultsSubmitted');
-        var SVC=['studentSafety','fire','police','ambulance','prisons',
-          'nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
-        var allSvcDone=SVC.every(function(k){
-          return localStorage.getItem(k+'Completed')==='true'||
-            (function(){var r=localStorage.getItem(k+'Score');return r&&parseInt(r)>0;})();
-        });
-        if(allSvcDone){
-          window.location.replace('congratulations.html');
-        } else {
-          window.location.replace('quiz_questions.html');
-        }
-        return;
+        document.getElementById('scoreGrid').innerHTML =
+          '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
+          'background:rgba(255,100,0,0.2);border-radius:12px;">' +
+          '⚠️ Results not found on server.<br>' +
+          '<small style="opacity:.6">Name: ' + name + '<br>Code: ' + code + '</small></div>';
+        buildPage({}); return;
       }
   
       // Parse scores
@@ -530,8 +475,7 @@ window.addEventListener('DOMContentLoaded', function(){
         var sc  = parseInt(raw.indexOf('/') > -1 ? raw.split('/')[0] : raw) || 0;
         sm[s.key] = sc;
         localStorage.setItem(s.key+'Score', sc+'/'+MAX_PER_QUIZ);
-        if(sc > 0) localStorage.setItem(s.key+'Completed','true');
-        else localStorage.removeItem(s.key+'Completed');
+        localStorage.setItem(s.key+'Completed','true');
       });
   
       // Restore school if missing
@@ -542,20 +486,16 @@ window.addEventListener('DOMContentLoaded', function(){
     })
     .catch(function(err){
       if(hasLocalScores){
-        // Offline but has local scores — show them
+        // Offline but has local scores — show them silently
         buildPage(localScoreMap);
-      } else if(submitted){
-        // Offline, no local scores, but submitted flag is set
-        // Could be false flag — show message and option to go back
+      } else {
+        // Offline and no local scores — show message
         document.getElementById('scoreGrid').innerHTML =
           '<div style="color:#fff;text-align:center;padding:24px;grid-column:1/-1;' +
           'background:rgba(255,100,0,0.25);border-radius:12px;">' +
           '📶 No internet connection.<br>' +
-          '<small>Connect to internet to verify your results.<br>' +
-          '<a href="quiz_questions.html" style="color:#FFD700">← Back to Quiz Hub</a></small></div>';
+          '<small>Connect to internet and reload to see your results.</small></div>';
         buildPage({});
-      } else {
-        window.location.replace('quiz_questions.html');
       }
     });
   
