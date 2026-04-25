@@ -181,6 +181,9 @@ ul.modules-list li {
  ═══════════════════════════════════════════════════════════════ -->
 <script>
 (function(){
+    // Cancel any speech carried over from activate.html
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
     var name      = localStorage.getItem('cadetName');
     var school    = localStorage.getItem('cadetSchool');
     var gender    = localStorage.getItem('cadetGender');
@@ -197,8 +200,8 @@ ul.modules-list li {
 
 <!-- Top bar -->
 <div class="top-bar">
-    <img src="../MEDIA/logo_quiz.png" alt="Cadet Media Ghana" class="logo">
-    <img src="../MEDIA/all_services_banner.png" alt="Ghana Public Safety Services" class="banner">
+    <img src="MEDIA/logo_quiz.png" alt="Cadet Media Ghana" class="logo">
+    <img src="MEDIA/all_services_banner.png" alt="Ghana Public Safety Services" class="banner">
 </div>
 
 <!-- Landscape two-column layout -->
@@ -261,7 +264,7 @@ ul.modules-list li {
 
 <!-- Click Sound -->
 <audio id="hoverSound">
-    <source src="../MEDIA/hover.mp3" type="audio/mpeg">
+    <source src="MEDIA/hover.mp3" type="audio/mpeg">
 </audio>
 
 <script>

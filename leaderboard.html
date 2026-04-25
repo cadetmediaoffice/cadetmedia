@@ -432,9 +432,29 @@ body{
 }
 .cd-cert-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(255,215,0,0.45);}
 .lb-row{cursor:pointer;}
+
+/* ── OFFLINE BANNER ── */
+#offlineBanner{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(90deg,#b71c1c,#c62828);
+  color:#fff;font-size:13px;font-weight:600;
+  padding:10px 16px;text-align:center;
+  box-shadow:0 2px 12px rgba(0,0,0,0.5);
+  animation:slideDown .4s ease;}
+#offlineBanner.back-online{
+  background:linear-gradient(90deg,#1b5e20,#2e7d32);
+  animation:slideDown .4s ease;}
+@keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+
 </style>
 </head>
 <body>
+<!-- ── OFFLINE BANNER ── -->
+<div id="offlineBanner">
+  <span id="offlineIcon">📵</span>
+  <span id="offlineMsg"> You are offline — scores and data will sync when connected</span>
+</div>
+
 <div class="bg-grid"></div>
 <div class="bg-glow"></div>
 
@@ -502,6 +522,7 @@ body{
     <button class="tab active" onclick="switchTab('individuals')">🏆 Top Cadets</button>
     <button class="tab" onclick="switchTab('schools')">🏫 Schools</button>
     <button class="tab" onclick="switchTab('regions')">🌍 Regions</button>
+    <button class="tab" onclick="switchTab('districts')">📍 Districts</button>
     <button class="tab" onclick="switchTab('gender')">👥 Gender</button>
     <button class="tab" onclick="switchTab('levels')">🎓 JHS / SHS</button>
   </div>
@@ -532,6 +553,12 @@ body{
   </div>
 
   <!-- ── GENDER PANEL ── -->
+  <div class="panel" id="panel-districts">
+    <div class="rank-grid" id="districtGrid">
+      <div class="loading"><span class="spin">⏳</span><p>Loading districts…</p></div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-gender">
     <div class="lb-title">👥 Gender Participation</div>
     <div class="gender-bar-wrap">
@@ -829,6 +856,7 @@ function renderAll(){
     gender:getField(r,['sex','gender']),
     school:getField(r,['school','institution'])||'Unknown',
     region:getField(r,['region'])||'Unknown',
+    district:getField(r,['district'])||getField(r,['__col23'])||'Unknown',
     pct:getScorePct(r),
     raw:r,
   }));
@@ -840,6 +868,7 @@ function renderAll(){
   renderIndividuals(ranked);
   renderSchools(ranked);
   renderRegions(ranked);
+  renderDistricts(ranked);
   renderGender(ranked);
   renderLevels(ranked);
 
@@ -978,6 +1007,85 @@ function renderRegions(ranked){
 }
 
 // ── Gender ──
+function renderDistricts(ranked){
+  const map = {};
+  ranked.forEach(r=>{
+    const d = (r.district||'Unknown').trim();
+    const reg = (r.region||'Unknown').trim();
+    if(!map[d]) map[d]={ count:0, totalPct:0, region:reg, top:null, schools:new Set() };
+    map[d].count++;
+    map[d].totalPct += r.pct;
+    map[d].schools.add(r.school);
+    if(!map[d].top || r.pct > map[d].top.pct) map[d].top = r;
+  });
+
+  const sorted = Object.keys(map).map(d=>({
+    name:d,
+    count:map[d].count,
+    avg:map[d].count ? Math.round(map[d].totalPct/map[d].count) : 0,
+    region:map[d].region,
+    top:map[d].top,
+    schools:map[d].schools.size
+  })).filter(d=>d.name && d.name!=='Unknown')
+    .sort((a,b)=> b.avg!==a.avg ? b.avg-a.avg : b.count-a.count);
+
+  const el = document.getElementById('districtGrid');
+  if(!sorted.length){
+    el.innerHTML='<div class="loading"><p>No district data available.<br><small>Make sure the District column is filled in your Google Sheet.</small></p></div>';
+    return;
+  }
+
+  el.innerHTML = sorted.map((d,i)=>{
+    const rank = i+1;
+    const rankColor = rank===1?'var(--r1)':rank===2?'var(--r2)':rank===3?'var(--r3)':'var(--muted)';
+    const rankEmoji = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
+    const topName   = d.top ? d.top.name : '—';
+    const topGIcon  = d.top && d.top.gender==='Female' ? '👩' : '👨';
+    const barW      = sorted[0].avg > 0 ? Math.round((d.avg/sorted[0].avg)*100) : 0;
+
+    return `<div class="rc-card" style="animation:fadeUp .4s ${i*0.05}s ease both;">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+        <div style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;
+          color:${rankColor};min-width:36px;">${rankEmoji||rank}</div>
+        <div style="flex:1;">
+          <div style="font-size:16px;font-weight:800;color:var(--text);">📍 ${d.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">🌍 ${d.region}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;
+            color:var(--gold);">${d.avg}%</div>
+          <div style="font-size:10px;color:var(--muted);">Avg Score</div>
+        </div>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:4px;margin-bottom:12px;overflow:hidden;">
+        <div style="height:100%;width:${barW}%;border-radius:4px;
+          background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .8s ease;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;text-align:center;">
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:7px;">
+          <div style="font-weight:800;color:var(--gold);font-size:14px;">${d.count}</div>
+          <div style="color:var(--muted);">Cadets</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:7px;">
+          <div style="font-weight:800;color:#4fc3f7;font-size:14px;">${d.schools}</div>
+          <div style="color:var(--muted);">Schools</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:7px;">
+          <div style="font-weight:800;color:#00e676;font-size:14px;">${d.avg}%</div>
+          <div style="color:var(--muted);">Avg</div>
+        </div>
+      </div>
+      ${d.top ? `<div style="margin-top:10px;padding:8px 10px;
+        background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);
+        border-radius:8px;font-size:11px;">
+        <span style="color:var(--muted);">🏆 Top Cadet: </span>
+        <strong style="color:var(--gold);">${topGIcon} ${d.top.name}</strong>
+        <span style="color:var(--muted);"> · ${d.top.pct}%</span>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 function renderGender(ranked){
   let male=0,female=0;
   ranked.forEach(r=>{
@@ -1508,6 +1616,39 @@ function closeDetail(){
 
 // Make lb-rows clickable — patch after render
 const _origRenderIndividuals = renderIndividuals;
+</script>
+<script>
+/* ── OFFLINE DETECTION ── */
+(function(){
+  var banner  = document.getElementById('offlineBanner');
+  var icon    = document.getElementById('offlineIcon');
+  var msg     = document.getElementById('offlineMsg');
+  var hideTimer = null;
+
+  function showOffline(){
+    if(!banner) return;
+    banner.classList.remove('back-online');
+    icon.textContent = '📵';
+    msg.textContent  = ' You are offline — scores and data will sync when connected';
+    banner.style.display = 'block';
+    if(hideTimer){ clearTimeout(hideTimer); hideTimer = null; }
+  }
+
+  function showOnline(){
+    if(!banner) return;
+    banner.classList.add('back-online');
+    icon.textContent = '✅';
+    msg.textContent  = ' Back online — syncing your data now…';
+    banner.style.display = 'block';
+    hideTimer = setTimeout(function(){
+      banner.style.display = 'none';
+    }, 3500);
+  }
+
+  if(!navigator.onLine) showOffline();
+  window.addEventListener('offline', showOffline);
+  window.addEventListener('online',  showOnline);
+})();
 </script>
 </body>
 </html>

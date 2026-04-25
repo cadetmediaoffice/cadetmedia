@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Activate — Cadet Media Ghana</title>
+<link rel="icon" type="image/x-icon" href="MEDIA/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -73,12 +74,137 @@ select option{background:#1a1a2e;color:#fff;}
 /* SPLASH */
 @keyframes sBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
 @keyframes sRipple{0%{transform:scale(1);opacity:.5;}100%{transform:scale(2.4);opacity:0;}}
+
+/* NAAD Preloader */
+@keyframes naadLogoIn{0%{opacity:0;transform:scale(0.7);}60%{transform:scale(1.05);}100%{opacity:1;transform:scale(1);}}
+@keyframes naadPulse{0%,100%{filter:drop-shadow(0 0 20px rgba(242,195,0,0.4));}50%{filter:drop-shadow(0 0 45px rgba(242,195,0,0.9));}}
+@keyframes naadTextIn{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes naadBlink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+@keyframes naadBarFill{0%{width:0%;}100%{width:100%;}}
+
+#naadPreloader{
+    position:fixed;inset:0;z-index:99999;
+    background:radial-gradient(ellipse at center, #0f1e3a 0%, #060d1f 60%, #000 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:28px;padding:40px;text-align:center;
+    opacity:1;transition:opacity 1s ease;
+}
+#naadPreloader.fade-out{opacity:0;pointer-events:none;}
+
+#naadPreloaderLogo{
+    width:min(340px,80vw);height:auto;
+    animation:naadLogoIn 1.2s cubic-bezier(0.34,1.56,0.64,1) 0.2s both,
+              naadPulse 2.5s ease-in-out 1.5s infinite;
+}
+#naadPreloaderLogo.hidden{display:none;}
+
+.naad-pre-title{
+    font-size:clamp(13px,3vw,16px);font-weight:900;
+    letter-spacing:0.18em;text-transform:uppercase;
+    color:#f2c300;
+    animation:naadTextIn 0.7s ease 1s both;
+}
+.naad-pre-status{
+    font-size:clamp(11px,2.5vw,13px);font-weight:700;
+    letter-spacing:0.12em;text-transform:uppercase;
+    color:#fff;opacity:0.7;
+    animation:naadBlink 1.4s ease-in-out infinite;
+    min-height:18px;
+}
+.naad-pre-bar-wrap{
+    width:min(300px,75vw);height:5px;
+    background:rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;
+    animation:naadTextIn 0.7s ease 1.2s both;
+}
+.naad-pre-bar{
+    height:100%;width:0%;border-radius:10px;
+    background:linear-gradient(90deg,#b80000,#f2c300,#b80000);
+    transition:width 0.6s ease;
+}
+.naad-pre-tag{
+    font-size:10px;opacity:0.25;letter-spacing:0.09em;
+    color:#fff;text-transform:uppercase;line-height:1.8;
+    animation:naadTextIn 0.7s ease 1.4s both;
+}
+
+/* ── OFFLINE BANNER ── */
+#offlineBanner{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(90deg,#b71c1c,#c62828);
+  color:#fff;font-size:13px;font-weight:600;
+  padding:10px 16px;text-align:center;
+  box-shadow:0 2px 12px rgba(0,0,0,0.5);
+  animation:slideDown .4s ease;}
+#offlineBanner.back-online{
+  background:linear-gradient(90deg,#1b5e20,#2e7d32);
+  animation:slideDown .4s ease;}
+@keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+
 </style>
 </head>
 <body>
+<!-- ── OFFLINE BANNER ── -->
+<div id="offlineBanner">
+  <span id="offlineIcon">📵</span>
+  <span id="offlineMsg"> You are offline — scores and data will sync when connected</span>
+</div>
 
-<img src="../MEDIA/logo_quiz.png" alt="CMG" class="logo">
-<img src="../MEDIA/all_services_banner.png" alt="All Services" class="banner">
+
+<!-- ══ NAAD Preloader Popup ══ -->
+<div id="naadPreloader">
+    <img id="naadPreloaderLogo"
+         src="MEDIA/naad_logo.png"
+         onerror="this.style.display='none'; document.getElementById('naadLogoFallback').style.display='block';"
+         alt="NAAD Logo">
+    <div id="naadLogoFallback" style="display:none;font-size:clamp(48px,15vw,96px);font-weight:900;
+         background:linear-gradient(90deg,#006400,#f2c300,#b80000);
+         -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+         letter-spacing:0.05em;">NAAD</div>
+    <div class="naad-pre-title">National Academic Assessment Drive</div>
+    <div class="naad-pre-status" id="naadPreStatus">Initialising system…</div>
+    <div class="naad-pre-bar-wrap">
+        <div class="naad-pre-bar" id="naadPreBar"></div>
+    </div>
+    <div class="naad-pre-tag">
+        ★ NAAD Safety Edition &nbsp;·&nbsp; A Ghana National Fire Service Initiative<br>
+        Produced by Cadet Media Ghana ★
+    </div>
+</div>
+
+<script>
+(function(){
+    var overlay = document.getElementById('naadPreloader');
+    var status  = document.getElementById('naadPreStatus');
+    var bar     = document.getElementById('naadPreBar');
+
+    var steps = [
+        { pct:10,  msg:'Initialising system…',          t:300  },
+        { pct:28,  msg:'Assessing your device…',        t:900  },
+        { pct:48,  msg:'Checking security modules…',    t:1600 },
+        { pct:68,  msg:'Verifying CMG components…',     t:2300 },
+        { pct:88,  msg:'Preparing activation portal…',  t:3000 },
+        { pct:100, msg:'System ready. Welcome! ✅',     t:3600 },
+    ];
+
+    steps.forEach(function(s){
+        setTimeout(function(){
+            bar.style.width  = s.pct + '%';
+            status.textContent = s.msg;
+        }, s.t);
+    });
+
+    // Fade out and reveal activation form
+    setTimeout(function(){
+        overlay.classList.add('fade-out');
+        setTimeout(function(){ overlay.style.display = 'none'; }, 1000);
+    }, 4300);
+})();
+</script>
+
+
+
+<img src="MEDIA/logo_quiz.png" alt="CMG" class="logo">
+<img src="MEDIA/all_services_banner.png" alt="All Services" class="banner">
 
 <!-- Registration form -->
 <div class="card" id="regCard">
@@ -138,8 +264,64 @@ select option{background:#1a1a2e;color:#fff;}
   <h3>✅ Pendrive Already Activated</h3>
   <p id="alreadyText"></p>
 
+  <!-- Sync status banner -->
+  <div id="syncStatusBanner" style="
+    background:rgba(0,180,255,0.10);border:1px solid rgba(0,180,255,0.25);
+    border-radius:8px;padding:9px 14px;font-size:12px;color:#7ad4ff;
+    text-align:center;display:none;">
+    🔄 Syncing your progress from server…
+  </div>
+  <div id="syncDoneBanner" style="
+    background:rgba(0,200,80,0.10);border:1px solid rgba(0,200,80,0.28);
+    border-radius:8px;padding:9px 14px;font-size:12px;color:#80ffb0;
+    text-align:center;display:none;">
+    ✅ Progress synced — your quiz scores are up to date.
+  </div>
+
+  <!-- ══ RESULTS PANEL (shown only when student has submitted) ══ -->
+  <div id="resultsPanel" style="display:none;flex-direction:column;gap:10px;">
+
+    <div style="text-align:center;padding:10px 0 4px;">
+      <div style="font-size:38px;" id="resBadgeEmoji">🏅</div>
+      <div id="resBadgeLabel" style="font-size:13px;font-weight:900;letter-spacing:1px;
+        color:#FFD700;margin-top:4px;text-transform:uppercase;"></div>
+      <div id="resTotalScore" style="font-size:28px;font-weight:900;color:#fff;margin-top:6px;"></div>
+      <div style="font-size:11px;opacity:.5;margin-top:2px;">Total Score</div>
+    </div>
+
+    <!-- Score grid -->
+    <div id="resScoreGrid" style="
+      display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px;">
+    </div>
+
+    <div id="resSubmittedOn" style="font-size:11px;opacity:.45;text-align:center;margin-top:4px;"></div>
+
+    <div style="border-top:1px solid rgba(255,215,0,0.15);padding-top:10px;text-align:center;">
+      <button class="btn-go" onclick="window.location.href='my_results.html'"
+        style="width:100%;padding:12px;font-size:14px;font-weight:bold;border:none;
+          border-radius:12px;cursor:pointer;
+          background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;
+          box-shadow:0 4px 18px rgba(255,215,0,0.4);">
+        📊 View Full Results Page
+      </button>
+    </div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;">
+      <p style="font-size:11px;opacity:.45;text-align:center;margin-bottom:8px;">
+        Not you? Clear this registration.
+      </p>
+      <button onclick="clearAndRegister()" style="
+        width:100%;padding:10px;border:2px solid rgba(220,80,80,0.5);
+        background:rgba(220,80,80,0.1);color:#ff9090;
+        border-radius:10px;font-size:12px;font-weight:bold;cursor:pointer;">
+        ⚠️ I am a NEW student — Erase &amp; Start Fresh
+      </button>
+    </div>
+  </div>
+  <!-- ══ END RESULTS PANEL ══ -->
+
   <!-- Identity verification -->
-  <div style="border-top:1px solid rgba(255,215,0,0.2);padding-top:16px;">
+  <div id="verifySection" style="border-top:1px solid rgba(255,215,0,0.2);padding-top:16px;">
     <p style="font-size:13px;color:#FFD700;font-weight:bold;margin-bottom:12px;text-align:center;">
       🔒 Confirm Your Identity to Continue
     </p>
@@ -179,7 +361,8 @@ select option{background:#1a1a2e;color:#fff;}
       ⚠️ I am a NEW student — Erase &amp; Start Fresh
     </button>
   </div>
-</div>
+  </div><!-- end verifySection -->
+</div><!-- end alreadyCard -->
 
 <script>
 // ══════════════════════════════════════
@@ -271,19 +454,289 @@ var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEk
 //  INIT
 // ══════════════════════════════════════
 window.addEventListener('DOMContentLoaded', function() {
-  // Always show the registration form first.
-  // Welcome Back card is only shown AFTER the server confirms a code is already registered.
-  document.getElementById('regCard').style.display = 'flex';
-  document.getElementById('alreadyCard').style.display = 'none';
-
   // Input focus sounds
   document.querySelectorAll('input, select').forEach(function(el) {
     el.addEventListener('focus', function(){ sndClick(); });
   });
 
-  // Always show new-user splash
-  buildSplash(false, null, null);
+  // ── RETURNING USER DETECTION ──────────────────────────────────────────
+  // Check localStorage FIRST — if this device already has an activated user,
+  // skip the registration form and go straight to the "Welcome Back" card.
+  var savedActivated = localStorage.getItem('cmgActivated');
+  var savedName      = localStorage.getItem('cadetName');
+  var savedGender    = localStorage.getItem('cadetGender');
+  var savedCode      = localStorage.getItem('cmgCode');
+  var savedSchool    = localStorage.getItem('cadetSchool');
+
+  if (savedActivated === 'true' && savedName && savedCode) {
+    // ── RETURNING USER ── show alreadyCard immediately, hide regCard
+    document.getElementById('regCard').style.display    = 'none';
+    document.getElementById('alreadyCard').style.display = 'flex';
+
+    // Pre-fill verify fields with saved data so user only needs to tap confirm
+    var verifyNameEl   = document.getElementById('verifyName');
+    var verifySchoolEl = document.getElementById('verifySchool');
+    var verifyCodeEl   = document.getElementById('verifyCode');
+    if (verifyNameEl)   verifyNameEl.value   = savedName;
+    if (verifySchoolEl) verifySchoolEl.value  = savedSchool || '';
+    if (verifyCodeEl)   verifyCodeEl.value   = savedCode;
+
+    // Update the "already activated" text
+    var alreadyText = document.getElementById('alreadyText');
+    if (alreadyText) {
+      var titleStr  = savedGender === 'Female' ? 'Cadetess' : 'Cadet';
+      var firstName = savedName.split(' ')[0];
+      alreadyText.innerHTML =
+        'This device is registered to <strong style="color:#FFD700;">' + titleStr + ' ' + savedName + '</strong>.<br>' +
+        'Your details have been filled in below. Just tap <em>Confirm &amp; Continue</em> to resume your quiz.';
+    }
+
+    // Show returning-user splash
+    buildSplash(true, savedName, savedGender);
+
+    // If already submitted, show results panel immediately from localStorage scores
+    if (localStorage.getItem('cmgResultsSubmitted') === 'true') {
+      showResultsPanelFromLocal();
+    }
+
+    // Background sync: pull latest scores from server silently
+    syncScoresFromServer(savedName, savedCode);
+
+  } else {
+    // ── NEW USER ── show registration form
+    document.getElementById('regCard').style.display    = 'flex';
+    document.getElementById('alreadyCard').style.display = 'none';
+    buildSplash(false, null, null);
+  }
 });
+
+// ══════════════════════════════════════
+//  BACKGROUND SCORE SYNC FROM SERVER
+//  Called silently when a returning user loads the page.
+//  Pulls their latest scores from Google Sheets and updates localStorage.
+// ══════════════════════════════════════
+function syncScoresFromServer(name, code) {
+  var RESULTS_URL = 'https://script.google.com/macros/s/AKfycbxTRQGLTi3__wvRftF0CdRLXlzuhxeCSoCWmxsmtW-FlIg_T7S4ATHOw6Im9ya-QYQ/exec';
+  var myName = (name || '').trim().toLowerCase();
+  var myCode = (code || '').trim().toUpperCase();
+
+  // Show syncing banner
+  var syncBanner = document.getElementById('syncStatusBanner');
+  var doneBanner = document.getElementById('syncDoneBanner');
+  if (syncBanner) syncBanner.style.display = 'block';
+
+  fetch(RESULTS_URL)
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if (syncBanner) syncBanner.style.display = 'none';
+      var match = null;
+      // Match by code first (most reliable)
+      for (var i = rows.length - 1; i >= 0; i--) {
+        var rc = (rows[i]['Column 1'] || '').toString().trim().toUpperCase();
+        if (myCode && rc === myCode) { match = rows[i]; break; }
+      }
+      // Fallback: match by name
+      if (!match) {
+        for (var i = rows.length - 1; i >= 0; i--) {
+          var rn = (rows[i]['Full Name '] || rows[i]['Full Name'] || '').trim().toLowerCase();
+          if (rn === myName) { match = rows[i]; break; }
+        }
+      }
+      if (!match) return; // No server record found — keep localStorage as-is
+
+      var SCORE_MAP = {
+        general:      '  General Safety Quiz Score  ',
+        studentSafety:'  Student Safety Quiz Score  ',
+        fire:         '  Fire Safety Quiz Score  ',
+        police:       '  Community Safety (Police) Quiz Score  ',
+        ambulance:    '  Health & Ambulance Quiz Score  ',
+        prisons:      '  Prisons Service Quiz Score  ',
+        nadmo:        '  Disaster Preparedness (NADMO) Quiz Score  ',
+        immigration:  '  Immigration Service Quiz Score  ',
+        customs:      '  Customs Division Quiz Score  ',
+        tourism:      '  Tourism & Creative Arts Quiz Score  ',
+        forest:       '  Forest Conservation Quiz Score  ',
+        gaf:          '  National Defence (GAF) Quiz Score  ',
+        narcotics:    '  Narcotics Control Quiz Score  '
+      };
+      var MAX = 30;
+      var updated = false;
+      // Merge server scores into localStorage (server wins if higher)
+      Object.keys(SCORE_MAP).forEach(function(k) {
+        var raw = (match[SCORE_MAP[k]] || '0').toString().trim();
+        var sc  = parseInt(raw.indexOf('/') > -1 ? raw.split('/')[0] : raw) || 0;
+        if (sc > 0) {
+          var localRaw  = (localStorage.getItem(k + 'Score') || '0').split('/')[0];
+          var localSc   = parseInt(localRaw) || 0;
+          if (sc >= localSc) { // server has equal or better score — use it
+            localStorage.setItem(k + 'Score',     sc + '/' + MAX);
+            localStorage.setItem(k + 'Completed', 'true');
+            updated = true;
+          }
+        }
+      });
+      // Check submitted flag
+      var serverSubmitted = (match['Submitted'] || match['submitted'] || '').toString().trim().toLowerCase();
+      if (serverSubmitted === 'true' || serverSubmitted === 'yes' || serverSubmitted === '1') {
+        localStorage.setItem('cmgResultsSubmitted', 'true');
+        updated = true;
+        // ── Show results panel immediately ──
+        showResultsPanel(match);
+      }
+      // Show done banner
+      if (doneBanner) {
+        doneBanner.textContent = updated
+          ? '✅ Progress synced — your quiz scores are up to date.'
+          : '✅ Server checked — your local data is current.';
+        doneBanner.style.display = 'block';
+        setTimeout(function(){ doneBanner.style.display = 'none'; }, 4000);
+      }
+    })
+    .catch(function(){
+      if (syncBanner) syncBanner.style.display = 'none';
+      // Silent failure — localStorage is fallback
+    });
+}
+
+// ══════════════════════════════════════
+//  RESULTS PANEL — from server row data
+// ══════════════════════════════════════
+function showResultsPanel(row) {
+  var panel   = document.getElementById('resultsPanel');
+  var verify  = document.getElementById('verifySection');
+  if (!panel) return;
+
+  // Hide verify form, show results panel
+  if (verify) verify.style.display = 'none';
+  panel.style.display = 'flex';
+
+  // Quiz label map
+  var QUIZ_LABELS = {
+    '  General Safety Quiz Score  ':                  '🛡️ General Safety',
+    '  Student Safety Quiz Score  ':                  '🎒 Student Safety',
+    '  Fire Safety Quiz Score  ':                     '🔥 Fire Safety',
+    '  Community Safety (Police) Quiz Score  ':       '👮 Police',
+    '  Health & Ambulance Quiz Score  ':              '🚑 Ambulance',
+    '  Prisons Service Quiz Score  ':                 '⚖️ Prisons',
+    '  Disaster Preparedness (NADMO) Quiz Score  ':   '🌊 NADMO',
+    '  Immigration Service Quiz Score  ':             '✈️ Immigration',
+    '  Customs Division Quiz Score  ':                '🏛️ Customs',
+    '  Tourism & Creative Arts Quiz Score  ':         '🎨 Tourism',
+    '  Forest Conservation Quiz Score  ':             '🌳 Forest',
+    '  National Defence (GAF) Quiz Score  ':          '🪖 GAF',
+    '  Narcotics Control Quiz Score  ':               '💊 Narcotics'
+  };
+
+  // Total score — try various column names used in your sheet
+  var total = (row['Total Score'] || row['  Total Score  '] || row['__col20'] || '').toString().trim();
+  var badge = (row['Badge'] || row['  Badge  '] || row['__col21'] || '').toString().trim();
+  var submittedOn = (row['Timestamp'] || row['timestamp'] || row['__col0'] || '').toString().trim();
+
+  // Badge emoji
+  var badgeEmoji = '🏅';
+  var bl = badge.toLowerCase();
+  if      (bl.includes('gold')    || bl.includes('platinum')) badgeEmoji = '🥇';
+  else if (bl.includes('silver'))                              badgeEmoji = '🥈';
+  else if (bl.includes('bronze'))                             badgeEmoji = '🥉';
+  else if (bl.includes('fire')    || bl.includes('star'))     badgeEmoji = '⭐';
+
+  document.getElementById('resBadgeEmoji').textContent  = badgeEmoji;
+  document.getElementById('resBadgeLabel').textContent  = badge || 'Quiz Completed';
+  document.getElementById('resTotalScore').textContent  = total ? total + ' pts' : '—';
+  if (submittedOn) {
+    var d = new Date(submittedOn);
+    document.getElementById('resSubmittedOn').textContent =
+      'Submitted: ' + (isNaN(d) ? submittedOn : d.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}));
+  }
+
+  // Score grid
+  var grid = document.getElementById('resScoreGrid');
+  grid.innerHTML = '';
+  Object.keys(QUIZ_LABELS).forEach(function(col) {
+    var raw = (row[col] || '').toString().trim();
+    if (!raw || raw === '0' || raw === '0/30') return;
+    var label = QUIZ_LABELS[col];
+    var cell = document.createElement('div');
+    cell.style.cssText =
+      'background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.18);' +
+      'border-radius:8px;padding:8px 10px;font-size:12px;';
+    cell.innerHTML =
+      '<div style="opacity:.7;margin-bottom:3px;">' + label + '</div>' +
+      '<div style="font-weight:900;color:#FFD700;font-size:15px;">' + raw + '</div>';
+    grid.appendChild(cell);
+  });
+
+  // Update header text
+  var name = localStorage.getItem('cadetName') || '';
+  var gender = localStorage.getItem('cadetGender') || 'Male';
+  var titleStr = gender === 'Female' ? 'Cadetess' : 'Cadet';
+  var alreadyText = document.getElementById('alreadyText');
+  if (alreadyText) {
+    alreadyText.innerHTML =
+      '🎉 <strong style="color:#FFD700;">' + titleStr + ' ' + name + '</strong> — your results are in!';
+  }
+}
+
+// ══════════════════════════════════════
+//  RESULTS PANEL — from localStorage (offline / instant)
+// ══════════════════════════════════════
+function showResultsPanelFromLocal() {
+  var panel  = document.getElementById('resultsPanel');
+  var verify = document.getElementById('verifySection');
+  if (!panel) return;
+
+  if (verify) verify.style.display = 'none';
+  panel.style.display = 'flex';
+
+  var QUIZ_LOCAL = [
+    { key:'general',       label:'🛡️ General Safety' },
+    { key:'studentSafety', label:'🎒 Student Safety' },
+    { key:'fire',          label:'🔥 Fire Safety' },
+    { key:'police',        label:'👮 Police' },
+    { key:'ambulance',     label:'🚑 Ambulance' },
+    { key:'prisons',       label:'⚖️ Prisons' },
+    { key:'nadmo',         label:'🌊 NADMO' },
+    { key:'immigration',   label:'✈️ Immigration' },
+    { key:'customs',       label:'🏛️ Customs' },
+    { key:'tourism',       label:'🎨 Tourism' },
+    { key:'forest',        label:'🌳 Forest' },
+    { key:'gaf',           label:'🪖 GAF' },
+    { key:'narcotics',     label:'💊 Narcotics' }
+  ];
+
+  var grid = document.getElementById('resScoreGrid');
+  grid.innerHTML = '';
+  var totalPts = 0; var totalMax = 0;
+  QUIZ_LOCAL.forEach(function(q) {
+    var raw = localStorage.getItem(q.key + 'Score') || '';
+    if (!raw) return;
+    var parts = raw.split('/');
+    var sc = parseInt(parts[0]) || 0;
+    var mx = parseInt(parts[1]) || 30;
+    totalPts += sc; totalMax += mx;
+    var cell = document.createElement('div');
+    cell.style.cssText =
+      'background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.18);' +
+      'border-radius:8px;padding:8px 10px;font-size:12px;';
+    cell.innerHTML =
+      '<div style="opacity:.7;margin-bottom:3px;">' + q.label + '</div>' +
+      '<div style="font-weight:900;color:#FFD700;font-size:15px;">' + raw + '</div>';
+    grid.appendChild(cell);
+  });
+
+  document.getElementById('resTotalScore').textContent = totalPts + ' / ' + totalMax + ' pts';
+  document.getElementById('resBadgeEmoji').textContent = '🏅';
+  document.getElementById('resBadgeLabel').textContent = 'Results Submitted';
+
+  var name = localStorage.getItem('cadetName') || '';
+  var gender = localStorage.getItem('cadetGender') || 'Male';
+  var titleStr = gender === 'Female' ? 'Cadetess' : 'Cadet';
+  var alreadyText = document.getElementById('alreadyText');
+  if (alreadyText) {
+    alreadyText.innerHTML =
+      '🎉 <strong style="color:#FFD700;">' + titleStr + ' ' + name + '</strong> — your results are in!';
+  }
+}
 
 function buildSplash(alreadyOn, name, gender) {
   var titleStr  = (gender === 'Female') ? 'Cadetess' : 'Cadet';
@@ -354,7 +807,7 @@ function buildSplash(alreadyOn, name, gender) {
         'pointer-events:none;';
 
       pd.innerHTML =
-        '<img src="../MEDIA/pendrive.png" alt="Pendrive"' +
+        '<img src="MEDIA/pendrive.png" alt="Pendrive"' +
           ' style="width:480px;max-width:95%;height:auto;' +
           'filter:drop-shadow(0 0 40px rgba(255,100,0,0.6)) drop-shadow(0 0 15px rgba(255,215,0,0.4));' +
           'animation:pdPulse 3s ease-in-out infinite;">';
@@ -605,6 +1058,12 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning, f
   if (region) localStorage.setItem('cadetRegion', region);
   localStorage.setItem('cmgCode',      code);
   localStorage.setItem('cmgActivated', 'true');
+  localStorage.setItem('cmgLastSeen',  new Date().toISOString()); // track last login time
+
+  // ── PUSH PROGRESS TO GOOGLE SHEETS (silent background sync) ──
+  // This ensures the server always has the latest "last seen" timestamp
+  // and any scores stored locally are mirrored online.
+  pushProgressToServer(name, gender, school, level, region, code);
 
   sndSuccessFanfare();
   var firstName = name.split(' ')[0];
@@ -618,7 +1077,7 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning, f
   var allDone   = !isReturning ? false : SERVICE_KEYS.every(function(k){
     return localStorage.getItem(k+'Completed') === 'true' && !!localStorage.getItem(k+'Score');
   });
-  var destination = (forceResults||submitted) ? 'my_results.html' : (allDone ? 'congratulations.html' : 'cadetnationalquiz.html');
+  var destination = (forceResults||submitted) ? 'my_results.html' : (allDone ? 'congratulations.html' : (isReturning ? 'cadetnationalquiz.html' : 'index.html'));
 
   setTimeout(function(){
     if (isReturning) {
@@ -640,6 +1099,39 @@ function saveAndLaunch(name, gender, school, level, region, code, isReturning, f
   setTimeout(function(){
     window.location.href = destination;
   }, 3400);
+}
+
+// ══════════════════════════════════════
+//  PUSH PROGRESS TO GOOGLE SHEETS
+//  Called silently after every successful activation/login.
+//  Sends current localStorage scores to Apps Script for server-side backup.
+// ══════════════════════════════════════
+function pushProgressToServer(name, gender, school, level, region, code) {
+  if (!APPS_SCRIPT_URL) return;
+  var SERVICE_KEYS = ['general','studentSafety','fire','police','ambulance','prisons','nadmo',
+                      'immigration','customs','tourism','forest','gaf','narcotics'];
+  // Build score payload: only include completed quizzes
+  var scores = {};
+  SERVICE_KEYS.forEach(function(k) {
+    var sc = localStorage.getItem(k + 'Score');
+    if (sc) scores[k] = sc;
+  });
+  var submitted = localStorage.getItem('cmgResultsSubmitted') || 'false';
+  var lastSeen  = localStorage.getItem('cmgLastSeen') || new Date().toISOString();
+
+  var url = APPS_SCRIPT_URL +
+    '?action=syncProgress' +
+    '&code='      + encodeURIComponent(code || '') +
+    '&name='      + encodeURIComponent(name || '') +
+    '&gender='    + encodeURIComponent(gender || '') +
+    '&school='    + encodeURIComponent(school || '') +
+    '&level='     + encodeURIComponent(level || '') +
+    '&region='    + encodeURIComponent(region || '') +
+    '&scores='    + encodeURIComponent(JSON.stringify(scores)) +
+    '&submitted=' + encodeURIComponent(submitted) +
+    '&lastSeen='  + encodeURIComponent(lastSeen);
+
+  fetch(url).catch(function(){}); // Silent — localStorage is primary, server is backup
 }
 
 function verifyAndContinue() {
@@ -735,6 +1227,39 @@ function showErr(msg) {
   el.textContent = msg;
   el.style.display = 'block';
 }
+</script>
+<script>
+/* ── OFFLINE DETECTION ── */
+(function(){
+  var banner  = document.getElementById('offlineBanner');
+  var icon    = document.getElementById('offlineIcon');
+  var msg     = document.getElementById('offlineMsg');
+  var hideTimer = null;
+
+  function showOffline(){
+    if(!banner) return;
+    banner.classList.remove('back-online');
+    icon.textContent = '📵';
+    msg.textContent  = ' You are offline — scores and data will sync when connected';
+    banner.style.display = 'block';
+    if(hideTimer){ clearTimeout(hideTimer); hideTimer = null; }
+  }
+
+  function showOnline(){
+    if(!banner) return;
+    banner.classList.add('back-online');
+    icon.textContent = '✅';
+    msg.textContent  = ' Back online — syncing your data now…';
+    banner.style.display = 'block';
+    hideTimer = setTimeout(function(){
+      banner.style.display = 'none';
+    }, 3500);
+  }
+
+  if(!navigator.onLine) showOffline();
+  window.addEventListener('offline', showOffline);
+  window.addEventListener('online',  showOnline);
+})();
 </script>
 </body>
 </html>
