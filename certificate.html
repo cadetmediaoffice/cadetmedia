@@ -746,17 +746,146 @@ body {
 </div><!-- /cert-outer -->
 
 <script>
+// ── Module definitions ──────────────────────────────────────────────────────
+var MODULE_DEFS = [
+  { key:'general',   name:'GENERAL',     icon:'🛡️' },
+  { key:'student',   name:'STUDENT',     icon:'🎓' },
+  { key:'fire',      name:'FIRE',        icon:'🔥' },
+  { key:'police',    name:'POLICE',      icon:'👮' },
+  { key:'health',    name:'HEALTH',      icon:'✚'  },
+  { key:'prisons',   name:'PRISONS',     icon:'⚖️' },
+  { key:'nadmo',     name:'NADMO',       icon:'🌪️' },
+  { key:'immigration',name:'IMMIGRATION',icon:'✈️' },
+  { key:'customs',   name:'CUSTOMS',     icon:'📦' },
+  { key:'tourism',   name:'TOURISM',     icon:'🏛️' },
+  { key:'forest',    name:'FOREST',      icon:'🌿' },
+  { key:'gaf',       name:'GAF',         icon:'🎖️' },
+  { key:'narcotics', name:'NARCOTICS',   icon:'🚫' },
+];
+
 window.addEventListener('DOMContentLoaded', function() {
+  var params = new URLSearchParams(window.location.search);
+
+  // ── Read student data from URL params ─────────────────────────────────────
+  var name    = params.get('name')   || 'STUDENT NAME';
+  var gender  = params.get('gender') || 'Male';
+  var school  = params.get('school') || '';
+  var region  = params.get('region') || '';
+  var pct     = parseFloat(params.get('pct') || '0');
+  var badge   = params.get('badge')  || 'PARTICIPANT';
+  var date    = params.get('date')   || new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  var serial  = params.get('serial') || ('NAAD-2026-' + Math.random().toString(36).substring(2,8).toUpperCase());
+  var modStr  = params.get('modules')|| '';
+
+  // ── Title (Cadet / Cadetess) ───────────────────────────────────────────────
+  var title = (gender && gender.toLowerCase() === 'female') ? 'Cadetess' : 'Cadet';
+
+  // ── Populate name ──────────────────────────────────────────────────────────
+  var nameEl = document.querySelector('.recipient-name');
+  if (nameEl) nameEl.textContent = name.toUpperCase();
+
+  var titleEl = document.querySelector('.cadetess-label');
+  if (titleEl) titleEl.textContent = title;
+
+  // ── Certificate ID ─────────────────────────────────────────────────────────
+  var certIdEl = document.querySelector('.cert-id-value');
+  if (certIdEl) certIdEl.textContent = serial;
+
+  // ── Score ──────────────────────────────────────────────────────────────────
+  var scoreEl = document.querySelector('.score-value');
+  if (scoreEl) scoreEl.textContent = Math.round(pct) + '%';
+
+  // ── Badge ──────────────────────────────────────────────────────────────────
+  var badgeEl = document.querySelector('.badge-text');
+  if (badgeEl) {
+    var badgeMap = {
+      'gold':'🥇 GOLD AWARD','silver':'🥈 SILVER AWARD','bronze':'🥉 BRONZE AWARD'
+    };
+    badgeEl.textContent = badgeMap[badge.toLowerCase()] || 'PARTICIPANT';
+  }
+
+  // ── Date ───────────────────────────────────────────────────────────────────
+  var dateEl = document.querySelector('.date-value');
+  if (dateEl) dateEl.textContent = date;
+
+  // ── Module scores ──────────────────────────────────────────────────────────
+  var modScores = modStr ? modStr.split(',') : [];
+  var gridEl = document.querySelector('.modules-grid');
+  if (gridEl && modScores.length > 0) {
+    gridEl.innerHTML = '';
+    MODULE_DEFS.forEach(function(mod, i) {
+      var score = modScores[i] || '0/30';
+      var got   = parseInt(score.split('/')[0]) || 0;
+      var tot   = parseInt(score.split('/')[1]) || 30;
+      var pctMod = tot > 0 ? Math.round((got/tot)*100) : 0;
+      var color = pctMod >= 70 ? '#2ecc71' : pctMod >= 50 ? '#f2c300' : '#e74c3c';
+      gridEl.innerHTML += '<div class="module-item">' +
+        '<div class="module-name">' + mod.name + '</div>' +
+        '<div class="module-icon" style="color:' + color + ';">' + mod.icon + '</div>' +
+        '<div class="module-score">' + score + '</div>' +
+        '</div>';
+    });
+  }
+
+  // ── Issued line with school ────────────────────────────────────────────────
+  var issuedEl = document.querySelector('.issued-line');
+  if (issuedEl && school) {
+    issuedEl.innerHTML = 'Issued under the National Academic Assessment Drive (NAAD)<br>' +
+      'in collaboration with National Safety and Emergency Institutions.<br>' +
+      '<span style="font-size:11px;opacity:0.7;">' + school + (region ? ' &nbsp;·&nbsp; ' + region : '') + '</span>';
+  }
+
+  // ── QR Code ────────────────────────────────────────────────────────────────
   var qrEl = document.getElementById('qrcode');
+  var qrUrl = 'https://cadetmediaoffice.github.io/cadetmedia/certificate.html?' +
+    new URLSearchParams({name:name,gender:gender,school:school,region:region,
+      pct:pct,badge:badge,date:date,serial:serial,modules:modStr}).toString();
+
   new QRCode(qrEl, {
-    text: 'https://cadetmediaoffice.github.io/cadetmedia/certificate.html',
+    text: qrUrl,
     width: 90,
     height: 90,
     colorDark: '#000000',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M
   });
+
+  // ── Download button ────────────────────────────────────────────────────────
+  var dlBtn = document.getElementById('downloadCertBtn');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', function() {
+      window.print();
+    });
+  }
 });
 </script>
+
+<!-- Download / Print Button -->
+<div style="text-align:center;padding:20px 0 30px;background:#e8e0d0;">
+  <button id="downloadCertBtn" style="
+    padding:14px 40px;
+    background:linear-gradient(45deg,#8B0000,#c0392b);
+    color:#fff;
+    font-family:'Oswald',sans-serif;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:1px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    box-shadow:0 4px 18px rgba(139,0,0,0.4);
+    text-transform:uppercase;
+  ">🖨️ Download / Print Certificate</button>
+</div>
+
+<!-- Print styles -->
+<style>
+@media print {
+  #downloadCertBtn, #downloadCertBtn + * { display:none !important; }
+  body { background:#fff !important; padding:0 !important; }
+  .cert-outer { box-shadow:none !important; }
+}
+</style>
+
 </body>
 </html>

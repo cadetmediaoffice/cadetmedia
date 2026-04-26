@@ -1359,16 +1359,33 @@ function getBadgeKey(pct){
 }
 
 function downloadCertFromModal(){
-  // Preload banner before drawing
-  const _preload = new Image();
-  _preload.src = BANNER_SRC;
-  if(!_preload.complete || _preload.naturalWidth === 0){
-    _preload.onload = () => _doDownloadCert(_preload);
-    return;
-  }
-  _doDownloadCert(_preload);
+  if(!_currentCertRow) return;
+  const row    = _currentCertRow;
+  const name   = getField(row,['full name','name'])||'Unknown';
+  const gender = getField(row,['sex','gender']);
+  const school = getField(row,['school','institution'])||'—';
+  const region = findRegion(row);
+  const pct    = getScorePct(row);
+  const badge  = getBadgeKey(pct);
+  const date   = getField(row,['date completed','date'])||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const serial = getField(row,['code','serial'])||('CMG-2026-'+([...name+school].reduce((h,c)=>Math.imul(31,h)+c.charCodeAt(0)|0,0)>>>0).toString(36).toUpperCase().substring(0,6));
+  const modScores = getModuleScores(row);
+
+  // Build module score string e.g. "16/30,0/30,13/30,..."
+  const modStr = modScores.map(ms => ms ? ms.got+'/'+ms.tot : '0/30').join(',');
+
+  const params = new URLSearchParams({
+    name, gender, school, region,
+    pct: pct.toString(),
+    badge, date, serial,
+    modules: modStr
+  });
+
+  // Open certificate.html in new tab with student data
+  window.open('certificate.html?' + params.toString(), '_blank');
 }
-function _doDownloadCert(_bannerImg){
+
+function _doDownloadCert_LEGACY(_bannerImg){
   if(!_currentCertRow) return;
   const row    = _currentCertRow;
   const name   = getField(row,['full name','name'])||'Unknown';
