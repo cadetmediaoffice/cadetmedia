@@ -1368,7 +1368,7 @@ function downloadCertFromModal(){
   const pct    = getScorePct(row);
   const badge  = getBadgeKey(pct);
   const date   = getField(row,['date completed','date'])||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  const serial = getField(row,['code','serial'])||('CMG-2026-'+([...name+school].reduce((h,c)=>Math.imul(31,h)+c.charCodeAt(0)|0,0)>>>0).toString(36).toUpperCase().substring(0,6));
+  const serial = getField(row,['code','serial','Code','CODE','certificate id','cert id','__col25'])||'';
   const modScores = getModuleScores(row);
 
   // Build module score string e.g. "16/30,0/30,13/30,..."
@@ -1397,7 +1397,7 @@ function _doDownloadCert_LEGACY(_bannerImg){
   const badge  = getBadgeKey(pct);
   const cfg    = BADGE_CFG[badge];
   const date   = getField(row,['date completed','date'])||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  const serial = 'CMG-2026-'+([...name+school].reduce((h,c)=>Math.imul(31,h)+c.charCodeAt(0)|0,0)>>>0).toString(36).toUpperCase().substring(0,6);
+  const serial = getField(row,['code','serial','Code','CODE','__col25'])||'';
   const modScores = getModuleScores(row);
 
   // Build canvas 1200×850

@@ -77,6 +77,7 @@ body{
     position:relative;background:#f5f0e8;
     border:1px solid #c8a96e;padding:24px 28px;
     border-radius:2px;
+    z-index:12;
 }
 .cert-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;}
 .cert-logos{display:flex;align-items:center;gap:10px;}
@@ -88,7 +89,7 @@ body{
 .cert-body{text-align:center;padding:8px 0;}
 .cert-title{font-family:'Cinzel',serif;font-size:20px;font-weight:900;letter-spacing:3px;color:#8B0000;margin-bottom:6px;}
 .certifies-that{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;color:#888;margin-bottom:6px;}
-.cadetess-label{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;color:#555;margin-bottom:4px;}
+.cadetess-label{font-family:'Playfair Display',serif;font-style:italic;font-size:36px;letter-spacing:2px;color:#333;margin-bottom:4px;}
 .recipient-name{
     font-family:'Cinzel',serif;
     font-size:clamp(18px,4vw,42px);
@@ -285,7 +286,7 @@ function populateCert(data) {
     var name   = (data.usedBy   || data.name   || '').toUpperCase();
     var school = (data.school   || '').toUpperCase();
     var gender = (data.gender   || 'male').toLowerCase();
-    var serial = (data.code     || data.serial || '').toUpperCase();
+    var serial = (data.code || data.serial || data.Code || '').toUpperCase();
     var badge  = (data.badge    || '').toLowerCase();
     var date   = (data.actDate  || data.date   || new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}));
 

@@ -87,7 +87,7 @@ body {
 }
 .cert-inner {
   position: relative;
-  z-index: 5;
+  z-index: 12;
   padding: 50px 50px 48px;
   display: flex;
   flex-direction: column;
@@ -177,10 +177,19 @@ body {
 }
 /* Right cert ID */
 .cert-id-box {
-  text-align: right;
+  text-align: center;
   flex-shrink: 0;
-  width: 160px;
-  min-width: 160px;
+  width: 175px;
+  min-width: 175px;
+  position: relative;
+  z-index: 15;
+  margin-right: 18px;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1.5px solid #B8860B;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  align-self: center;
 }
 .cert-id-label {
   font-family: 'Oswald', sans-serif;
@@ -193,16 +202,18 @@ body {
 }
 .cert-id-value {
   font-family: 'Oswald', sans-serif;
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 900;
   color: #CE1126;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   white-space: nowrap;
   display: block;
   border: 1.5px solid #CE1126;
-  padding: 3px 8px;
+  padding: 4px 6px;
   border-radius: 3px;
   background: rgba(206,17,38,0.04);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* Safety Edition banner */
 .safety-edition {
@@ -279,8 +290,10 @@ body {
 .cadetess-label {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 22px;
+  font-size: 36px;
   color: #333;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
 }
 .recipient-name {
   font-family: 'Cinzel', serif;
@@ -780,7 +793,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var pct     = parseFloat(params.get('pct') || '0');
   var badge   = params.get('badge')  || 'PARTICIPANT';
   var date    = params.get('date')   || new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  var serial  = params.get('serial') || ('NAAD-2026-' + Math.random().toString(36).substring(2,8).toUpperCase());
+  var serial  = params.get('serial') || params.get('code') || 'N/A';
   var modStr  = params.get('modules')|| '';
 
   // ── Title (Cadet / Cadetess) ───────────────────────────────────────────────
