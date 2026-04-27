@@ -1382,37 +1382,23 @@ function downloadCertFromModal(){
     window.open('certificate.html?' + params.toString(), '_blank');
   }
 
-  // Serial code is in column AB (index 27) via VLOOKUP formula in Google Sheet
-  var serial = (row['__col27'] || '').toString().trim().toUpperCase();
-
-  // Fallback — scan all columns for CMG- pattern just in case
-  if (!serial || !serial.startsWith('CMG-')) {
-    serial = '';
-    for (var ci = 0; ci <= 30; ci++) {
-      var v = (row['__col' + ci] || '').toString().trim();
-      if (v && v.toUpperCase().startsWith('CMG-')) { serial = v.toUpperCase(); break; }
+  // Scan ALL columns for CMG- pattern — works regardless of column position
+  var serial = '';
+  for (var ci = 0; ci <= 50; ci++) {
+    var v = (row['__col' + ci] || '').toString().trim();
+    if (v && v.toUpperCase().startsWith('CMG-')) {
+      serial = v.toUpperCase();
+      break;
     }
   }
-
-  if (serial) {
-    // Found in row — open immediately
-    openCert(serial);
-  } else {
-    // Not in row — look up from Codes sheet by student name
-    const btn = document.getElementById('cdCertBtn');
-    if (btn) { btn.textContent = '⏳ Looking up…'; btn.disabled = true; }
-
-    fetch(SHEET_URL + '?action=getCodeByName&name=' + encodeURIComponent(name))
-      .then(r => r.json())
-      .then(data => {
-        if (btn) { btn.textContent = '🏅 Download Certificate'; btn.disabled = false; }
-        openCert(data.code || '');
-      })
-      .catch(() => {
-        if (btn) { btn.textContent = '🏅 Download Certificate'; btn.disabled = false; }
-        openCert('');
-      });
+  // Also try named fields as backup
+  if (!serial) {
+    var named = getField(row, ['serial code','code','serial','Code','CODE','certificate id']);
+    if (named && named.toUpperCase().startsWith('CMG-')) serial = named.toUpperCase();
   }
+
+  // Open certificate immediately — serial shows if found, blank if not
+  openCert(serial);
 }
 
 function _doDownloadCert_LEGACY(_bannerImg){
