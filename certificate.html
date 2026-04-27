@@ -179,8 +179,8 @@ body {
 .cert-id-box {
   text-align: center;
   flex-shrink: 0;
-  width: 175px;
-  min-width: 175px;
+  width: 220px;
+  min-width: 220px;
   position: relative;
   z-index: 15;
   margin-right: 18px;
@@ -202,18 +202,20 @@ body {
 }
 .cert-id-value {
   font-family: 'Oswald', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   color: #CE1126;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   white-space: nowrap;
   display: block;
   border: 1.5px solid #CE1126;
   padding: 4px 6px;
   border-radius: 3px;
   background: rgba(206,17,38,0.04);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-all;
+  white-space: normal;
 }
 /* Safety Edition banner */
 .safety-edition {
@@ -290,23 +292,27 @@ body {
 .cadetess-label {
   font-family: 'Playfair Display', serif;
   font-style: italic;
-  font-size: 36px;
-  color: #333;
+  font-size: clamp(13px, 2.5vw, 28px);
+  color: #555;
   letter-spacing: 2px;
   margin-bottom: 4px;
+  white-space: nowrap;
+  display: block;
 }
 .recipient-name {
   font-family: 'Cinzel', serif;
-  font-size: clamp(18px, 4vw, 46px);
+  font-size: clamp(13px, 2.8vw, 34px);
   font-weight: 900;
   color: #111;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   line-height: 1;
   max-width: 100%;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: center;
-  white-space: normal;
-  overflow-wrap: break-word;
+  display: block;
+  width: 100%;
 }
 .name-underline {
   display: flex;
@@ -801,7 +807,18 @@ window.addEventListener('DOMContentLoaded', function() {
 
   // ── Populate name ──────────────────────────────────────────────────────────
   var nameEl = document.querySelector('.recipient-name');
-  if (nameEl) nameEl.textContent = name.toUpperCase();
+  if (nameEl) {
+    nameEl.textContent = name.toUpperCase();
+    // Auto-shrink font based on name length to keep on one line
+    var nameLen = name.length;
+    var fontSize = nameLen <= 20 ? 34 :
+                   nameLen <= 25 ? 28 :
+                   nameLen <= 30 ? 24 :
+                   nameLen <= 35 ? 20 :
+                   nameLen <= 40 ? 17 : 14;
+    nameEl.style.fontSize = fontSize + 'px';
+    nameEl.style.letterSpacing = nameLen > 30 ? '0.5px' : '1.5px';
+  }
 
   var titleEl = document.querySelector('.cadetess-label');
   if (titleEl) titleEl.textContent = title;
