@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Oswald:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
@@ -18,6 +19,78 @@ body{
     align-items:center;justify-content:center;
     padding:20px;
     color:#fff;
+}
+
+/* ── Manual Entry Box ── */
+#manualBox{
+    text-align:center;padding:30px 20px;max-width:480px;width:100%;
+}
+#manualBox h2{
+    font-size:20px;font-weight:700;letter-spacing:1px;
+    margin-bottom:6px;color:#f2c300;
+}
+#manualBox p{font-size:13px;opacity:0.7;margin-bottom:20px;line-height:1.6;}
+.verify-input{
+    width:100%;padding:14px 16px;
+    font-family:'Oswald',sans-serif;font-size:15px;
+    font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    background:rgba(255,255,255,0.1);
+    border:2px solid rgba(242,195,0,0.5);
+    border-radius:10px;color:#fff;
+    outline:none;text-align:center;
+    transition:border 0.2s;
+    margin-bottom:12px;
+}
+.verify-input::placeholder{color:rgba(255,255,255,0.35);font-weight:400;letter-spacing:0;}
+.verify-input:focus{border-color:#f2c300;}
+.verify-btn{
+    width:100%;padding:14px;
+    background:linear-gradient(45deg,#f2c300,#e6a800);
+    color:#000;font-family:'Oswald',sans-serif;
+    font-size:15px;font-weight:700;letter-spacing:1px;
+    border:none;border-radius:10px;cursor:pointer;
+    text-transform:uppercase;
+    transition:transform 0.2s,box-shadow 0.2s;
+    box-shadow:0 4px 18px rgba(242,195,0,0.4);
+}
+.verify-btn:hover{transform:translateY(-2px);}
+.verify-error{
+    color:#ff6b6b;font-size:12px;margin-top:8px;
+    display:none;
+}
+.divider-or{
+    display:flex;align-items:center;gap:12px;
+    margin:16px 0;opacity:0.4;font-size:12px;
+    letter-spacing:2px;
+}
+.divider-or::before,.divider-or::after{
+    content:'';flex:1;height:1px;background:#fff;
+}
+
+/* ── QR Scanner ── */
+#scannerBox{
+    width:100%;max-width:320px;margin:0 auto;
+    display:none;
+}
+#qr-reader{
+    width:100%;border-radius:12px;
+    overflow:hidden;border:2px solid rgba(242,195,0,0.5);
+}
+#qr-reader video{border-radius:10px;}
+.scan-btn{
+    width:100%;padding:12px;margin-top:10px;
+    background:rgba(255,255,255,0.1);
+    color:#fff;font-family:'Oswald',sans-serif;
+    font-size:13px;font-weight:700;letter-spacing:1px;
+    border:1px solid rgba(255,255,255,0.3);
+    border-radius:10px;cursor:pointer;
+    text-transform:uppercase;
+    transition:background 0.2s;
+}
+.scan-btn:hover{background:rgba(255,255,255,0.2);}
+#scanStatus{
+    font-size:12px;opacity:0.6;text-align:center;
+    margin-top:8px;min-height:18px;
 }
 
 /* ── Loading & Error states ── */
@@ -136,6 +209,29 @@ body{
 </style>
 </head>
 <body>
+
+<!-- Manual Entry Box -->
+<div id="manualBox" style="display:none;">
+    <h2>🔍 Verify NAAD Certificate</h2>
+    <p>Enter the Certificate ID from the certificate<br>or scan the QR code with your phone camera.</p>
+    <input class="verify-input" id="certIdInput"
+           type="text" placeholder="e.g. CMG-2026-GH-00001-298B"
+           maxlength="30">
+    <div class="verify-error" id="verifyError">⚠️ Please enter a valid Certificate ID</div>
+    <button class="verify-btn" id="verifyBtn">🔍 Verify Certificate</button>
+    <div class="divider-or">OR SCAN QR CODE WITH CAMERA</div>
+
+    <!-- Camera QR Scanner -->
+    <div id="scannerBox">
+        <div id="qr-reader"></div>
+        <div id="scanStatus">📷 Point camera at the QR code on the certificate…</div>
+        <button class="scan-btn" id="stopScanBtn">✕ Stop Camera</button>
+    </div>
+
+    <button class="scan-btn" id="startScanBtn" style="margin-top:0;">
+        📷 Open Camera to Scan QR Code
+    </button>
+</div>
 
 <!-- Status box (loading / error) -->
 <div id="statusBox">
@@ -349,34 +445,127 @@ function populateCert(data) {
 }
 
 // ── Fetch student data by serial code ─────────────────────────────────────
-window.addEventListener('DOMContentLoaded', function() {
-    var params = new URLSearchParams(window.location.search);
-    var serial = params.get('id') || params.get('serial') || params.get('code') || '';
+function verifyCertificate(serial) {
+    serial = serial.trim().toUpperCase();
+    if (!serial) return;
 
-    if (!serial) {
-        setStatus('❌', 'No Certificate ID', 'Please scan a valid NAAD QR code or provide a certificate ID in the URL.', true);
-        document.getElementById('spinner').style.display = 'none';
-        return;
-    }
+    // Hide manual box, show spinner
+    document.getElementById('manualBox').style.display  = 'none';
+    document.getElementById('statusBox').style.display  = 'block';
+    document.getElementById('spinner').style.display    = 'block';
+    document.getElementById('statusIcon').style.display = 'none';
+    document.getElementById('statusTitle').textContent  = 'Verifying Certificate…';
+    document.getElementById('statusMsg').textContent    = 'Please wait while we fetch student data from our records.';
 
-    // Fetch from Google Sheets via Apps Script
-    var url = SCRIPT_URL + '?action=checkStatus&code=' + encodeURIComponent(serial.toUpperCase());
+    var url = SCRIPT_URL + '?action=checkStatus&code=' + encodeURIComponent(serial);
     fetch(url)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.status === 'found') {
                 populateCert(data);
             } else {
-                setStatus('❌', 'Certificate Not Found',
-                    'The certificate ID "' + serial + '" was not found in our records. Please check the QR code and try again.', true);
-                document.getElementById('spinner').style.display = 'none';
+                // Not found — show manual box again with error
+                document.getElementById('statusBox').style.display = 'none';
+                document.getElementById('manualBox').style.display = 'block';
+                var errEl = document.getElementById('verifyError');
+                errEl.textContent = '❌ Certificate ID "' + serial + '" not found. Please check and try again.';
+                errEl.style.display = 'block';
             }
         })
         .catch(function() {
-            setStatus('📶', 'Connection Error',
-                'Could not connect to the verification server. Please check your internet connection and try again.', true);
-            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('statusBox').style.display = 'none';
+            document.getElementById('manualBox').style.display = 'block';
+            var errEl = document.getElementById('verifyError');
+            errEl.textContent = '📶 Connection error. Please check your internet and try again.';
+            errEl.style.display = 'block';
         });
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var serial = params.get('id') || params.get('serial') || params.get('code') || '';
+
+    if (serial) {
+        // Serial in URL — verify immediately (QR scan)
+        verifyCertificate(serial);
+    } else {
+        // No serial — show manual entry box
+        document.getElementById('statusBox').style.display = 'none';
+        document.getElementById('manualBox').style.display = 'block';
+    }
+
+    // Manual verify button
+    document.getElementById('verifyBtn').addEventListener('click', function() {
+        var input = document.getElementById('certIdInput').value.trim();
+        var errEl = document.getElementById('verifyError');
+        if (!input || input.length < 5) {
+            errEl.textContent = '⚠️ Please enter a valid Certificate ID';
+            errEl.style.display = 'block';
+            return;
+        }
+        errEl.style.display = 'none';
+        verifyCertificate(input);
+    });
+
+    // Allow Enter key to trigger verify
+    document.getElementById('certIdInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('verifyBtn').click();
+    });
+
+    // ── Camera QR Scanner ────────────────────────────────────────────────
+    var html5QrCode = null;
+
+    function startScanner() {
+        document.getElementById('scannerBox').style.display  = 'block';
+        document.getElementById('startScanBtn').style.display = 'none';
+        document.getElementById('scanStatus').textContent = '📷 Point camera at the QR code…';
+
+        html5QrCode = new Html5Qrcode('qr-reader');
+        html5QrCode.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 220, height: 220 } },
+            function(decodedText) {
+                // QR code scanned — extract serial from URL
+                var serial = '';
+                try {
+                    var url    = new URL(decodedText);
+                    serial = url.searchParams.get('id') ||
+                             url.searchParams.get('serial') ||
+                             url.searchParams.get('code') || '';
+                } catch(e) {
+                    // Not a URL — use raw text as serial
+                    serial = decodedText.trim();
+                }
+
+                if (serial) {
+                    stopScanner();
+                    document.getElementById('scanStatus').textContent = '✅ Code found: ' + serial;
+                    verifyCertificate(serial);
+                } else {
+                    document.getElementById('scanStatus').textContent = '⚠️ Could not read code. Try again.';
+                }
+            },
+            function(err) {
+                // Scan error — ignore, keep scanning
+            }
+        ).catch(function(err) {
+            document.getElementById('scanStatus').textContent = '❌ Camera access denied. Please allow camera and try again.';
+            document.getElementById('scannerBox').style.display  = 'none';
+            document.getElementById('startScanBtn').style.display = 'block';
+        });
+    }
+
+    function stopScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().catch(function(){});
+            html5QrCode = null;
+        }
+        document.getElementById('scannerBox').style.display   = 'none';
+        document.getElementById('startScanBtn').style.display = 'block';
+    }
+
+    document.getElementById('startScanBtn').addEventListener('click', startScanner);
+    document.getElementById('stopScanBtn').addEventListener('click', stopScanner);
 
     // ── Download PNG button ────────────────────────────────────────────────
     document.getElementById('dlPngBtn').addEventListener('click', function() {
