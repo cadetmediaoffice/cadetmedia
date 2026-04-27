@@ -1371,11 +1371,20 @@ function downloadCertFromModal(){
   const modScores = getModuleScores(row);
   const modStr = modScores.map(ms => ms ? ms.got+'/'+ms.tot : '0/30').join(',');
 
-  // Try reading serial from row first (col25 = code column in sheet)
-  var serial = row['__col25'] || getField(row,['code','serial','Code','CODE','certificate id']);
-
-  // Clean up — must look like CMG-2026-...
-  if (!serial || serial.length < 8 || serial.includes('/')) serial = '';
+  // Serial code is saved at column index 25 by Apps Script submitResults
+  // Try all nearby columns in case sheet has shifted, look for CMG- pattern
+  function findSerial(r) {
+    // Check columns 24-27 for a value matching CMG- pattern
+    for (var ci = 23; ci <= 28; ci++) {
+      var v = (r['__col' + ci] || '').toString().trim();
+      if (v && v.toUpperCase().startsWith('CMG-')) return v.toUpperCase();
+    }
+    // Also try named fields
+    var named = getField(r, ['code','serial','Code','CODE','certificate id','cert id','serial code']);
+    if (named && named.toUpperCase().startsWith('CMG-')) return named.toUpperCase();
+    return '';
+  }
+  var serial = findSerial(row);
 
   function openCert(certSerial) {
     const params = new URLSearchParams({
