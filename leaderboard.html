@@ -1388,27 +1388,8 @@ function downloadCertFromModal(){
     window.open('certificate.html?' + params.toString(), '_blank');
   }
 
-  if (serial) {
-    // Serial found directly in row
-    openCert(serial);
-  } else {
-    // Serial missing from row — fetch from Codes sheet via Apps Script
-    const btn = document.getElementById('cdCertBtn');
-    if (btn) { btn.textContent = '⏳ Fetching code…'; btn.disabled = true; }
-
-    fetch(SHEET_URL + '?action=checkStatus&code=LOOKUP_BY_NAME&name=' + encodeURIComponent(name))
-      .then(r => r.json())
-      .then(data => {
-        var fetchedSerial = (data.code || data.serial || '').toUpperCase();
-        if (btn) { btn.textContent = '🏅 Download Certificate'; btn.disabled = false; }
-        openCert(fetchedSerial || 'CMG-2026-UNVERIFIED');
-      })
-      .catch(() => {
-        if (btn) { btn.textContent = '🏅 Download Certificate'; btn.disabled = false; }
-        // Still open certificate — just without a verified serial
-        openCert('CMG-2026-UNVERIFIED');
-      });
-  }
+  // Open certificate — serial will show if available, blank if not yet in sheet
+  openCert(serial || '');
 }
 
 function _doDownloadCert_LEGACY(_bannerImg){
