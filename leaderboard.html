@@ -1368,21 +1368,47 @@ function downloadCertFromModal(){
   const pct    = getScorePct(row);
   const badge  = getBadgeKey(pct);
   const date   = getField(row,['date completed','date'])||new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  const serial = getField(row,['code','serial','Code','CODE','certificate id','cert id','__col25'])||'';
   const modScores = getModuleScores(row);
-
-  // Build module score string e.g. "16/30,0/30,13/30,..."
   const modStr = modScores.map(ms => ms ? ms.got+'/'+ms.tot : '0/30').join(',');
 
-  const params = new URLSearchParams({
-    name, gender, school, region,
-    pct: pct.toString(),
-    badge, date, serial,
-    modules: modStr
-  });
+  // Try reading serial from row first (col25 = code column in sheet)
+  var serial = row['__col25'] || getField(row,['code','serial','Code','CODE','certificate id']);
 
-  // Open certificate.html in new tab with student data
-  window.open('certificate.html?' + params.toString(), '_blank');
+  // Clean up — must look like CMG-2026-...
+  if (!serial || serial.length < 8 || serial.includes('/')) serial = '';
+
+  function openCert(certSerial) {
+    const params = new URLSearchParams({
+      name, gender, school, region,
+      pct: pct.toString(),
+      badge, date,
+      serial: certSerial,
+      modules: modStr
+    });
+    window.open('certificate.html?' + params.toString(), '_blank');
+  }
+
+  if (serial) {
+    // Serial found directly in row
+    openCert(serial);
+  } else {
+    // Serial missing from row — fetch from Codes sheet via Apps Script
+    const btn = document.getElementById('cdCertBtn');
+    if (btn) { btn.textContent = '⏳ Fetching code…'; btn.disabled = true; }
+
+    fetch(SHEET_URL + '?action=checkStatus&code=LOOKUP_BY_NAME&name=' + encodeURIComponent(name))
+      .then(r => r.json())
+      .then(data => {
+        var fetchedSerial = (data.code || data.serial || '').toUpperCase();
+        if (btn) { btn.textContent = '🏅 Download Certificate'; btn.disabled = false; }
+        openCert(fetchedSerial || 'CMG-2026-UNVERIFIED');
+      })
+      .catch(() => {
+        if (btn) { btn.textContent = '🏅 Download Certificate'; btn.disabled = false; }
+        // Still open certificate — just without a verified serial
+        openCert('CMG-2026-UNVERIFIED');
+      });
+  }
 }
 
 function _doDownloadCert_LEGACY(_bannerImg){
