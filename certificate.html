@@ -284,11 +284,16 @@ body {
 }
 .recipient-name {
   font-family: 'Cinzel', serif;
-  font-size: 46px;
+  font-size: clamp(18px, 4vw, 46px);
   font-weight: 900;
   color: #111;
-  letter-spacing: 4px;
+  letter-spacing: 2px;
   line-height: 1;
+  max-width: 100%;
+  word-break: break-word;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 .name-underline {
   display: flex;
@@ -547,6 +552,7 @@ body {
 }
 .mod-svg { width: 28px; height: 28px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="cert-outer">
@@ -836,11 +842,10 @@ window.addEventListener('DOMContentLoaded', function() {
   }
 
   // ── QR Code ────────────────────────────────────────────────────────────────
-  var qrEl = document.getElementById('qrcode');
-  var qrUrl = 'https://cadetmediaoffice.github.io/cadetmedia/certificate.html?' +
-    new URLSearchParams({name:name,gender:gender,school:school,region:region,
-      pct:pct,badge:badge,date:date,serial:serial,modules:modStr}).toString();
-
+  // Short QR URL — just the serial code, easy to scan
+  var qrEl  = document.getElementById('qrcode');
+  var qrUrl = 'https://cadetmediaoffice.github.io/cadetmedia/verify.html?id=' + encodeURIComponent(serial);
+  qrEl.innerHTML = '';
   new QRCode(qrEl, {
     text: qrUrl,
     width: 90,
@@ -854,14 +859,56 @@ window.addEventListener('DOMContentLoaded', function() {
   var dlBtn = document.getElementById('downloadCertBtn');
   if (dlBtn) {
     dlBtn.addEventListener('click', function() {
-      window.print();
+      var btn     = dlBtn;
+      var bar     = document.getElementById('certDownloadBar');
+      var msg     = document.getElementById('certDlMsg');
+      var certEl  = document.querySelector('.cert-outer');
+
+      if (!certEl) { alert('Certificate not found.'); return; }
+
+      // Hide button bar so it doesn't appear in image
+      bar.style.display = 'none';
+      msg.style.display = 'block';
+      msg.textContent   = 'Generating your certificate image, please wait…';
+
+      // Get student name for filename
+      var nameEl   = document.querySelector('.recipient-name');
+      var certName = nameEl ? nameEl.textContent.trim().replace(/\s+/g,'_') : 'NAAD_Certificate';
+
+      setTimeout(function() {
+        html2canvas(certEl, {
+          scale: 3,           // high resolution
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#e8e0d0',
+          logging: false
+        }).then(function(canvas) {
+          var link      = document.createElement('a');
+          link.download = 'NAAD_Certificate_' + certName + '.png';
+          link.href     = canvas.toDataURL('image/png', 1.0);
+          link.click();
+
+          // Restore button
+          bar.style.display = 'block';
+          msg.style.display = 'none';
+          btn.textContent   = '✅ Downloaded! Click to download again';
+          setTimeout(function(){
+            btn.textContent = '⬇️ Download Certificate as Image';
+          }, 4000);
+        }).catch(function(err) {
+          bar.style.display = 'block';
+          msg.style.display = 'none';
+          alert('Could not generate image. Please try again.');
+          console.error(err);
+        });
+      }, 300);
     });
   }
 });
 </script>
 
-<!-- Download / Print Button -->
-<div style="text-align:center;padding:20px 0 30px;background:#e8e0d0;">
+<!-- Download PNG Button -->
+<div id="certDownloadBar" style="text-align:center;padding:20px 0 30px;background:#e8e0d0;">
   <button id="downloadCertBtn" style="
     padding:14px 40px;
     background:linear-gradient(45deg,#8B0000,#c0392b);
@@ -875,17 +922,12 @@ window.addEventListener('DOMContentLoaded', function() {
     cursor:pointer;
     box-shadow:0 4px 18px rgba(139,0,0,0.4);
     text-transform:uppercase;
-  ">🖨️ Download / Print Certificate</button>
+    min-width:260px;
+  ">⬇️ Download Certificate as Image</button>
+  <p id="certDlMsg" style="margin-top:10px;font-family:Arial,sans-serif;font-size:12px;color:#888;display:none;">
+    Generating your certificate image, please wait…
+  </p>
 </div>
-
-<!-- Print styles -->
-<style>
-@media print {
-  #downloadCertBtn, #downloadCertBtn + * { display:none !important; }
-  body { background:#fff !important; padding:0 !important; }
-  .cert-outer { box-shadow:none !important; }
-}
-</style>
 
 </body>
 </html>
