@@ -295,7 +295,7 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
 
         <div id="sp-upload" style="display:none;">
           <div class="fcard"><h4>📤 Upload Excel File</h4>
-            <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;">Fill in the Excel template and upload it here. CMG will process all questions within 2 working days.</p>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;">Upload the filled Excel template. Each question will be sent to Google Sheets and optionally saved to GitHub so all services can access them.</p>
             <div class="uzone" id="uz" onclick="document.getElementById('fi').click()"
               ondragover="event.preventDefault();this.classList.add('drag')"
               ondragleave="this.classList.remove('drag')"
@@ -306,7 +306,22 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
               <p>or click to browse<br><small style="opacity:.6;">.xlsx only · Max 10MB</small></p>
               <div class="uz-btn">Browse Files</div>
             </div>
-            <div id="uprog" style="display:none;"><div class="prog"><div class="pfill" id="pf"></div></div><p style="font-size:12px;color:var(--muted);text-align:center;" id="upst">Processing...</p></div>
+            <!-- GitHub token field (optional) -->
+            <div id="ghSection" style="margin-top:14px;background:rgba(79,195,247,0.06);border:1px solid rgba(79,195,247,0.2);border-radius:10px;padding:14px;">
+              <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;">🐙 GitHub Gist Sync (optional)</div>
+              <p style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6;">Enter a GitHub Personal Access Token to also save approved questions as a public Gist. Any service (NAAD platform, apps, etc.) can then fetch the JSON from a fixed URL.</p>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;padding:9px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--input);color:var(--text);font-family:var(--fm);font-size:12px;outline:none;">
+                <a href="https://github.com/settings/tokens/new?description=NAAD+Question+Bank&scopes=gist" target="_blank" style="font-size:10px;color:var(--blue);white-space:nowrap;text-decoration:none;padding:9px 10px;border:1px solid rgba(79,195,247,0.3);border-radius:8px;">Get Token ↗</a>
+              </div>
+              <div id="gistUrl" style="display:none;margin-top:10px;font-size:11px;color:var(--green);word-break:break-all;"></div>
+            </div>
+            <!-- Progress -->
+            <div id="uprog" style="display:none;margin-top:14px;">
+              <div class="prog"><div class="pfill" id="pf" style="transition:width .3s;"></div></div>
+              <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;" id="upst">Reading file…</p>
+              <div id="ulog" style="margin-top:10px;max-height:160px;overflow-y:auto;font-size:11px;font-family:var(--fm);color:var(--muted);background:rgba(0,0,0,0.2);border-radius:8px;padding:10px;line-height:1.8;"></div>
+            </div>
             <div class="msg ok" id="uok"></div>
             <div class="msg err" id="uerr"></div>
           </div>
@@ -552,14 +567,205 @@ function clearForm(){['fM','fL','fQ','fA','fB','fC','fE','fN'].forEach(function(
 // ── UPLOAD ──
 function drop(e){e.preventDefault();document.getElementById('uz').classList.remove('drag');var f=e.dataTransfer.files[0];if(f)upFile2(f);}
 function upFile(e){var f=e.target.files[0];if(f)upFile2(f);}
+
+// ── Load SheetJS dynamically if not present ──
+function loadSheetJS(cb){
+  if(window.XLSX){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=cb;s.onerror=function(){document.getElementById('uerr').textContent='❌ Could not load Excel parser. Check your internet connection.';document.getElementById('uerr').classList.add('show');};
+  document.head.appendChild(s);
+}
+
 function upFile2(f){
-  if(!f.name.endsWith('.xlsx')&&!f.name.endsWith('.xls')){document.getElementById('uerr').textContent='❌ Please upload an .xlsx file.';document.getElementById('uerr').classList.add('show');return;}
-  document.getElementById('uprog').style.display='block';document.getElementById('uerr').classList.remove('show');document.getElementById('uok').classList.remove('show');
-  var p=0;var iv=setInterval(function(){p+=15;if(p>90)p=90;document.getElementById('pf').style.width=p+'%';document.getElementById('upst').textContent=p<50?'Reading file…':'Processing questions…';},200);
-  var r=new FileReader();
-  r.onload=function(){clearInterval(iv);document.getElementById('pf').style.width='100%';document.getElementById('upst').textContent='Complete!';
-    setTimeout(function(){document.getElementById('uprog').style.display='none';document.getElementById('uok').textContent='✅ File received: '+f.name+' ('+Math.round(f.size/1024)+' KB). Your questions will be processed by CMG within 2 working days.';document.getElementById('uok').classList.add('show');},500);
-  };r.readAsArrayBuffer(f);
+  if(!f.name.endsWith('.xlsx')&&!f.name.endsWith('.xls')){
+    document.getElementById('uerr').textContent='❌ Please upload an .xlsx file.';
+    document.getElementById('uerr').classList.add('show');return;
+  }
+  document.getElementById('uprog').style.display='block';
+  document.getElementById('uerr').classList.remove('show');
+  document.getElementById('uok').classList.remove('show');
+  document.getElementById('ulog').innerHTML='';
+  document.getElementById('pf').style.width='5%';
+  document.getElementById('upst').textContent='Loading Excel parser…';
+
+  loadSheetJS(function(){
+    document.getElementById('upst').textContent='Reading file…';
+    document.getElementById('pf').style.width='15%';
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var wb=window.XLSX.read(ev.target.result,{type:'array'});
+        // Find the Questions sheet — it's called "Questions" or the second sheet
+        var sheetName='Questions';
+        if(!wb.SheetNames.includes(sheetName)) sheetName=wb.SheetNames.find(function(n){return n.toLowerCase().includes('question');})||wb.SheetNames[wb.SheetNames.length-1];
+        var ws=wb.Sheets[sheetName];
+        // Row 1 is a merged title — skip it. Row 2 has the real headers (may contain \n).
+        var raw=window.XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        // Find header row: first row where cell[0] mentions 'module'
+        var headerIdx=raw.findIndex(function(r){return String(r[0]||'').toLowerCase().includes('module');});
+        if(headerIdx<0) headerIdx=1;
+        var headers=raw[headerIdx].map(function(h){return String(h||'').replace(/\n/g,' ').trim();});
+        var rows=raw.slice(headerIdx+1).map(function(r){
+          var obj={};headers.forEach(function(h,i){obj[h]=String(r[i]||'').trim();});return obj;
+        });
+
+        // The template's actual column headers (from the xlsx we read):
+        // "Module (dropdown — required)", "Level 1=Easy...", "Question (required)",
+        // "Option A (required)", "Option B...", "Option C...", "Option D...",
+        // "Correct Answer A/B/C/D", "Explanation (required...)", "Difficulty Easy/Medium/Hard",
+        // "Your Full Name & Agency (required)", "Notes for Reviewer (optional)"
+        // We map by partial key match so it's resilient to minor header changes.
+        function col(row,kw){
+          var k=Object.keys(row).find(function(h){return h.toLowerCase().includes(kw.toLowerCase());});
+          return k?String(row[k]||'').trim():'';
+        }
+
+        var questions=[];
+        rows.forEach(function(row,idx){
+          var module=col(row,'module');
+          var question=col(row,'question');
+          if(!module||!question||module==='Module'||question==='Question')return; // skip header/empty rows
+          questions.push({
+            module:       module,
+            edition:      col(row,'edition')||'Safety',
+            level:        (col(row,'level')||'All').replace(/[^A-Za-z]/g,''), // strip "1=Easy" to just level word
+            question:     question,
+            optionA:      col(row,'option a'),
+            optionB:      col(row,'option b'),
+            optionC:      col(row,'option c'),
+            optionD:      col(row,'option d'),
+            correctAnswer:col(row,'correct').toUpperCase().replace(/[^ABCD]/g,''),
+            explanation:  col(row,'explanation'),
+            difficulty:   col(row,'difficulty')||'Medium',
+            submittedBy:  col(row,'name')||col(row,'agency')||(U?U.f:'Unknown'),
+            notes:        col(row,'notes'),
+          });
+        });
+
+        if(questions.length===0){
+          document.getElementById('uerr').textContent='❌ No valid questions found in the file. Make sure the "Questions" sheet is filled in.';
+          document.getElementById('uerr').classList.add('show');
+          document.getElementById('uprog').style.display='none';
+          return;
+        }
+
+        logLine('📊 Found <b>'+questions.length+'</b> questions in <i>'+f.name+'</i>');
+        document.getElementById('pf').style.width='20%';
+        submitBulk(questions,f.name);
+
+      }catch(err){
+        document.getElementById('uerr').textContent='❌ Failed to read Excel file: '+err.message;
+        document.getElementById('uerr').classList.add('show');
+        document.getElementById('uprog').style.display='none';
+      }
+    };
+    reader.readAsArrayBuffer(f);
+  });
+}
+
+function logLine(html){
+  var d=document.getElementById('ulog');
+  d.innerHTML+=html+'<br>';
+  d.scrollTop=d.scrollHeight;
+}
+
+// ── Submit each question to Google Sheets one-by-one ──
+async function submitBulk(questions,filename){
+  var ok=0,dup=0,fail=0;
+  var total=questions.length;
+
+  for(var i=0;i<total;i++){
+    var q=questions[i];
+    var pct=20+Math.round((i/total)*60);
+    document.getElementById('pf').style.width=pct+'%';
+    document.getElementById('upst').textContent='Submitting question '+(i+1)+' of '+total+'…';
+
+    // Add to local portal preview (pending)
+    var localQ={...q,answers:[q.optionA,q.optionB,q.optionC,q.optionD],correct:['A','B','C','D'].indexOf(q.correctAnswer),status:'Pending',explain:q.explanation,source:q.submittedBy};
+    AQ.push(localQ);
+
+    // Send to Google Apps Script / Google Sheets
+    if(QB&&!QB.includes('YOUR_')){
+      try{
+        var res=await fetch(QB,{method:'POST',body:JSON.stringify({action:'submitQuestion',...q})});
+        var data=await res.json();
+        if(data.status==='ok'){ok++;logLine('✅ Q'+(i+1)+': <span style="color:var(--green)">'+q.question.slice(0,60)+'…</span>');}
+        else if(data.status==='duplicate'){dup++;logLine('⚠️ Q'+(i+1)+': Duplicate — '+q.question.slice(0,50));}
+        else{fail++;logLine('❌ Q'+(i+1)+': '+data.message);}
+      }catch(e){
+        fail++;
+        logLine('❌ Q'+(i+1)+': Network error — '+e.message);
+      }
+    } else {
+      ok++;
+      logLine('📝 Q'+(i+1)+' [local only]: '+q.question.slice(0,60));
+    }
+    // Small delay to avoid rate limits
+    await new Promise(function(r){setTimeout(r,300);});
+  }
+
+  save();stats();renderM();if(U&&U.admin){renderA();}
+
+  document.getElementById('pf').style.width='85%';
+  document.getElementById('upst').textContent='Syncing to GitHub…';
+
+  // ── GitHub Gist save ──
+  var ghToken=document.getElementById('ghToken').value.trim();
+  if(ghToken){
+    await saveToGist(ghToken,questions,filename);
+  } else {
+    logLine('ℹ️ No GitHub token provided — skipping Gist sync.');
+  }
+
+  document.getElementById('pf').style.width='100%';
+  document.getElementById('upst').textContent='Done!';
+
+  var summary='✅ Bulk upload complete! '+ok+' submitted to Google Sheets';
+  if(dup>0) summary+=', '+dup+' duplicates skipped';
+  if(fail>0) summary+=', '+fail+' failed';
+  summary+='. Check the "Review" tab to approve questions.';
+  document.getElementById('uok').textContent=summary;
+  document.getElementById('uok').classList.add('show');
+  // Reset file input
+  document.getElementById('fi').value='';
+}
+
+// ── Save approved questions JSON snapshot to GitHub Gist ──
+async function saveToGist(token,questions,filename){
+  try{
+    var approved=AQ.filter(function(q){return q.status==='Approved';});
+    var payload={
+      description:'NAAD Question Bank — '+new Date().toISOString().slice(0,10)+' — uploaded from '+filename,
+      public:true,
+      files:{
+        'naad_questions.json':{content:JSON.stringify({updated:new Date().toISOString(),total:approved.length,questions:approved},null,2)},
+        'naad_pending.json':{content:JSON.stringify({updated:new Date().toISOString(),total:questions.length,questions:questions},null,2)}
+      }
+    };
+    var existingGistId=localStorage.getItem('naadGistId');
+    var gistEndpoint=existingGistId?'https://api.github.com/gists/'+existingGistId:'https://api.github.com/gists';
+    var gistMethod=existingGistId?'PATCH':'POST';
+    var r=await fetch(gistEndpoint,{
+      method:gistMethod,
+      headers:{'Authorization':'token '+token,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},
+      body:JSON.stringify(payload)
+    });
+    var data=await r.json();
+    if(data.html_url){
+      var rawUrl=data.files['naad_questions.json'].raw_url;
+      // Store gist ID so next upload updates same gist
+      localStorage.setItem('naadGistId',data.id);
+      localStorage.setItem('naadGistUrl',rawUrl);
+      document.getElementById('gistUrl').style.display='block';
+      document.getElementById('gistUrl').innerHTML='🐙 Gist saved! Share this URL with any service:<br><a href="'+rawUrl+'" target="_blank" style="color:var(--blue);">'+rawUrl+'</a>';
+      logLine('🐙 GitHub Gist saved: <a href="'+data.html_url+'" target="_blank" style="color:var(--blue)">View Gist ↗</a>');
+    } else {
+      logLine('❌ GitHub error: '+(data.message||JSON.stringify(data)));
+    }
+  }catch(e){
+    logLine('❌ GitHub Gist failed: '+e.message);
+  }
 }
 
 // ── NAV ──
