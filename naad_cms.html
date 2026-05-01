@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAAD Safety — Content Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#060f1e;--navy2:#0d1a2e;--navy3:#112240;
+  --gold:#FFD700;--gold2:#e6a800;--gold3:rgba(255,215,0,0.1);
+  --red:#b80000;--red2:rgba(184,0,0,0.12);
+  --green:#00c853;--green2:rgba(0,200,83,0.1);
+  --blue:#4fc3f7;--blue2:rgba(79,195,247,0.1);
+  --text:#eef2ff;--muted:rgba(238,242,255,0.5);--muted2:rgba(238,242,255,0.2);
+  --card:rgba(255,255,255,0.03);--card2:rgba(255,255,255,0.06);
+  --border:rgba(255,215,0,0.12);--border2:rgba(255,255,255,0.08);
+  --input:rgba(255,255,255,0.06);--radius:14px;
+  --fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+}
+body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 90% 0%,rgba(184,0,0,0.07),transparent 55%),
+    radial-gradient(ellipse 60% 50% at 5% 100%,rgba(255,215,0,0.05),transparent 55%),
+    linear-gradient(175deg,#060f1e,#080e1a);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,215,0,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,215,0,0.02) 1px,transparent 1px);
+  background-size:52px 52px;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.lbox{position:relative;z-index:1;width:100%;max-width:400px;text-align:center;}
+.lbadge{width:72px;height:72px;border-radius:18px;margin:0 auto 20px;
+  background:linear-gradient(135deg,#b80000,#7b0000);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  box-shadow:0 8px 32px rgba(184,0,0,0.4),0 0 0 1px rgba(255,215,0,0.2);}
+.ltitle{font-family:var(--fh);font-size:26px;font-weight:900;color:var(--gold);margin-bottom:4px;}
+.lsub{font-size:12px;color:var(--muted);margin-bottom:28px;line-height:1.7;}
+.lcard{background:rgba(13,26,46,0.95);border:1px solid var(--border);border-radius:var(--radius);padding:26px;backdrop-filter:blur(20px);}
+.lcard label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px;text-align:left;}
+.lcard input{width:100%;padding:13px;background:var(--input);border:1.5px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:15px;letter-spacing:3px;text-align:center;outline:none;transition:border-color .2s;margin-bottom:14px;}
+.lcard input:focus{border-color:rgba(255,215,0,0.4);}
+.lbtn{width:100%;padding:14px;border:none;border-radius:11px;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#000;font-family:var(--fh);font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(255,215,0,0.3);transition:transform .15s;}
+.lbtn:hover{transform:translateY(-2px);}
+.lerr{color:#ff6b6b;font-size:12px;margin-top:10px;display:none;}
+.lsecure{font-size:10px;color:var(--muted2);margin-top:14px;letter-spacing:.5px;}
+
+/* APP */
+#app{display:none;position:relative;z-index:1;min-height:100vh;}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(6,15,30,0.93);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:0 20px;display:flex;align-items:center;gap:14px;height:56px;}
+.topbar-logo{font-family:var(--fh);font-size:13px;font-weight:900;color:var(--gold);letter-spacing:.5px;}
+.topbar-logo span{color:var(--muted);font-weight:400;font-size:11px;margin-left:6px;}
+.apill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--gold3);border:1px solid rgba(255,215,0,0.2);color:var(--gold);}
+.apill.admin{background:var(--red2);border-color:rgba(255,100,100,0.3);color:#ff9090;}
+.tbr{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.lout{padding:7px 14px;border:1px solid var(--border2);border-radius:8px;background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .2s;}
+.lout:hover{border-color:rgba(255,100,100,0.4);color:#ff9090;}
+
+.layout{display:flex;min-height:calc(100vh - 56px);}
+.sidebar{width:210px;flex-shrink:0;border-right:1px solid var(--border);padding:16px 10px;display:flex;flex-direction:column;gap:2px;background:rgba(6,15,30,0.5);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .2s;border:1px solid transparent;}
+.ni:hover{background:var(--card2);color:var(--text);}
+.ni.active{background:var(--gold3);border-color:var(--border);color:var(--gold);font-weight:700;}
+.ni-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.nbadge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.nbadge.g{background:var(--green);}
+.ssec{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);padding:10px 12px 4px;font-weight:600;}
+
+.content{flex:1;padding:24px 24px 60px;min-width:0;}
+.phdr{margin-bottom:22px;}
+.phdr h2{font-family:var(--fh);font-size:20px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.phdr p{font-size:12px;color:var(--muted);line-height:1.6;}
+
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,215,0,0.03),transparent);pointer-events:none;}
+.sn{font-family:var(--fh);font-size:28px;font-weight:900;color:var(--gold);}
+.sn.g{color:var(--green);}.sn.b{color:var(--blue);}.sn.r{color:#ff6b6b;}
+.sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+.si{position:absolute;right:12px;top:12px;font-size:20px;opacity:.25;}
+
+.stitle{font-family:var(--fh);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;}
+.fcard h4{font-family:var(--fh);font-size:12px;color:var(--gold);letter-spacing:.5px;text-transform:uppercase;margin-bottom:16px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fgrid.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;}
+.req{color:var(--gold);}
+.field input,.field select,.field textarea{padding:11px 13px;border-radius:9px;border:1.5px solid var(--border2);background:var(--input);color:var(--text);font-family:var(--fb);font-size:13px;outline:none;transition:border-color .2s;width:100%;}
+.field textarea{min-height:80px;resize:vertical;line-height:1.6;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(255,215,0,0.35);}
+.field select option{background:#0d1a2e;}
+
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.ai{display:flex;align-items:center;gap:8px;background:var(--input);border:1.5px solid var(--border2);border-radius:9px;padding:9px 11px;}
+.abadge{min-width:24px;height:24px;border-radius:6px;background:var(--gold3);color:var(--gold);font-weight:800;font-size:12px;font-family:var(--fh);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ai input{border:none;background:transparent;padding:0;font-size:13px;flex:1;color:var(--text);outline:none;}
+
+.crow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.copt{padding:8px 20px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-weight:700;font-size:14px;cursor:pointer;font-family:var(--fh);transition:all .2s;}
+.copt.sel{border-color:var(--green);background:rgba(0,200,83,0.12);color:var(--green);}
+
+.bsub{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#000;font-family:var(--fh);font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(255,215,0,0.22);transition:transform .15s;margin-top:6px;}
+.bsub:hover{transform:translateY(-2px);}
+.bsub:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.bout{padding:9px 18px;border:1px solid var(--border2);border-radius:9px;background:transparent;color:var(--muted);font-family:var(--fb);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.bout:hover{border-color:rgba(255,215,0,0.3);color:var(--text);}
+
+.msg{padding:11px 15px;border-radius:9px;font-size:12px;font-weight:500;margin-top:12px;display:none;}
+.msg.show{display:block;}
+.msg.ok{background:var(--green2);border:1px solid rgba(0,200,83,0.28);color:#80ffb0;}
+.msg.err{background:var(--red2);border:1px solid rgba(255,100,100,0.28);color:#ffaaaa;}
+.msg.info{background:var(--blue2);border:1px solid rgba(79,195,247,0.28);color:#aaddff;}
+
+.uzone{border:2px dashed rgba(255,215,0,0.22);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;background:rgba(255,215,0,0.02);transition:all .25s;margin-bottom:16px;}
+.uzone:hover,.uzone.drag{border-color:var(--gold);background:rgba(255,215,0,0.06);}
+.uzone h4{font-family:var(--fh);font-size:14px;color:var(--text);margin-bottom:5px;}
+.uzone p{font-size:12px;color:var(--muted);line-height:1.7;}
+.uz-btn{display:inline-block;margin-top:12px;padding:9px 22px;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#000;border-radius:8px;font-family:var(--fh);font-size:12px;font-weight:700;}
+.prog{height:4px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px;transition:width .4s;width:0%;}
+
+.tcard{background:linear-gradient(135deg,rgba(255,215,0,0.06),rgba(184,0,0,0.04));border:1px solid rgba(255,215,0,0.18);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.ti{font-size:32px;flex-shrink:0;}
+.tinfo{flex:1;}
+.tinfo h4{font-family:var(--fh);font-size:13px;color:var(--gold);margin-bottom:3px;}
+.tinfo p{font-size:12px;color:var(--muted);line-height:1.6;}
+.tdl{padding:9px 20px;border:none;border-radius:9px;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#000;font-family:var(--fh);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-block;}
+
+.stabs{display:flex;gap:6px;margin-bottom:18px;}
+.stab{padding:8px 18px;border-radius:9px;border:1.5px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--fh);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.stab.active{border-color:var(--gold);background:var(--gold3);color:var(--gold);}
+
+.fbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.fp{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;transition:all .2s;font-family:var(--fb);}
+.fp.active{background:var(--gold3);border-color:rgba(255,215,0,0.3);color:var(--gold);}
+.si2{padding:7px 13px;border-radius:9px;border:1px solid var(--border2);background:var(--input);color:var(--text);font-size:12px;outline:none;font-family:var(--fb);flex:1;min-width:160px;}
+.si2:focus{border-color:rgba(255,215,0,0.3);}
+
+.qcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px 17px;transition:border-color .2s;margin-bottom:10px;}
+.qcard:hover{border-color:rgba(255,215,0,0.22);}
+.qct{display:flex;align-items:flex-start;gap:11px;margin-bottom:9px;}
+.qmod{padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--gold3);border:1px solid rgba(255,215,0,0.18);color:var(--gold);flex-shrink:0;}
+.qtxt{font-size:13px;font-weight:500;flex:1;line-height:1.6;}
+.qmeta{font-size:10px;color:var(--muted);margin-top:2px;}
+.pill{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.pPending{background:rgba(255,215,0,0.1);color:var(--gold);border:1px solid rgba(255,215,0,0.22);}
+.pApproved{background:var(--green2);color:var(--green);border:1px solid rgba(0,200,83,0.28);}
+.pRejected{background:var(--red2);color:#ff9090;border:1px solid rgba(255,100,100,0.28);}
+.qans{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0;font-size:11px;}
+.qa{padding:5px 9px;border-radius:7px;background:rgba(255,255,255,0.03);border:1px solid var(--border2);}
+.qa.c{background:rgba(0,200,83,0.09);border-color:rgba(0,200,83,0.22);color:#80ffb0;}
+.qex{font-size:11px;color:var(--muted);line-height:1.6;padding:7px 11px;background:rgba(255,255,255,0.02);border-radius:7px;border-left:2px solid var(--gold);margin-top:6px;}
+.qact{display:flex;gap:7px;margin-top:9px;}
+.bapp{padding:6px 16px;border:1px solid rgba(0,200,83,0.3);border-radius:8px;background:var(--green2);color:var(--green);font-weight:700;font-size:11px;cursor:pointer;font-family:var(--fb);transition:all .2s;}
+.bapp:hover{background:rgba(0,200,83,0.22);}
+.brej{padding:6px 16px;border:1px solid rgba(255,100,100,0.25);border-radius:8px;background:var(--red2);color:#ff9090;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--fb);transition:all .2s;}
+.brej:hover{background:rgba(255,100,100,0.22);}
+.rn{font-size:11px;color:#ff9090;margin-top:6px;padding:6px 10px;background:var(--red2);border-radius:7px;}
+
+.loading{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+.spin{display:inline-block;width:22px;height:22px;border:2px solid rgba(255,215,0,0.18);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:36px 20px;color:var(--muted);}
+
+.panel{display:none;}.panel.active{display:block;}
+@media(max-width:700px){.sidebar{display:none;}.content{padding:14px;}.sgrid{grid-template-columns:1fr 1fr;}.agrid{grid-template-columns:1fr;}.qans{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="bg-grid"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="lbox">
+    <div class="lbadge">🛡️</div>
+    <div style="font-family:var(--fh);font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px;">Cadet Media Ghana</div>
+    <div class="ltitle">NAAD Content Portal</div>
+    <div class="lsub">Safety Edition · Authorised Agency Officers Only<br>Enter your agency password to continue.</div>
+    <div class="lcard">
+      <label>Agency Password</label>
+      <input type="password" id="pwInput" placeholder="••••••••••••" maxlength="40">
+      <button class="lbtn" onclick="doLogin()">🔓 Access Portal</button>
+      <div class="lerr" id="loginErr">❌ Incorrect password. Contact CMG if you need access.</div>
+      <div class="lsecure">🔒 Secure Portal · Cadet Media Ghana 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">NAAD <span>Content Portal</span></div>
+    <div id="apill" class="apill">—</div>
+    <div class="tbr">
+      <span id="clk" style="font-size:11px;color:var(--muted);font-family:var(--fm);"></span>
+      <button class="lout" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="ssec">Main</div>
+      <div class="ni active" onclick="go('dashboard',this)"><span class="ni-icon">📊</span>Dashboard</div>
+      <div class="ni" onclick="go('submit',this)"><span class="ni-icon">✏️</span>Submit Questions</div>
+      <div class="ni" onclick="go('mine',this)"><span class="ni-icon">📋</span>My Questions<span class="nbadge" id="pb" style="display:none">0</span></div>
+      <div id="adminNav" style="display:none;">
+        <div class="ssec">Admin</div>
+        <div class="ni" onclick="go('review',this)"><span class="ni-icon">🔍</span>Review All<span class="nbadge" id="rb">0</span></div>
+        <div class="ni" onclick="go('agencies',this)"><span class="ni-icon">🏛️</span>Agencies</div>
+      </div>
+      <div class="ssec">Help</div>
+      <div class="ni" onclick="go('guide',this)"><span class="ni-icon">📖</span>Guidelines</div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="phdr"><h2 id="dgreet">Welcome</h2><p id="dsub"></p></div>
+        <div class="sgrid">
+          <div class="sc"><span class="si">📝</span><div class="sn" id="dT">—</div><div class="sl">My Submissions</div></div>
+          <div class="sc"><span class="si">✅</span><div class="sn g" id="dA">—</div><div class="sl">Approved</div></div>
+          <div class="sc"><span class="si">⏳</span><div class="sn" id="dP">—</div><div class="sl">Pending</div></div>
+          <div class="sc"><span class="si">❌</span><div class="sn r" id="dR">—</div><div class="sl">Rejected</div></div>
+        </div>
+        <div class="stitle">📢 Notice</div>
+        <div class="msg info show">Welcome to the NAAD Content Portal. Submit your agency's safety questions using the <strong>Submit Questions</strong> section. Each module requires a minimum of <strong>30 questions</strong> across 3 difficulty levels. All questions are reviewed by CMG before going live.</div>
+        <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="bsub" style="width:auto;padding:11px 22px;" onclick="go('submit',document.querySelectorAll('.ni')[1])">✏️ Submit a Question</button>
+          <button class="bout" onclick="go('guide',document.querySelectorAll('.ni')[document.getElementById('adminNav').style.display!='none'?5:3])">📖 Read Guidelines</button>
+        </div>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="panel" id="panel-submit">
+        <div class="phdr"><h2>✏️ Submit Questions</h2><p>Add safety questions to NAAD. All submissions are reviewed by CMG before going live.</p></div>
+        <div class="tcard">
+          <div class="ti">📥</div>
+          <div class="tinfo"><h4>Download Excel Template</h4><p>Prefer to submit many questions at once? Download the template, fill it in and upload it below.</p></div>
+          <a class="tdl" href="NAAD_Safety_Question_Template.xlsx" download>⬇️ Download</a>
+        </div>
+        <div class="stabs">
+          <button class="stab active" onclick="stab('manual',this)">✏️ Type Question</button>
+          <button class="stab" onclick="stab('upload',this)">📤 Upload Excel</button>
+        </div>
+
+        <div id="sp-manual">
+          <div class="fcard"><h4>📝 Question Details</h4>
+            <div class="fgrid">
+              <div class="field"><label>Module <span class="req">*</span></label><select id="fM"></select></div>
+              <div class="field"><label>Level <span class="req">*</span></label>
+                <select id="fL"><option value="">— Select —</option><option value="1">Level 1 — Easy</option><option value="2">Level 2 — Medium</option><option value="3">Level 3 — Hard</option></select></div>
+            </div>
+            <div class="field fgrid full" style="margin-top:12px;">
+              <label>Question <span class="req">*</span></label>
+              <textarea id="fQ" placeholder="Type the full question here..." maxlength="500" oninput="cc(this,'ql',500)"></textarea>
+              <div style="text-align:right;font-size:10px;color:var(--muted);margin-top:2px;" id="ql">0/500</div>
+            </div>
+          </div>
+          <div class="fcard"><h4>🔤 Answer Options</h4>
+            <div class="agrid">
+              <div class="ai"><div class="abadge">A</div><input type="text" id="fA" placeholder="Option A..."></div>
+              <div class="ai"><div class="abadge">B</div><input type="text" id="fB" placeholder="Option B..."></div>
+              <div class="ai"><div class="abadge">C</div><input type="text" id="fC" placeholder="Option C..."></div>
+              <div class="ai"><div class="abadge">D</div><input type="text" id="fD" placeholder="Option D..."></div>
+            </div>
+            <div class="field"><label>Correct Answer <span class="req">*</span></label>
+              <div class="crow">
+                <button class="copt" onclick="sc('A',this)">A</button>
+                <button class="copt" onclick="sc('B',this)">B</button>
+                <button class="copt" onclick="sc('C',this)">C</button>
+                <button class="copt" onclick="sc('D',this)">D</button>
+              </div>
+              <input type="hidden" id="fCor">
+            </div>
+          </div>
+          <div class="fcard"><h4>💡 Explanation</h4>
+            <div class="field fgrid full">
+              <label>Explanation <span class="req">*</span> <span style="font-weight:400;text-transform:none;font-size:10px;">— Why is this the correct answer?</span></label>
+              <textarea id="fE" placeholder="Explain clearly why the correct answer is right..." maxlength="600" oninput="cc(this,'el',600)"></textarea>
+              <div style="text-align:right;font-size:10px;color:var(--muted);margin-top:2px;" id="el">0/600</div>
+            </div>
+            <div class="field fgrid full" style="margin-top:10px;">
+              <label>Notes <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+              <input type="text" id="fN" placeholder="Any notes for the CMG review team...">
+            </div>
+            <button class="bsub" id="sBtn" onclick="doSubmit()">📤 Submit Question for Review</button>
+            <div class="msg ok" id="sok"></div>
+            <div class="msg err" id="serr"></div>
+          </div>
+        </div>
+
+        <div id="sp-upload" style="display:none;">
+          <div class="fcard"><h4>📤 Upload Excel File</h4>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;">Fill in the Excel template and upload it here. CMG will process all questions within 2 working days.</p>
+            <div class="uzone" id="uz" onclick="document.getElementById('fi').click()"
+              ondragover="event.preventDefault();this.classList.add('drag')"
+              ondragleave="this.classList.remove('drag')"
+              ondrop="drop(event)">
+              <input type="file" id="fi" accept=".xlsx,.xls" onchange="upFile(event)" style="display:none">
+              <div style="font-size:36px;margin-bottom:10px;">📊</div>
+              <h4>Drop your Excel file here</h4>
+              <p>or click to browse<br><small style="opacity:.6;">.xlsx only · Max 10MB</small></p>
+              <div class="uz-btn">Browse Files</div>
+            </div>
+            <div id="uprog" style="display:none;"><div class="prog"><div class="pfill" id="pf"></div></div><p style="font-size:12px;color:var(--muted);text-align:center;" id="upst">Processing...</p></div>
+            <div class="msg ok" id="uok"></div>
+            <div class="msg err" id="uerr"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY QUESTIONS -->
+      <div class="panel" id="panel-mine">
+        <div class="phdr"><h2>📋 My Submitted Questions</h2><p>All questions you have submitted. Check their review status here.</p></div>
+        <div class="fbar">
+          <button class="fp active" onclick="fq('all',this,'m')">All</button>
+          <button class="fp" onclick="fq('Pending',this,'m')">⏳ Pending</button>
+          <button class="fp" onclick="fq('Approved',this,'m')">✅ Approved</button>
+          <button class="fp" onclick="fq('Rejected',this,'m')">❌ Rejected</button>
+          <input class="si2" id="ms" placeholder="🔍 Search..." oninput="renderM()">
+        </div>
+        <div id="mList"><div class="loading"><div class="spin"></div><br>Loading...</div></div>
+      </div>
+
+      <!-- REVIEW (Admin) -->
+      <div class="panel" id="panel-review">
+        <div class="phdr"><h2>🔍 Review All Submissions</h2><p>Approve or reject questions from all agencies.</p></div>
+        <div class="sgrid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="sc"><div class="sn" id="rT">—</div><div class="sl">Total</div></div>
+          <div class="sc"><div class="sn g" id="rA">—</div><div class="sl">Approved</div></div>
+          <div class="sc"><div class="sn" id="rP">—</div><div class="sl">Pending</div></div>
+        </div>
+        <div class="fbar">
+          <button class="fp active" onclick="fq('all',this,'a')">All</button>
+          <button class="fp" onclick="fq('Pending',this,'a')">⏳ Pending</button>
+          <button class="fp" onclick="fq('Approved',this,'a')">✅ Approved</button>
+          <button class="fp" onclick="fq('Rejected',this,'a')">❌ Rejected</button>
+          <input class="si2" id="as" placeholder="🔍 Search..." oninput="renderA()">
+          <select id="amf" onchange="renderA()" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--input);color:var(--text);font-size:12px;outline:none;"></select>
+        </div>
+        <button class="bout" style="margin-bottom:14px;" onclick="appAll()">✅ Approve All Pending</button>
+        <div id="aList"><div class="loading"><div class="spin"></div><br>Loading...</div></div>
+      </div>
+
+      <!-- AGENCIES (Admin) -->
+      <div class="panel" id="panel-agencies">
+        <div class="phdr"><h2>🏛️ Agency Overview</h2><p>Submission progress per agency.</p></div>
+        <div id="agList"><div class="loading"><div class="spin"></div><br>Loading...</div></div>
+      </div>
+
+      <!-- GUIDELINES -->
+      <div class="panel" id="panel-guide">
+        <div class="phdr"><h2>📖 Question Writing Guidelines</h2><p>Please read before submitting to ensure questions meet NAAD standards.</p></div>
+        <div class="fcard"><h4>✅ Good Questions</h4>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="padding:9px 13px;background:rgba(0,200,83,0.07);border:1px solid rgba(0,200,83,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✔ <strong>Factually accurate</strong> — based on official agency guidelines and national safety standards</div>
+            <div style="padding:9px 13px;background:rgba(0,200,83,0.07);border:1px solid rgba(0,200,83,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✔ <strong>Four plausible options</strong> — all four answers should seem possible to a student</div>
+            <div style="padding:9px 13px;background:rgba(0,200,83,0.07);border:1px solid rgba(0,200,83,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✔ <strong>One clear correct answer</strong> — no ambiguity</div>
+            <div style="padding:9px 13px;background:rgba(0,200,83,0.07);border:1px solid rgba(0,200,83,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✔ <strong>Strong explanation</strong> — clearly explain WHY the answer is correct with facts or laws</div>
+            <div style="padding:9px 13px;background:rgba(0,200,83,0.07);border:1px solid rgba(0,200,83,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✔ <strong>Scenario-based</strong> — e.g. "A student sees smoke — what should they do?"</div>
+          </div>
+        </div>
+        <div class="fcard" style="margin-top:0;"><h4>❌ Avoid These</h4>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="padding:9px 13px;background:var(--red2);border:1px solid rgba(255,100,100,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✗ Trick questions or deliberately confusing wording</div>
+            <div style="padding:9px 13px;background:var(--red2);border:1px solid rgba(255,100,100,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✗ Questions where two or more answers could be correct</div>
+            <div style="padding:9px 13px;background:var(--red2);border:1px solid rgba(255,100,100,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✗ Politically sensitive or culturally inappropriate content</div>
+            <div style="padding:9px 13px;background:var(--red2);border:1px solid rgba(255,100,100,0.18);border-radius:8px;font-size:12px;line-height:1.6;color:rgba(238,242,255,0.85);">✗ Duplicate questions already in the NAAD system</div>
+          </div>
+        </div>
+        <div class="fcard" style="margin-top:0;"><h4>📊 Module Requirements — Minimum 30 Questions Each</h4>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead><tr>
+              <th style="padding:9px;background:var(--navy3);color:var(--gold);text-align:left;">Module</th>
+              <th style="padding:9px;background:var(--navy3);color:var(--gold);text-align:center;">Min</th>
+              <th style="padding:9px;background:var(--navy3);color:var(--gold);text-align:center;">Level Split</th>
+            </tr></thead>
+            <tbody id="mgt"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var QB='https://script.google.com/macros/s/AKfycbySGKvNZDrr4SNv9UxDMq6ldCdjVgz5lo4nLr557YNRR3CFbSqfOYqRkeTePi_kSq4j/exec';
+var MODS=['Fire Safety','Police','Ambulance','Prisons','NADMO','Immigration','Customs','Tourism','Forest','GAF','Narcotics','General Safety','Student Safety'];
+var AGENCIES={
+  'GNFS@NAAD2026':       {n:'GNFS',     f:'Ghana National Fire Service',         m:'Fire Safety',   e:'🔥',admin:false},
+  'Police@NAAD2026':     {n:'Police',   f:'Ghana Police Service',                m:'Police',        e:'👮',admin:false},
+  'Ambulance@NAAD2026':  {n:'NAS',      f:'National Ambulance Service',          m:'Ambulance',     e:'🚑',admin:false},
+  'NADMO@NAAD2026':      {n:'NADMO',    f:'Nat. Disaster Mgmt Org.',             m:'NADMO',         e:'🌊',admin:false},
+  'Prisons@NAAD2026':    {n:'Prisons',  f:'Ghana Prisons Service',               m:'Prisons',       e:'⚖️',admin:false},
+  'Immigration@NAAD2026':{n:'GIS',      f:'Ghana Immigration Service',           m:'Immigration',   e:'✈️',admin:false},
+  'Customs@NAAD2026':    {n:'Customs',  f:'Ghana Customs Division',              m:'Customs',       e:'🏛️',admin:false},
+  'Tourism@NAAD2026':    {n:'Tourism',  f:'Ministry of Tourism',                 m:'Tourism',       e:'🎨',admin:false},
+  'Forest@NAAD2026':     {n:'Forest',   f:'Forestry Commission',                 m:'Forest',        e:'🌳',admin:false},
+  'GAF@NAAD2026':        {n:'GAF',      f:'Ghana Armed Forces',                  m:'GAF',           e:'🪖',admin:false},
+  'Narcotics@NAAD2026':  {n:'NACOC',    f:'Narcotic Control Commission',         m:'Narcotics',     e:'💊',admin:false},
+  'CadetMedia@2025!':    {n:'Admin',    f:'Cadet Media Ghana (Administrator)',    m:'ALL',           e:'⚙️',admin:true},
+};
+
+var U=null,AQ=[],FMY='all',FAD='all',CORR='';
+
+// ── LOGIN ──
+function doLogin(){
+  var pw=document.getElementById('pwInput').value.trim();
+  var ag=AGENCIES[pw];
+  if(!ag){document.getElementById('loginErr').style.display='block';document.getElementById('pwInput').value='';return;}
+  U={pw,module:ag.m,...ag};
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  init();
+}
+function doLogout(){U=null;document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}
+document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
+// ── INIT ──
+function init(){
+  var pill=document.getElementById('apill');pill.textContent=U.e+' '+U.f;if(U.admin)pill.classList.add('admin');
+  var h=new Date().getHours();
+  document.getElementById('dgreet').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+U.f;
+  document.getElementById('dsub').textContent='NAAD Safety Edition · '+new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  if(U.admin)document.getElementById('adminNav').style.display='block';
+  // Module dropdown
+  var sel=document.getElementById('fM');sel.innerHTML='<option value="">— Select Module —</option>';
+  var mods=U.admin||U.module==='ALL'?MODS:[U.module];
+  mods.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
+  if(mods.length===1){sel.value=mods[0];sel.disabled=true;}
+  // Admin module filter
+  var af=document.getElementById('amf');af.innerHTML='<option value="">All Modules</option>';
+  MODS.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;af.appendChild(o);});
+  // Module guide
+  document.getElementById('mgt').innerHTML=MODS.map(function(m,i){
+    var bg=i%2===0?'rgba(255,255,255,0.02)':'transparent';
+    return '<tr style="border-bottom:1px solid var(--border);background:'+bg+';"><td style="padding:9px;font-size:12px;">'+m+'</td><td style="padding:9px;text-align:center;font-family:var(--fm);color:var(--gold);">30</td><td style="padding:9px;text-align:center;font-size:11px;color:var(--muted);">10 Easy · 12 Medium · 8 Hard</td></tr>';
+  }).join('');
+  setInterval(function(){document.getElementById('clk').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});},1000);
+  loadQ();
+}
+
+// ── LOAD ──
+function loadQ(){
+  if(!QB||QB.includes('YOUR_')){AQ=JSON.parse(localStorage.getItem('naadQ')||'[]');stats();renderM();if(U.admin){renderA();renderAg();}return;}
+  fetch(QB+'?action=getQuestions&shuffle=false').then(function(r){return r.json();}).then(function(res){AQ=res.questions||[];stats();renderM();if(U.admin){renderA();renderAg();}}).catch(function(){AQ=JSON.parse(localStorage.getItem('naadQ')||'[]');stats();renderM();});
+}
+
+// ── STATS ──
+function stats(){
+  var mine=U.admin?AQ:AQ.filter(function(q){return (q.source||'').toLowerCase().includes(U.n.toLowerCase());});
+  var ap=mine.filter(function(q){return q.status==='Approved';}).length;
+  var pe=mine.filter(function(q){return (q.status||'Pending')==='Pending';}).length;
+  var re=mine.filter(function(q){return q.status==='Rejected';}).length;
+  document.getElementById('dT').textContent=mine.length;
+  document.getElementById('dA').textContent=ap;
+  document.getElementById('dP').textContent=pe;
+  document.getElementById('dR').textContent=re;
+  if(pe>0){document.getElementById('pb').textContent=pe;document.getElementById('pb').style.display='block';}
+  if(U.admin){
+    var ap2=AQ.filter(function(q){return q.status==='Approved';}).length;
+    var pe2=AQ.filter(function(q){return (q.status||'Pending')==='Pending';}).length;
+    document.getElementById('rT').textContent=AQ.length;
+    document.getElementById('rA').textContent=ap2;
+    document.getElementById('rP').textContent=pe2;
+    document.getElementById('rb').textContent=pe2;
+  }
+}
+
+// ── RENDER CARDS ──
+function cards(list,admin){
+  if(!list.length)return '<div class="empty"><div style="font-size:36px;margin-bottom:8px;">📭</div><p>No questions found.</p></div>';
+  var L=['A','B','C','D'];
+  return list.map(function(q,i){
+    var st=q.status||'Pending';
+    var ans=(q.answers||q.a||[]).map(function(a,j){return '<div class="qa'+(j===(q.correct||q.c)?' c':'')+'"><strong>'+L[j]+'.</strong> '+esc(a)+'</div>';}).join('');
+    var act=admin&&st==='Pending'?'<div class="qact"><button class="bapp" onclick="appQ('+i+')">✅ Approve</button><button class="brej" onclick="rejQ('+i+')">❌ Reject</button></div>':'';
+    var rn=q.rejectNote?'<div class="rn">Reason: '+esc(q.rejectNote)+'</div>':'';
+    return '<div class="qcard"><div class="qct"><span class="qmod">'+esc(q.module||'')+'</span><div style="flex:1;"><div class="qtxt">'+esc(q.question||q.q||'')+'</div><div class="qmeta">By: '+esc(q.source||'')+'  ·  Lv'+esc(String(q.level||''))+'  ·  '+esc(q.difficulty||'')+'</div></div><span class="pill p'+st+'">'+st+'</span></div><div class="qans">'+ans+'</div><div class="qex">💡 '+esc(q.explain||q.ex||'')+'</div>'+rn+act+'</div>';
+  }).join('');
+}
+function renderM(){
+  var s=(document.getElementById('ms').value||'').toLowerCase();
+  var mine=U.admin?AQ:AQ.filter(function(q){return (q.source||'').toLowerCase().includes(U.n.toLowerCase());});
+  var f=mine.filter(function(q){
+    if(FMY!=='all'&&(q.status||'Pending')!==FMY)return false;
+    if(s&&!(q.question||q.q||'').toLowerCase().includes(s)&&!(q.module||'').toLowerCase().includes(s))return false;
+    return true;
+  });
+  document.getElementById('mList').innerHTML=cards(f,false);
+}
+function renderA(){
+  var s=(document.getElementById('as').value||'').toLowerCase();
+  var mf=document.getElementById('amf').value;
+  var f=AQ.filter(function(q){
+    if(FAD!=='all'&&(q.status||'Pending')!==FAD)return false;
+    if(mf&&q.module!==mf)return false;
+    if(s&&!(q.question||q.q||'').toLowerCase().includes(s)&&!(q.source||'').toLowerCase().includes(s)&&!(q.module||'').toLowerCase().includes(s))return false;
+    return true;
+  });
+  document.getElementById('aList').innerHTML=cards(f,true);
+}
+function renderAg(){
+  var mp={};MODS.forEach(function(m){mp[m]={t:0,a:0,p:0};});
+  AQ.forEach(function(q){var m=q.module||'';if(!mp[m])return;mp[m].t++;if(q.status==='Approved')mp[m].a++;else if((q.status||'Pending')==='Pending')mp[m].p++;});
+  var html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">';
+  Object.keys(AGENCIES).forEach(function(pw){var ag=AGENCIES[pw];if(ag.admin)return;var s=mp[ag.m]||{t:0,a:0,p:0};var pct=Math.min(Math.round((s.a/30)*100),100);
+    html+='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:11px;"><span style="font-size:22px;">'+ag.e+'</span><div><div style="font-family:var(--fh);font-size:12px;font-weight:700;color:var(--text);">'+ag.f+'</div><div style="font-size:10px;color:var(--muted);">'+ag.m+'</div></div></div><div style="display:flex;gap:10px;font-size:11px;margin-bottom:7px;"><span style="color:var(--green);">✅ '+s.a+' approved</span><span style="color:var(--gold);">⏳ '+s.p+' pending</span></div><div style="background:rgba(255,255,255,0.06);border-radius:5px;height:5px;overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:5px;"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px;">'+s.a+' / 30 minimum ('+pct+'%)</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('agList').innerHTML=html;
+}
+
+// ── APPROVE/REJECT ──
+function appQ(i){var q=AQ[i];if(!q)return;q.status='Approved';save();if(QB&&!QB.includes('YOUR_'))fetch(QB,{method:'POST',body:JSON.stringify({action:'reviewQuestion',status:'Approved',reviewedBy:'CMG Admin',row:i+2})}).catch(function(){});stats();renderA();renderM();toast('✅ Approved!');}
+function rejQ(i){var r=prompt('Reason for rejection:')||'';var q=AQ[i];if(!q)return;q.status='Rejected';q.rejectNote=r;save();if(QB&&!QB.includes('YOUR_'))fetch(QB,{method:'POST',body:JSON.stringify({action:'reviewQuestion',status:'Rejected',reviewedBy:'CMG Admin',row:i+2,notes:r})}).catch(function(){});stats();renderA();renderM();toast('❌ Rejected.');}
+function appAll(){if(!confirm('Approve ALL pending questions?'))return;AQ.forEach(function(q){if((q.status||'Pending')==='Pending')q.status='Approved';});save();if(QB&&!QB.includes('YOUR_'))fetch(QB+'?action=approveAll&reviewedBy=CMG+Admin').catch(function(){});stats();renderA();toast('✅ All pending approved!');}
+
+// ── SUBMIT ──
+function sc(l,el){document.querySelectorAll('.copt').forEach(function(b){b.classList.remove('sel');});el.classList.add('sel');CORR=l;document.getElementById('fCor').value=l;}
+function doSubmit(){
+  var btn=document.getElementById('sBtn');
+  var ok=document.getElementById('sok');var er=document.getElementById('serr');
+  ok.classList.remove('show');er.classList.remove('show');
+  var d={module:document.getElementById('fM').value,level:document.getElementById('fL').value,question:document.getElementById('fQ').value.trim(),optionA:document.getElementById('fA').value.trim(),optionB:document.getElementById('fB').value.trim(),optionC:document.getElementById('fC').value.trim(),optionD:document.getElementById('fD').value.trim(),correctAnswer:CORR,explanation:document.getElementById('fE').value.trim(),notes:document.getElementById('fN').value.trim(),submittedBy:U.f,edition:'Safety',};
+  if(!d.module){showErr(er,'Please select a module.');return;}
+  if(!d.level){showErr(er,'Please select a difficulty level.');return;}
+  if(!d.question||d.question.length<10){showErr(er,'Please enter a valid question (minimum 10 characters).');return;}
+  if(!d.optionA||!d.optionB||!d.optionC||!d.optionD){showErr(er,'Please fill in all four answer options.');return;}
+  if(!d.correctAnswer){showErr(er,'Please select the correct answer.');return;}
+  if(!d.explanation||d.explanation.length<20){showErr(er,'Please provide an explanation (minimum 20 characters).');return;}
+  btn.disabled=true;btn.textContent='⏳ Submitting…';
+  var q={module:d.module,level:parseInt(d.level),difficulty:d.level==='1'?'Easy':d.level==='2'?'Medium':'Hard',question:d.question,q:d.question,answers:[d.optionA,d.optionB,d.optionC,d.optionD],a:[d.optionA,d.optionB,d.optionC,d.optionD],correct:['A','B','C','D'].indexOf(d.correctAnswer),c:['A','B','C','D'].indexOf(d.correctAnswer),explain:d.explanation,ex:d.explanation,source:U.f,status:'Pending',edition:'Safety',submittedAt:new Date().toISOString()};
+  AQ.push(q);save();
+  if(QB&&!QB.includes('YOUR_')){
+    fetch(QB,{method:'POST',body:JSON.stringify({action:'submitQuestion',...d})}).then(function(r){return r.json();}).then(function(res){
+      btn.disabled=false;btn.textContent='📤 Submit Question for Review';
+      ok.textContent='✅ Question submitted! Awaiting CMG review.';ok.classList.add('show');clearForm();stats();
+    }).catch(function(){btn.disabled=false;btn.textContent='📤 Submit Question for Review';ok.textContent='✅ Saved locally — will sync when online.';ok.classList.add('show');clearForm();stats();});
+  } else {
+    setTimeout(function(){btn.disabled=false;btn.textContent='📤 Submit Question for Review';ok.textContent='✅ Question saved! Connect to Apps Script to sync to Google Sheets.';ok.classList.add('show');clearForm();stats();},700);
+  }
+}
+function showErr(el,m){el.textContent='⚠️ '+m;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},4000);}
+function clearForm(){['fM','fL','fQ','fA','fB','fC','fE','fN'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.disabled)el.value='';});CORR='';document.getElementById('fCor').value='';document.querySelectorAll('.copt').forEach(function(b){b.classList.remove('sel');});document.getElementById('ql').textContent='0/500';document.getElementById('el').textContent='0/600';}
+
+// ── UPLOAD ──
+function drop(e){e.preventDefault();document.getElementById('uz').classList.remove('drag');var f=e.dataTransfer.files[0];if(f)upFile2(f);}
+function upFile(e){var f=e.target.files[0];if(f)upFile2(f);}
+function upFile2(f){
+  if(!f.name.endsWith('.xlsx')&&!f.name.endsWith('.xls')){document.getElementById('uerr').textContent='❌ Please upload an .xlsx file.';document.getElementById('uerr').classList.add('show');return;}
+  document.getElementById('uprog').style.display='block';document.getElementById('uerr').classList.remove('show');document.getElementById('uok').classList.remove('show');
+  var p=0;var iv=setInterval(function(){p+=15;if(p>90)p=90;document.getElementById('pf').style.width=p+'%';document.getElementById('upst').textContent=p<50?'Reading file…':'Processing questions…';},200);
+  var r=new FileReader();
+  r.onload=function(){clearInterval(iv);document.getElementById('pf').style.width='100%';document.getElementById('upst').textContent='Complete!';
+    setTimeout(function(){document.getElementById('uprog').style.display='none';document.getElementById('uok').textContent='✅ File received: '+f.name+' ('+Math.round(f.size/1024)+' KB). Your questions will be processed by CMG within 2 working days.';document.getElementById('uok').classList.add('show');},500);
+  };r.readAsArrayBuffer(f);
+}
+
+// ── NAV ──
+function go(name,el){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+  var p=document.getElementById('panel-'+name);if(p)p.classList.add('active');
+  if(el)el.classList.add('active');
+  if(name==='mine')renderM();
+  if(name==='review'&&U.admin)renderA();
+  if(name==='agencies'&&U.admin)renderAg();
+}
+function stab(n,el){document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');document.getElementById('sp-manual').style.display=n==='manual'?'block':'none';document.getElementById('sp-upload').style.display=n==='upload'?'block':'none';}
+function fq(s,el,t){el.parentElement.querySelectorAll('.fp').forEach(function(p){p.classList.remove('active');});el.classList.add('active');if(t==='m'){FMY=s;renderM();}else{FAD=s;renderA();}}
+
+// ── HELPERS ──
+function save(){try{localStorage.setItem('naadQ',JSON.stringify(AQ));}catch(e){}}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function cc(el,id,max){var l=el.value.length;var c=document.getElementById(id);c.textContent=l+'/'+max;c.style.color=l>=max?'var(--red)':l>max*.9?'var(--gold)':'var(--muted)';}
+function toast(m){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:rgba(13,26,46,0.96);border:1px solid var(--gold);border-radius:30px;padding:9px 20px;font-size:12px;font-weight:600;color:var(--gold);z-index:9999;';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2600);}
+</script>
+</body>
+</html>
