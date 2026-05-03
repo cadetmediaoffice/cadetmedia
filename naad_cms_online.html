@@ -211,6 +211,7 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
         <div class="ssec">Admin</div>
         <div class="ni" onclick="go('review',this)"><span class="ni-icon">🔍</span>Review All<span class="nbadge" id="rb">0</span></div>
         <div class="ni" onclick="go('agencies',this)"><span class="ni-icon">🏛️</span>Agencies</div>
+        <div class="ni" onclick="go('export',this)"><span class="ni-icon">💾</span>Export Quiz</div>
       </div>
       <div class="ssec">Help</div>
       <div class="ni" onclick="go('guide',this)"><span class="ni-icon">📖</span>Guidelines</div>
@@ -382,6 +383,31 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
       <div class="panel" id="panel-agencies">
         <div class="phdr"><h2>🏛️ Agency Overview</h2><p>Submission progress per agency.</p></div>
         <div id="agList"><div class="loading"><div class="spin"></div><br>Loading...</div></div>
+      </div>
+
+      <!-- EXPORT QUIZ (CMG Admin only) -->
+      <div class="panel" id="panel-export">
+        <div class="phdr"><h2>💾 Export Quiz Files</h2><p>Download approved questions as ready-to-use quiz HTML files for pen drives.</p></div>
+        <div class="fcard">
+          <h4>📦 Select Module to Export</h4>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7;">Choose a module. The portal fetches all approved questions and generates a complete quiz HTML file ready to copy onto pen drives.</p>
+          <div id="exportModuleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"></div>
+          <div id="exportStatus" style="display:none;margin-top:10px;">
+            <div class="prog"><div class="pfill" id="epf" style="transition:width .4s;"></div></div>
+            <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:6px;" id="epst">Fetching questions…</p>
+          </div>
+          <div class="msg ok" id="exok"></div>
+          <div class="msg err" id="exerr"></div>
+        </div>
+        <div class="fcard" style="margin-top:0;">
+          <h4>📋 How to use exported files</h4>
+          <p style="font-size:12px;color:var(--muted);line-height:1.8;">
+            1. Click a module button above to download its quiz HTML file.<br>
+            2. Copy the file onto the pen drive into the correct folder.<br>
+            3. Replace the old quiz file with the new one — keep the same filename.<br>
+            4. Open in any browser to confirm questions load correctly.
+          </p>
+        </div>
       </div>
 
       <!-- GUIDELINES -->
@@ -842,6 +868,95 @@ function save(){/* Data lives in Google Sheets — no localStorage needed */}
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function cc(el,id,max){var l=el.value.length;var c=document.getElementById(id);c.textContent=l+'/'+max;c.style.color=l>=max?'var(--red)':l>max*.9?'var(--gold)':'var(--muted)';}
 function toast(m){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:rgba(13,26,46,0.96);border:1px solid var(--gold);border-radius:30px;padding:9px 20px;font-size:12px;font-weight:600;color:var(--gold);z-index:9999;';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2600);}
+
+// ── EXPORT QUIZ ──
+var MODULES_LIST=[
+  {name:'Fire Safety',icon:'🔥',file:'fire_quiz'},
+  {name:'Police',icon:'👮',file:'police_quiz'},
+  {name:'Ambulance',icon:'🚑',file:'ambulance_quiz'},
+  {name:'NADMO',icon:'🌊',file:'nadmo_quiz'},
+  {name:'Prisons',icon:'⚖️',file:'prisons_quiz'},
+  {name:'Immigration',icon:'✈️',file:'immigration_quiz'},
+  {name:'Customs',icon:'🏛️',file:'customs_quiz'},
+  {name:'Tourism',icon:'🎨',file:'tourism_quiz'},
+  {name:'Forest',icon:'🌳',file:'forest_quiz'},
+  {name:'GAF',icon:'🪖',file:'gaf_quiz'},
+  {name:'Narcotics',icon:'💊',file:'narcotics_quiz'},
+  {name:'General Safety',icon:'🛡️',file:'general_quiz'},
+];
+
+function renderExportModules(){
+  var grid=document.getElementById('exportModuleGrid');
+  if(!grid)return;
+  grid.innerHTML=MODULES_LIST.map(function(m){
+    return '<button onclick="exportModule(''+m.name+'',''+m.file+'')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:10px;cursor:pointer;color:var(--text);font-family:var(--fm);font-size:13px;font-weight:500;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)'">'
+      +'<span style="font-size:22px;">'+m.icon+'</span>'
+      +'<div style="text-align:left;"><div>'+m.name+'</div><div style="font-size:10px;color:var(--muted);font-weight:400;">'+m.file+'.html</div></div>'
+      +'</button>';
+  }).join('');
+}
+
+async function exportModule(moduleName, fileName){
+  document.getElementById('exportStatus').style.display='block';
+  document.getElementById('epf').style.width='10%';
+  document.getElementById('epst').textContent='Fetching approved questions for '+moduleName+'…';
+  document.getElementById('exok').classList.remove('show');
+  document.getElementById('exerr').classList.remove('show');
+
+  try{
+    var res=await fetch(QB+'?action=getQuestions&module='+encodeURIComponent(moduleName)+'&shuffle=false');
+    var data=await res.json();
+    var questions=data.questions||[];
+
+    if(questions.length===0){
+      document.getElementById('exerr').textContent='❌ No approved questions found for '+moduleName+'. Approve some questions first.';
+      document.getElementById('exerr').classList.add('show');
+      document.getElementById('exportStatus').style.display='none';
+      return;
+    }
+
+    document.getElementById('epf').style.width='60%';
+    document.getElementById('epst').textContent='Building quiz file ('+questions.length+' questions)…';
+
+    var html=buildQuizHTML(moduleName, questions);
+
+    document.getElementById('epf').style.width='100%';
+    document.getElementById('epst').textContent='Done!';
+
+    // Download the file
+    var blob=new Blob([html],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=fileName+'.html';a.click();
+    URL.revokeObjectURL(url);
+
+    setTimeout(function(){document.getElementById('exportStatus').style.display='none';},1000);
+    document.getElementById('exok').textContent='✅ '+questions.length+' questions exported to '+fileName+'.html — copy it to the pen drive.';
+    document.getElementById('exok').classList.add('show');
+
+  }catch(e){
+    document.getElementById('exerr').textContent='❌ Export failed: '+e.message;
+    document.getElementById('exerr').classList.add('show');
+    document.getElementById('exportStatus').style.display='none';
+  }
+}
+
+function buildQuizHTML(moduleName, questions){
+  var qjs=questions.map(function(q,i){
+    var imgPart=q.imageData?',image:''+q.imageData+''':'';
+    var answers=q.answers||[];
+    return '{q:'+JSON.stringify(q.question||q.q||'')+',a:'+JSON.stringify(answers)+',c:'+q.correct+',ex:'+JSON.stringify(q.explain||q.explanation||'')+(q.source?',src:'+JSON.stringify(q.source):'')+imgPart+'}';
+  }).join(',\n');
+
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>NAAD '+moduleName+' Quiz</title>\n<style>\n*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;background:#0d1a2e;color:#eef2ff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}.container{background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.3);border-radius:16px;padding:30px;max-width:680px;width:100%;}.header{text-align:center;margin-bottom:24px;}.header h1{font-size:22px;color:#FFD700;margin-bottom:4px;}.header p{font-size:13px;color:rgba(238,242,255,0.6);}.progress{background:rgba(255,255,255,0.1);border-radius:10px;height:6px;margin-bottom:20px;}.prog-fill{background:#FFD700;height:6px;border-radius:10px;transition:width .4s;}.question-num{font-size:11px;color:rgba(238,242,255,0.5);margin-bottom:10px;}.question-text{font-size:16px;font-weight:600;margin-bottom:8px;line-height:1.5;}.question-img{width:100%;max-height:240px;object-fit:contain;border-radius:10px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.1);}.options{display:flex;flex-direction:column;gap:10px;margin-top:16px;}.option{padding:12px 16px;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;gap:10px;}.option:hover{border-color:#FFD700;background:rgba(255,215,0,0.08);}.option.correct{border-color:#4caf50;background:rgba(76,175,80,0.15);}.option.wrong{border-color:#f44336;background:rgba(244,67,54,0.15);}.option-letter{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}.explain{background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.25);border-radius:10px;padding:14px;margin-top:14px;font-size:13px;line-height:1.6;display:none;}.explain.show{display:block;}.btn{padding:12px 28px;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;margin-top:16px;transition:all .2s;}.btn-next{background:#FFD700;color:#0d1a2e;width:100%;}.btn-next:hover{background:#ffc107;}.score-screen{text-align:center;}.score-screen h2{font-size:28px;color:#FFD700;margin-bottom:8px;}.score-screen p{font-size:14px;color:rgba(238,242,255,0.7);margin-bottom:20px;}.badge{display:inline-block;padding:8px 20px;border-radius:20px;font-weight:700;font-size:14px;margin-bottom:16px;}.badge.gold{background:rgba(255,215,0,0.2);color:#FFD700;border:1px solid #FFD700;}.badge.silver{background:rgba(192,192,192,0.2);color:#ccc;border:1px solid #ccc;}.badge.bronze{background:rgba(205,127,50,0.2);color:#cd7f32;border:1px solid #cd7f32;}\n</style>\n</head>\n<body>\n<div class="container">\n<div class="header"><h1>NAAD Safety Edition</h1><p>'+moduleName+' · '+questions.length+' Questions</p></div>\n<div id="quiz"></div>\n</div>\n<script>\nvar questions=[\n'+qjs+'\n];\nvar current=0,score=0,answered=false;\nfunction shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}\nquestions=shuffle(questions);\nfunction render(){\n  var q=questions[current];\n  var letters=['A','B','C','D'];\n  var pct=Math.round((current/questions.length)*100);\n  var imgHtml=q.image?'<img class="question-img" src="'+q.image+'">':''  ;\n  document.getElementById('quiz').innerHTML='<div class="progress"><div class="prog-fill" style="width:'+pct+'%"></div></div><div class="question-num">Question '+(current+1)+' of '+questions.length+'</div><div class="question-text">'+q.q+'</div>'+imgHtml+'<div class="options">'+q.a.map(function(ans,i){return '<div class="option" id="opt'+i+'" onclick="pick('+i+')"><span class="option-letter">'+letters[i]+'</span>'+ans+'</div>';}).join('')+'</div><div class="explain" id="ex">'+q.ex+'</div>'+'<button class="btn btn-next" id="nxt" onclick="next()" style="display:none">'+((current+1)<questions.length?'Next Question →':'See Results')+'</button>';\n  answered=false;\n}\nfunction pick(i){\n  if(answered)return;answered=true;\n  var q=questions[current];\n  document.getElementById('opt'+i).classList.add(i===q.c?'correct':'wrong');\n  if(i!==q.c)document.getElementById('opt'+q.c).classList.add('correct');\n  if(i===q.c)score++;\n  document.getElementById('ex').classList.add('show');\n  document.getElementById('nxt').style.display='block';\n  document.querySelectorAll('.option').forEach(function(o){o.style.pointerEvents='none';});\n}\nfunction next(){current++;if(current<questions.length){render();}else{showScore();}}\nfunction showScore(){\n  var pct=Math.round((score/questions.length)*100);\n  var badge=pct>=80?'gold':pct>=50?'silver':'bronze';\n  var msg=pct>=80?'Excellent work!':pct>=50?'Good effort!':'Keep studying!';\n  document.getElementById('quiz').innerHTML='<div class="score-screen"><h2>'+score+'/'+questions.length+'</h2><div class="badge '+badge+'">'+pct+'% · '+msg+'</div><p>NAAD Safety Edition — '+q+'</p><button class="btn btn-next" onclick="restart()">🔄 Try Again</button></div>';\n}\nfunction restart(){current=0;score=0;questions=shuffle(questions);render();}\nrender();\n<\/script>\n</body>\n</html>';
+}
+
+// Render export modules when export panel is opened
+var _goOrig=go;
+go=function(name,el){
+  _goOrig(name,el);
+  if(name==='export'&&U&&U.admin) renderExportModules();
+};
 </script>
 </body>
 </html>
