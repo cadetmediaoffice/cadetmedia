@@ -277,6 +277,23 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
               <input type="hidden" id="fCor">
             </div>
           </div>
+          <div class="fcard"><h4>🖼️ Question Image <span style="font-weight:400;text-transform:none;font-size:10px;">— optional, for visual questions</span></h4>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Upload an image if your question refers to a diagram, sign, equipment or scenario. Supported: JPG, PNG, SVG (max 2MB).</p>
+            <div id="imgZone" style="border:2px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;" onclick="document.getElementById('imgFile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor='var(--border2)'" ondrop="dropImg(event)">
+              <input type="file" id="imgFile" accept="image/*" style="display:none" onchange="loadImg(event)">
+              <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
+              <p style="font-size:12px;color:var(--muted);">Drop image here or click to browse<br><small>.jpg .png .svg · Max 2MB</small></p>
+            </div>
+            <div id="imgPreviewWrap" style="display:none;margin-top:12px;text-align:center;">
+              <img id="imgPreview" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--border2);">
+              <div style="margin-top:8px;">
+                <input type="text" id="imgLabel" placeholder="Image label / caption (optional)" style="width:100%;padding:8px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--input);color:var(--text);font-family:var(--fm);font-size:12px;">
+                <button onclick="clearImg()" style="margin-top:6px;background:rgba(220,50,50,0.15);border:1px solid rgba(220,50,50,0.3);color:#ff6b6b;padding:5px 14px;border-radius:6px;font-size:11px;cursor:pointer;">✕ Remove Image</button>
+              </div>
+            </div>
+            <input type="hidden" id="fImg">
+            <input type="hidden" id="fImgLabel">
+          </div>
           <div class="fcard"><h4>💡 Explanation</h4>
             <div class="field fgrid full">
               <label>Explanation <span class="req">*</span> <span style="font-weight:400;text-transform:none;font-size:10px;">— Why is this the correct answer?</span></label>
@@ -506,7 +523,8 @@ function cards(list,admin){
     var ans=(q.answers||q.a||[]).map(function(a,j){return '<div class="qa'+(j===(q.correct||q.c)?' c':'')+'"><strong>'+L[j]+'.</strong> '+esc(a)+'</div>';}).join('');
     var act=admin&&st==='Pending'?'<div class="qact"><button class="bapp" onclick="appQ('+i+')">✅ Approve</button><button class="brej" onclick="rejQ('+i+')">❌ Reject</button></div>':'';
     var rn=q.rejectNote?'<div class="rn">Reason: '+esc(q.rejectNote)+'</div>':'';
-    return '<div class="qcard"><div class="qct"><span class="qmod">'+esc(q.module||'')+'</span><div style="flex:1;"><div class="qtxt">'+esc(q.question||q.q||'')+'</div><div class="qmeta">By: '+esc(q.source||'')+'  ·  Lv'+esc(String(q.level||''))+'  ·  '+esc(q.difficulty||'')+'</div></div><span class="pill p'+st+'">'+st+'</span></div><div class="qans">'+ans+'</div><div class="qex">💡 '+esc(q.explain||q.ex||'')+'</div>'+rn+act+'</div>';
+    var imgHtml=q.imageData?'<div style="text-align:center;margin:10px 0;"><img src="'+q.imageData+'" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--border2);">'+( q.imageLabel?'<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+esc(q.imageLabel)+'</div>':'' )+'</div>':'';
+  return '<div class="qcard"><div class="qct"><span class="qmod">'+esc(q.module||'')+'</span><div style="flex:1;"><div class="qtxt">'+esc(q.question||q.q||'')+'</div><div class="qmeta">By: '+esc(q.source||'')+'  ·  Lv'+esc(String(q.level||''))+'  ·  '+esc(q.difficulty||'')+'</div></div><span class="pill p'+st+'">'+st+'</span></div>'+imgHtml+'<div class="qans">'+ans+'</div><div class="qex">💡 '+esc(q.explain||q.ex||'')+'</div>'+rn+act+'</div>';
   }).join('');
 }
 function renderM(){
@@ -570,7 +588,7 @@ function doSubmit(){
   var btn=document.getElementById('sBtn');
   var ok=document.getElementById('sok');var er=document.getElementById('serr');
   ok.classList.remove('show');er.classList.remove('show');
-  var d={module:document.getElementById('fM').value,level:document.getElementById('fL').value,question:document.getElementById('fQ').value.trim(),optionA:document.getElementById('fA').value.trim(),optionB:document.getElementById('fB').value.trim(),optionC:document.getElementById('fC').value.trim(),optionD:document.getElementById('fD').value.trim(),correctAnswer:CORR,explanation:document.getElementById('fE').value.trim(),notes:document.getElementById('fN').value.trim(),submittedBy:U.f,edition:'Safety',};
+  var d={module:document.getElementById('fM').value,level:document.getElementById('fL').value,question:document.getElementById('fQ').value.trim(),optionA:document.getElementById('fA').value.trim(),optionB:document.getElementById('fB').value.trim(),optionC:document.getElementById('fC').value.trim(),optionD:document.getElementById('fD').value.trim(),correctAnswer:CORR,explanation:document.getElementById('fE').value.trim(),notes:document.getElementById('fN').value.trim(),submittedBy:U.f,edition:'Safety',imageData:document.getElementById('fImg').value||'',imageLabel:document.getElementById('fImgLabel').value||'',};
   if(!d.module){showErr(er,'Please select a module.');return;}
   if(!d.level){showErr(er,'Please select a difficulty level.');return;}
   if(!d.question||d.question.length<10){showErr(er,'Please enter a valid question (minimum 10 characters).');return;}
@@ -594,7 +612,11 @@ function doSubmit(){
     });
 }
 function showErr(el,m){el.textContent='⚠️ '+m;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},4000);}
-function clearForm(){['fM','fL','fQ','fA','fB','fC','fE','fN'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.disabled)el.value='';});CORR='';document.getElementById('fCor').value='';document.querySelectorAll('.copt').forEach(function(b){b.classList.remove('sel');});document.getElementById('ql').textContent='0/500';document.getElementById('el').textContent='0/600';}
+function clearForm(){['fM','fL','fQ','fA','fB','fC','fE','fN'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.disabled)el.value='';});CORR='';document.getElementById('fCor').value='';document.querySelectorAll('.copt').forEach(function(b){b.classList.remove('sel');});document.getElementById('ql').textContent='0/500';document.getElementById('el').textContent='0/600';clearImg();}
+function loadImg(e){var f=e.target.files[0];if(f)readImgFile(f);}
+function dropImg(e){e.preventDefault();document.getElementById('imgZone').style.borderColor='var(--border2)';var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))readImgFile(f);}
+function readImgFile(f){if(f.size>2*1024*1024){alert('Image too large. Max 2MB.');return;}var r=new FileReader();r.onload=function(ev){var b64=ev.target.result;document.getElementById('fImg').value=b64;document.getElementById('imgPreview').src=b64;document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgZone').style.display='none';};r.readAsDataURL(f);}
+function clearImg(){document.getElementById('fImg').value='';document.getElementById('fImgLabel').value='';document.getElementById('imgPreview').src='';document.getElementById('imgPreviewWrap').style.display='none';document.getElementById('imgZone').style.display='block';document.getElementById('imgFile').value='';}
 
 // ── UPLOAD ──
 function drop(e){e.preventDefault();document.getElementById('uz').classList.remove('drag');var f=e.dataTransfer.files[0];if(f)upFile2(f);}
@@ -672,6 +694,8 @@ function upFile2(f){
             difficulty:   col(row,'difficulty')||'Medium',
             submittedBy:  col(row,'name')||col(row,'agency')||(U?U.f:'Unknown'),
             notes:        col(row,'notes'),
+            imageUrl:     col(row,'image url')||col(row,'image')||'',
+            imageLabel:   col(row,'image label')||col(row,'image caption')||'',
           });
         });
 
@@ -720,7 +744,7 @@ async function submitBulk(questions,filename){
     // Send to Google Apps Script / Google Sheets
     if(QB&&!QB.includes('YOUR_')){
       try{
-        var res=await fetch(QB,{method:'POST',body:JSON.stringify({action:'submitQuestion',...q})});
+        var res=await fetch(QB,{method:'POST',body:JSON.stringify({action:'submitQuestion',...q,imageData:q.imageUrl||'',imageLabel:q.imageLabel||''})});
         var data=await res.json();
         if(data.status==='ok'){ok++;logLine('✅ Q'+(i+1)+': <span style="color:var(--green)">'+q.question.slice(0,60)+'…</span>');}
         else if(data.status==='duplicate'){dup++;logLine('⚠️ Q'+(i+1)+': Duplicate — '+q.question.slice(0,50));}
