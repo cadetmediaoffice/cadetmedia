@@ -1568,7 +1568,7 @@ function cards(list,admin){
   var L=['A','B','C','D'];
   return list.map(function(q,i){
     var st=q.status||'Pending';
-    var ans=(q.answers||q.a||[]).map(function(a,j){return '<div class="qa'+(j===(q.correct||q.c)?' c':'')+'"><strong>'+L[j]+'.</strong> '+esc(a)+'</div>';}).join('');
+    var ans=((q.answers||q.a)||[]).map(function(a,j){return '<div class="qa'+(j===(q.correct||q.c)?' c':'')+'"><strong>'+L[j]+'.</strong> '+esc(String(a==null?'':a))+'</div>';}).join('');
     var realIdx=AQ.indexOf(q);
     var canEdit=U&&(U.admin||st!=='Approved');
     var canDelete=U&&U.admin; // Only admin can delete any question
@@ -2073,7 +2073,7 @@ function fq(s,el,t){el.parentElement.querySelectorAll('.fp').forEach(function(p)
 
 // ── HELPERS ──
 function save(){/* Data lives in Google Sheets — no localStorage needed */}
-function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function esc(s){ return (String(s||'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function cc(el,id,max){var l=el.value.length;var c=document.getElementById(id);c.textContent=l+'/'+max;c.style.color=l>=max?'var(--red)':l>max*.9?'var(--gold)':'var(--muted)';}
 function toast(m){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:rgba(13,26,46,0.96);border:1px solid var(--gold);border-radius:30px;padding:9px 20px;font-size:12px;font-weight:600;color:var(--gold);z-index:9999;';t.textContent=m;document.body.appendChild(t);setTimeout(function(){t.remove();},2600);}
 
