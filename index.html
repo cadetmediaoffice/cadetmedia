@@ -4096,20 +4096,31 @@ function saveEditQ(){
 
   // Sync to server
   if(QB&&!QB.includes('YOUR_')){
-    pingServer(QB+'?action=editQuestion&rowIndex='+q.rowIndex
-      +'&question='+encodeURIComponent(newQ)
-      +'&optionA='+encodeURIComponent(newA)
-      +'&optionB='+encodeURIComponent(newB)
-      +'&optionC='+encodeURIComponent(newC)
-      +'&optionD='+encodeURIComponent(newD)
-      +'&correctAnswer='+encodeURIComponent(['A','B','C','D'][newCor])
-      +'&explanation='+encodeURIComponent(newEx)
-      +'&level='+encodeURIComponent(newLv)
-      +'&imageLabel='+encodeURIComponent(newImgLabel)
-      +'&editedBy='+encodeURIComponent(U.f)
-      +'&t='+Date.now())
-    .then(function(){toast('✅ Question updated.');})
-    .catch(function(){toast('✅ Saved locally. Will sync when connected.');});
+    fetch(QB, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action:        'editQuestion',
+        rowIndex:      q.rowIndex,
+        question:      newQ,
+        optionA:       newA,
+        optionB:       newB,
+        optionC:       newC,
+        optionD:       newD,
+        correctAnswer: ['A','B','C','D'][newCor],
+        explanation:   newEx,
+        level:         newLv,
+        imageData:     _editImageData || '',   // ← was missing
+        imageLabel:    newImgLabel,
+        editedBy:      U.f
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res.status==='ok'){ toast('✅ Question updated.'); }
+      else { toast('⚠️ '+( res.message||'Update may not have saved.')); }
+    })
+    .catch(function(){ toast('✅ Saved locally. Will sync when connected.'); });
   } else {
     toast('✅ Question updated locally.');
   }
