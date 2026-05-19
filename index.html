@@ -2708,49 +2708,53 @@ function doSubmit(){
   }
 
   btn.disabled=true;btn.textContent='⏳ Submitting…';
-  pingServer(QB+'?action=submitQuestion'
-      +'&module='+encodeURIComponent(d.module||'')
-      +'&level='+encodeURIComponent(d.level||'')
-      +'&question='+encodeURIComponent(d.question||'')
-      +'&optionA='+encodeURIComponent(d.optionA||'')
-      +'&optionB='+encodeURIComponent(d.optionB||'')
-      +'&optionC='+encodeURIComponent(d.optionC||'')
-      +'&optionD='+encodeURIComponent(d.optionD||'')
-      +'&correctAnswer='+encodeURIComponent(d.correctAnswer||'')
-      +'&explanation='+encodeURIComponent(d.explanation||'')
-      +'&notes='+encodeURIComponent(d.notes||'')
-      +'&submittedBy='+encodeURIComponent(d.submittedBy||'')
-      +'&edition='+encodeURIComponent(d.edition||'')
-      +'&imageLabel='+encodeURIComponent(d.imageLabel||'')
-      +'&t='+Date.now())
-    .then(function(r){return r.json();})
-    .then(function(res){
-      btn.disabled=false;btn.textContent='📤 Submit Question for Review';
-      if(res.status==='duplicate'){showErr(er,'⚠️ This question already exists in the bank.');return;}
-      if(res.status==='error'){showErr(er,'❌ '+res.message);return;}
-      ok.textContent='✅ Submitted to CMG Server! Your question will be reviewed shortly.';
-      ok.classList.add('show');clearForm();
-      loadQ();
-      // Notify CMG of new submission
-      pingServer(QB+'?action=pushNotification'
-        +'&targetAgency=Admin'
-        +'&type=type-info'
-        +'&title='+encodeURIComponent('📝 New Question from '+U.f)
-        +'&msg='+encodeURIComponent('"'+(d.question||'').substring(0,60)+'…" submitted for '+d.module+' ('+d.level+')')
-        +'&t='+Date.now());
-      // Local confirmation notification for agency
-      receiveRealTimeNotif({
-        id:'submit_'+Date.now(),
-        type:'type-info',
-        title:'📝 Question Submitted',
-        msg:'Your question has been sent to CMG for review. You will be notified when approved or rejected.',
-        ts:Date.now(),unread:true
-      });
-    })
-    .catch(function(){
-      btn.disabled=false;btn.textContent='📤 Submit Question for Review';
-      showErr(er,'❌ Could not connect to CMG Server. Check your internet connection.');
-    });
+
+fetch(QB, {
+  method: 'POST',
+  headers: { 'Content-Type': 'text/plain' },
+  body: JSON.stringify({
+    action:        'submitQuestion',
+    module:        d.module        || '',
+    level:         d.level         || '',
+    question:      d.question      || '',
+    optionA:       d.optionA       || '',
+    optionB:       d.optionB       || '',
+    optionC:       d.optionC       || '',
+    optionD:       d.optionD       || '',
+    correctAnswer: d.correctAnswer || '',
+    explanation:   d.explanation   || '',
+    notes:         d.notes         || '',
+    submittedBy:   d.submittedBy   || '',
+    edition:       d.edition       || '',
+    imageData:     d.imageData     || '',   // ← THIS was missing
+    imageLabel:    d.imageLabel    || ''
+  })
+})
+.then(function(r){ return r.json(); })
+.then(function(res){
+  btn.disabled=false; btn.textContent='📤 Submit Question for Review';
+  if(res.status==='duplicate'){ showErr(er,'⚠️ This question already exists in the bank.'); return; }
+  if(res.status==='error'){ showErr(er,'❌ '+res.message); return; }
+  ok.textContent='✅ Submitted to CMG Server! Your question will be reviewed shortly.';
+  ok.classList.add('show'); clearForm();
+  loadQ();
+  pingServer(QB+'?action=pushNotification'
+    +'&targetAgency=Admin'
+    +'&type=type-info'
+    +'&title='+encodeURIComponent('📝 New Question from '+U.f)
+    +'&msg='+encodeURIComponent('"'+(d.question||'').substring(0,60)+'…" submitted for '+d.module+' ('+d.level+')')
+    +'&t='+Date.now());
+  receiveRealTimeNotif({
+    id:'submit_'+Date.now(), type:'type-info',
+    title:'📝 Question Submitted',
+    msg:'Your question has been sent to CMG for review. You will be notified when approved or rejected.',
+    ts:Date.now(), unread:true
+  });
+})
+.catch(function(){
+  btn.disabled=false; btn.textContent='📤 Submit Question for Review';
+  showErr(er,'❌ Could not connect to CMG Server. Check your internet connection.');
+});
 }
 
 // ── UPLOAD: intercept to run validation BEFORE submitting ──
@@ -3923,9 +3927,10 @@ function initFeatures(){
 // Override appQ to send notification on approve
 function appQ(i){
   var q=AQ[i];if(!q)return;
-  fetch(QB+'?action=reviewQuestion&status=Approved&reviewedBy='+encodeURIComponent('CMG Admin')+'&rowIndex='+q.rowIndex+'&t='+Date.now(),{mode:'no-cors'})
+  fetch(QB+'?action=reviewQuestion&status=Approved&reviewedBy='+encodeURIComponent('CMG Admin')+'&rowIndex='+q.rowIndex+'&t='+Date.now())
     .then(function(r){return r.json();})
-    .then(function(){
+    .then(function(res){
+      if(res.status!=='ok'){toast('❌ '+res.message);return;}
       q.status='Approved';
       stats();renderA();renderM();
       pushNotif(q.source||'Agency','type-approved','Question Approved ✅','"'+((q.question||q.q||'').substring(0,60))+'…" has been approved and added to the '+q.module+' module.',true);
