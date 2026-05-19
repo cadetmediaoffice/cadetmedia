@@ -1839,7 +1839,7 @@ function showErr(el,m){el.textContent='⚠️ '+m;el.classList.add('show');setTi
 function clearForm(){['fM','fL','fQ','fA','fB','fC','fE','fN'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.disabled)el.value='';});CORR='';document.getElementById('fCor').value='';document.querySelectorAll('.copt').forEach(function(b){b.classList.remove('sel');});document.getElementById('ql').textContent='0/500';document.getElementById('el').textContent='0/600';clearImg();}
 function loadImg(e){var f=e.target.files[0];if(f)readImgFile(f);}
 function dropImg(e){e.preventDefault();document.getElementById('imgZone').style.borderColor='var(--border2)';var f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))readImgFile(f);}
-function readImgFile(f){if(f.size>2*1024*1024){alert('Image too large. Max 2MB.');return;}var r=new FileReader();r.onload=function(ev){var b64=ev.target.result;document.getElementById('fImg').value=b64;document.getElementById('imgPreview').src=b64;document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgZone').style.display='none';};r.readAsDataURL(f);}
+function readImgFile(f){if(f.size>2*1024*1024){alert('Image too large. Max 2MB.');return;}var r=new FileReader();r.onload=function(ev){var img=new Image();img.onload=function(){var MAX=400;var w=img.width,h=img.height;if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);var b64=c.toDataURL('image/jpeg',0.7);document.getElementById('fImg').value=b64;document.getElementById('imgPreview').src=b64;document.getElementById('imgPreviewWrap').style.display='block';document.getElementById('imgZone').style.display='none';};img.src=ev.target.result;};r.readAsDataURL(f);}
 function clearImg(){document.getElementById('fImg').value='';document.getElementById('fImgLabel').value='';document.getElementById('imgPreview').src='';document.getElementById('imgPreviewWrap').style.display='none';document.getElementById('imgZone').style.display='block';document.getElementById('imgFile').value='';}
 
 // ── UPLOAD ──
@@ -3961,8 +3961,22 @@ function handleEditImageUpload(input){
   }
   var reader = new FileReader();
   reader.onload = function(e){
-    _editImageData = e.target.result;
-    showEditImagePreview(_editImageData);
+    // Compress image using canvas before saving
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      // Scale down so base64 stays under 50,000 chars
+      var MAX = 400;
+      var w = img.width, h = img.height;
+      if(w > h){ if(w > MAX){ h = Math.round(h*MAX/w); w = MAX; } }
+      else      { if(h > MAX){ w = Math.round(w*MAX/h); h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      _editImageData = canvas.toDataURL('image/jpeg', 0.7); // 70% quality JPEG
+      showEditImagePreview(_editImageData);
+      toast('🖼️ Image ready (' + Math.round(_editImageData.length/1000) + 'KB encoded)');
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
