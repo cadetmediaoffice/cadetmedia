@@ -500,7 +500,7 @@ function speak(text, rate, pitch){
 //  CONFIG
 // ══════════════════════════════════════════════
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb2Nkc19rLDOoCeR_GLABuG5aY2I-g/formResponse";
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcCmE6gPZzCDVPheQQPO85lQmv9Ubmeb6A9oD-s8vMqr4uHwBdHIUVQiNsMY6ffETa/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMu6XM_zeUR9q1_U__IlXNde4pYjhSaIbd4m2kv3FbxMJbwzedtijCCWTQLEXB1oLH/exec';
 
 const SERVICES = [
   {key:"general",       name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
@@ -797,11 +797,10 @@ const STEPS = [
   {html:'<div class="field-group"><label>Contact Number (WhatsApp)</label><input type="tel" id="f_phone" placeholder="+233 XX XXX XXXX" maxlength="20"></div>'},
   {html:'<div class="field-group"><label>Email Address</label><input type="email" id="f_email" placeholder="youremail@gmail.com" maxlength="80"></div>'},
   {html:`<div class="field-group"><label>Region</label><select id="f_region"><option value="">Select your region…</option>${['Ahafo','Ashanti','Bono','Bono East','Central','Eastern','Greater Accra','North East','Northern','Oti','Savannah','Upper East','Upper West','Volta','Western','Western North'].map(r=>`<option>${r}</option>`).join('')}</select></div>`},
-  {html:'<div class="field-group"><label>District</label><input type="text" id="f_district" placeholder="e.g. Kumasi Metro" maxlength="60"></div>'},
 ];
 
 let currentStep=0;
-const savedVals={f_phone:'',f_email:'',f_region:'',f_district:''};
+const savedVals={f_phone:'',f_email:'',f_region:''};
 let headerAdded=false;
 
 function ensureHeader(){
@@ -817,7 +816,7 @@ function ensureHeader(){
       <span style="opacity:.7">${window.cadetSchool}</span><br>
       <span style="color:#FFD700;font-weight:700;">${window.pct}% — ${window.overallLabel.replace(/🏅|🥈|🥉|🎓/g,'').trim()}</span>
     </div>
-    <p class="sub">Just 4 more details and your results will be officially submitted to CMG.</p>`;
+    <p class="sub">Just 3 more details and your results will be officially submitted to CMG.</p>`;
   modal.insertBefore(hdr,modal.firstChild);
 }
 
@@ -838,7 +837,7 @@ function showStep(idx){
     document.getElementById('btnNext').textContent=idx===STEPS.length-1?'✅ Submit Results':'Next →';
     document.getElementById('btnBack').style.display=idx>0?'block':'none';
     // Restore saved value
-    const ids=['f_phone','f_email','f_region','f_district'];
+    const ids=['f_phone','f_email','f_region'];
     const el=document.getElementById(ids[idx]);
     if(el) el.value=savedVals[ids[idx]]||'';
   }
@@ -864,13 +863,13 @@ function openForm(){
 }
 
 function saveCurrentVal(){
-  const ids=['f_phone','f_email','f_region','f_district'];
+  const ids=['f_phone','f_email','f_region'];
   const el=document.getElementById(ids[currentStep]);
   if(el) savedVals[ids[currentStep]]=el.value.trim();
 }
 
 function getVal(idx){
-  const ids=['f_phone','f_email','f_region','f_district'];
+  const ids=['f_phone','f_email','f_region'];
   const el=document.getElementById(ids[idx]);
   return el?el.value.trim():savedVals[ids[idx]];
 }
@@ -891,7 +890,7 @@ function prevStep(){
 function submitResults(){
   saveCurrentVal();
   const phone=savedVals['f_phone'],email=savedVals['f_email'];
-  const region=savedVals['f_region'],district=savedVals['f_district'];
+  const region=savedVals['f_region'],district=localStorage.getItem('cadetDistrict')||'';
   const today=new Date();
   const dateStr=`${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()}`;
   const badgeText=window.overallLabel.replace(/🏅|🥈|🥉|🎓/g,'').trim();
@@ -938,6 +937,7 @@ function submitResults(){
   const params=new URLSearchParams({
     action:'submitResults',name:window.cadetName,gender:window.cadetGender,
     school:window.cadetSchool,phone,email,region,district,
+    code:localStorage.getItem('cmgCode')||'',level:localStorage.getItem('cadetLevel')||'',
     total:`${window.pct}%`,badge:badgeText,date:dateStr,
     ...Object.fromEntries(SERVICES.map(s=>[s.key,`${window.scoreMap[s.key]}/${MAX_PER_QUIZ}`]))
   });
