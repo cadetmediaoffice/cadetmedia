@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CMG Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#FFD700;--gold2:#e6a800;
+  --bg:#04090f;--card:rgba(255,255,255,0.04);
+  --border:rgba(255,215,0,0.14);
+  --text:#f0f4ff;--muted:rgba(240,244,255,0.5);
+  --green:#00e676;--red:#ff5252;--blue:#4fc3f7;--purple:#ce93d8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;}
+
+/* BG */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,215,0,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,215,0,0.025) 1px,transparent 1px);
+  background-size:40px 40px;}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 16px 60px;}
+
+/* LOGIN OVERLAY */
+#loginOverlay{position:fixed;inset:0;z-index:9999;
+  background:rgba(4,9,15,0.97);display:flex;align-items:center;justify-content:center;}
+.login-box{background:rgba(255,215,0,0.06);border:1.5px solid rgba(255,215,0,0.25);
+  border-radius:20px;padding:40px 36px;width:90%;max-width:380px;
+  display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;}
+.login-box .lock{font-size:48px;margin-bottom:4px;}
+.login-box h2{font-family:'Orbitron',monospace;font-size:16px;color:var(--gold);letter-spacing:1px;}
+.login-box p{font-size:13px;color:var(--muted);line-height:1.7;}
+.login-box input{width:100%;padding:13px 16px;border-radius:11px;
+  border:1.5px solid rgba(255,215,0,0.2);background:rgba(255,255,255,0.05);
+  color:#fff;font-size:18px;letter-spacing:6px;text-align:center;outline:none;
+  font-family:'Barlow',sans-serif;transition:border-color .2s;}
+.login-box input:focus{border-color:var(--gold);}
+.login-box button{width:100%;padding:13px;border:none;border-radius:11px;
+  background:linear-gradient(45deg,var(--gold),var(--gold2));
+  color:#000;font-weight:800;font-size:15px;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;transition:transform .15s;}
+.login-box button:hover{transform:scale(1.03);}
+.login-err{color:var(--red);font-size:12px;display:none;}
+
+/* OFFLINE BANNER */
+#offlineBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:8888;
+  background:linear-gradient(90deg,#b71c1c,#c62828);
+  color:#fff;font-size:13px;font-weight:600;padding:10px 16px;text-align:center;
+  box-shadow:0 2px 12px rgba(0,0,0,0.5);animation:slideDown .4s ease;}
+#offlineBanner.online{background:linear-gradient(90deg,#1b5e20,#2e7d32);}
+@keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
+
+/* HEADER */
+.header{padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:28px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.header-left h1{font-family:'Orbitron',monospace;font-size:clamp(16px,3vw,24px);
+  font-weight:900;color:var(--gold);}
+.header-left p{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.refresh-btn{padding:9px 18px;border:1.5px solid var(--border);border-radius:10px;
+  background:transparent;color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px;transition:all .2s;}
+.refresh-btn:hover{background:rgba(255,215,0,0.1);}
+.logout-btn{padding:9px 18px;border:1.5px solid rgba(255,80,80,0.3);border-radius:10px;
+  background:rgba(255,80,80,0.07);color:#ff8080;font-size:13px;font-weight:700;
+  cursor:pointer;font-family:'Barlow Condensed',sans-serif;transition:all .2s;}
+.logout-btn:hover{background:rgba(255,80,80,0.15);}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 8px var(--green);
+  animation:pulse 1.5s infinite;margin-right:6px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+@media(max-width:700px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:20px 16px;text-align:center;position:relative;overflow:hidden;transition:transform .2s;}
+.stat-card:hover{transform:translateY(-3px);}
+.stat-card::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,215,0,0.04),transparent);pointer-events:none;}
+.stat-icon{font-size:26px;margin-bottom:8px;}
+.stat-val{font-family:'Orbitron',monospace;font-size:32px;font-weight:900;
+  color:var(--gold);line-height:1;}
+.stat-val.green{color:var(--green);}
+.stat-val.blue{color:var(--blue);}
+.stat-val.red{color:var(--red);}
+.stat-val.purple{color:var(--purple);}
+.stat-lbl{font-size:11px;color:var(--muted);letter-spacing:1px;
+  text-transform:uppercase;margin-top:5px;}
+
+/* SECTION TITLE */
+.sec-title{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* SEARCH & FILTER BAR */
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{
+  padding:10px 14px;border-radius:10px;
+  border:1.5px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04);color:#fff;
+  font-size:13px;outline:none;font-family:'Barlow',sans-serif;
+  transition:border-color .2s;}
+.filter-bar input{flex:1;min-width:180px;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:rgba(255,215,0,0.4);}
+.filter-bar select option{background:#111;color:#fff;}
+
+/* DATA SOURCE BADGE */
+.source-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;
+  border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;}
+.source-badge.online{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:var(--green);}
+.source-badge.offline{background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);color:var(--red);}
+.source-badge.hybrid{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--gold);}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);margin-bottom:32px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:rgba(255,215,0,0.07);padding:12px 14px;text-align:left;
+  font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--border);
+  white-space:nowrap;}
+tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;}
+tbody tr:hover{background:rgba(255,215,0,0.04);}
+tbody tr:last-child{border-bottom:none;}
+td{padding:11px 14px;color:var(--text);vertical-align:middle;}
+td.muted{color:var(--muted);font-size:12px;}
+.badge-pill{display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;letter-spacing:.5px;}
+.pill-submitted{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid rgba(0,230,118,0.3);}
+.pill-progress{background:rgba(255,215,0,0.12);color:var(--gold);border:1px solid rgba(255,215,0,0.25);}
+.pill-activated{background:rgba(79,195,247,0.12);color:var(--blue);border:1px solid rgba(79,195,247,0.25);}
+.rank-num{font-family:'Orbitron',monospace;font-size:12px;color:var(--muted);}
+.rank-num.r1{color:#FFD700;}
+.rank-num.r2{color:#c0c0c0;}
+.rank-num.r3{color:#cd7f32;}
+
+/* MINI CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+@media(max-width:600px){.charts-grid{grid-template-columns:1fr;}}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.chart-card h4{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;
+  color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;}
+.bar-item{margin-bottom:10px;}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.bar-label span:first-child{color:var(--text);max-width:200px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;}
+.bar-label span:last-child{color:var(--gold);font-weight:700;font-family:'Orbitron',monospace;font-size:11px;}
+.bar-track{height:6px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .8s ease;}
+.bar-fill.blue{background:linear-gradient(90deg,var(--blue),#0288d1);}
+.bar-fill.green{background:linear-gradient(90deg,var(--green),#00c853);}
+
+/* TODAY HIGHLIGHT */
+.today-card{background:rgba(0,230,118,0.05);border:1px solid rgba(0,230,118,0.2);
+  border-radius:14px;padding:18px 20px;margin-bottom:28px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.today-card .t-icon{font-size:32px;}
+.today-card .t-info h3{font-family:'Orbitron',monospace;font-size:13px;color:var(--green);margin-bottom:4px;}
+.today-card .t-info p{font-size:12px;color:var(--muted);line-height:1.6;}
+.today-nums{margin-left:auto;display:flex;gap:20px;}
+.today-num{text-align:center;}
+.today-num .n{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:var(--green);}
+.today-num .l{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+.loading .spinner{display:inline-block;width:28px;height:28px;border:3px solid rgba(255,215,0,0.2);
+  border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* EMPTY */
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:13px;}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{padding:8px 18px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.08);
+  background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;}
+.tab.active{border-color:var(--gold);background:rgba(255,215,0,0.1);color:var(--gold);}
+.tab:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--text);}
+.panel{display:none;}.panel.active{display:block;}
+
+/* LAST UPDATED */
+#lastUpdated{font-size:11px;color:var(--muted);text-align:right;margin-bottom:8px;}
+
+/* STUDENT PROFILE MODAL */
+.profile-overlay{display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(2,5,10,0.85);backdrop-filter:blur(4px);
+  align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 16px;}
+.profile-overlay.open{display:flex;}
+.profile-modal{background:#0a1420;border:1px solid var(--border);border-radius:18px;
+  max-width:920px;width:100%;padding:28px;position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+.profile-close{position:absolute;top:16px;right:16px;background:transparent;
+  border:1.5px solid var(--border);color:var(--muted);border-radius:8px;
+  width:32px;height:32px;cursor:pointer;font-size:14px;}
+.profile-close:hover{color:var(--gold);border-color:var(--gold);}
+.profile-grid{display:grid;grid-template-columns:280px 1fr;gap:28px;}
+@media(max-width:700px){.profile-grid{grid-template-columns:1fr;}}
+.profile-photo-box{width:100%;aspect-ratio:1;border-radius:14px;
+  border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;
+  flex-direction:column;color:var(--muted);font-size:12px;text-align:center;gap:8px;
+  background:rgba(255,255,255,0.02);margin-bottom:16px;}
+.profile-photo-box .icon{font-size:32px;opacity:.5;}
+.profile-section-title{font-family:'Orbitron',monospace;font-size:11px;color:var(--gold);
+  letter-spacing:1px;text-transform:uppercase;margin:20px 0 10px;}
+.profile-section-title:first-child{margin-top:0;}
+.profile-field{display:flex;justify-content:space-between;gap:12px;padding:7px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+.profile-field .k{color:var(--muted);}
+.profile-field .v{color:var(--text);font-weight:600;text-align:right;}
+.module-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;}
+@media(max-width:500px){.module-grid{grid-template-columns:1fr;}}
+.module-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);}
+.module-row .score{font-family:'Orbitron',monospace;color:var(--gold);}
+.module-row.mod-strong{border-left:3px solid var(--green);padding-left:8px;background:rgba(0,230,118,0.05);}
+.module-row.mod-weak{border-left:3px solid var(--red);padding-left:8px;background:rgba(255,82,82,0.05);}
+.sw-callout{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.sw-item{flex:1;min-width:150px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);}
+.sw-item.strong{border-color:rgba(0,230,118,0.35);background:rgba(0,230,118,0.06);}
+.sw-item.weak{border-color:rgba(255,82,82,0.35);background:rgba(255,82,82,0.06);}
+.sw-label{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.sw-val{font-size:13px;font-weight:700;color:var(--text);}
+/* Real certificate.html preview — shown scaled down inside a fixed box */
+.cert-preview-box{width:100%;aspect-ratio:960/1245;overflow:hidden;border-radius:10px;
+  border:1px solid var(--border);background:#e8e0d0;position:relative;}
+.cert-preview-box iframe{position:absolute;top:0;left:0;width:960px;height:1245px;
+  border:0;transform:scale(0.2917);transform-origin:top left;pointer-events:none;}
+@media(min-width:701px){.cert-preview-box iframe{transform:scale(0.2917);}}
+.profile-cert-link{display:block;margin-top:10px;padding:10px;border-radius:9px;
+  border:1.5px solid var(--border);background:transparent;color:var(--gold);
+  font-size:12px;font-weight:700;text-align:center;text-decoration:none;}
+.profile-cert-link:hover{background:rgba(255,215,0,0.08);}
+tbody tr.clickable{cursor:pointer;}
+tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<!-- OFFLINE BANNER -->
+<div id="offlineBanner">
+  <span id="offlineIcon">📵</span>
+  <span id="offlineMsg"> You are offline — showing cached data from this device</span>
+</div>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="lock">🔐</div>
+    <h2>ADMIN DASHBOARD</h2>
+    <p>Cadet Media Ghana · NAAD Safety Edition<br>Enter administrator password to continue.</p>
+    <input type="password" id="pwInput" placeholder="••••••••" maxlength="40"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="loginErr">❌ Incorrect password. Try again.</div>
+    <button onclick="doLogin()">🔓 Enter Dashboard</button>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="wrap" id="dashboard" style="display:none;">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>⚙️ ADMIN DASHBOARD</h1>
+      <p><span class="live-dot"></span>CADET MEDIA GHANA · NAAD SAFETY EDITION 2026</p>
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
+      <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- DATA SOURCE -->
+  <div id="sourceBadge" class="source-badge hybrid">
+    <span>⚡</span><span id="sourceText">Loading data…</span>
+  </div>
+  <div id="lastUpdated"></div>
+
+  <!-- TODAY CARD -->
+  <div class="today-card" id="todayCard" style="display:none;">
+    <div class="t-icon">📅</div>
+    <div class="t-info">
+      <h3>TODAY'S ACTIVITY</h3>
+      <p id="todayDate">—</p>
+    </div>
+    <div class="today-nums">
+      <div class="today-num"><div class="n" id="todayActivated">0</div><div class="l">Activated</div></div>
+      <div class="today-num"><div class="n" id="todaySubmitted">0</div><div class="l">Submitted</div></div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-val" id="statTotal">—</div>
+      <div class="stat-lbl">Total Activated</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-val green" id="statSubmitted">—</div>
+      <div class="stat-lbl">Results Submitted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-val blue" id="statProgress">—</div>
+      <div class="stat-lbl">Still In Progress</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🏫</div>
+      <div class="stat-val purple" id="statSchools">—</div>
+      <div class="stat-lbl">Schools Represented</div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATES -->
+  <div class="sec-title">🏆 Certificates</div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🎖️</div>
+      <div class="stat-val green" id="statCertIssued">—</div>
+      <div class="stat-lbl">Certificates Issued</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-val blue" id="statCertPending">—</div>
+      <div class="stat-lbl">Certificates Pending</div>
+    </div>
+  </div>
+
+  <!-- SYNC -->
+  <div class="sec-title">🔄 Synchronization</div>
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card" title="Offline-queue tracking isn't built yet — every submission currently goes straight online, so there's nothing to report here until that feature exists.">
+      <div class="stat-icon">💾</div>
+      <div class="stat-val" id="statSyncOk" style="color:var(--muted);">N/A</div>
+      <div class="stat-lbl">Successfully Saved</div>
+    </div>
+    <div class="stat-card" title="Offline-queue tracking isn't built yet — every submission currently goes straight online, so there's nothing to report here until that feature exists.">
+      <div class="stat-icon">⏸️</div>
+      <div class="stat-val" id="statSyncPending" style="color:var(--muted);">N/A</div>
+      <div class="stat-lbl">Pending Offline Sync</div>
+    </div>
+    <div class="stat-card" title="Offline-queue tracking isn't built yet — every submission currently goes straight online, so there's nothing to report here until that feature exists.">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-val" id="statSyncFailed" style="color:var(--muted);">N/A</div>
+      <div class="stat-lbl">Failed Sync</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin:-16px 0 28px;text-align:center;">
+    Sync tracking requires an offline queue on the student-facing pages — not built yet, so these are placeholders.
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('students',this)">👤 All Students</button>
+    <button class="tab" onclick="switchTab('schools',this)">🏫 Schools</button>
+    <button class="tab" onclick="switchTab('regions',this)">🌍 Regions</button>
+    <button class="tab" onclick="switchTab('charts',this)">📊 Charts</button>
+    <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
+  </div>
+
+  <!-- STUDENTS PANEL -->
+  <div class="panel active" id="panel-students">
+    <div class="sec-title">👤 Student Database</div>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Search by name, activation code / certificate ID, or school…" oninput="renderStudents()">
+      <select id="filterStatus" onchange="renderStudents()">
+        <option value="">All Status</option>
+        <option value="submitted">✅ Submitted</option>
+        <option value="progress">⏳ In Progress</option>
+        <option value="activated">🔵 Activated Only</option>
+      </select>
+      <select id="filterGender" onchange="renderStudents()">
+        <option value="">All Gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+    </div>
+    <div class="filter-bar">
+      <select id="filterRegion" onchange="onRegionChange()">
+        <option value="">🌍 All Regions</option>
+      </select>
+      <select id="filterDistrict" onchange="onDistrictChange()">
+        <option value="">📍 All Districts</option>
+      </select>
+      <select id="filterSchool" onchange="renderStudents()">
+        <option value="">🏫 All Schools</option>
+      </select>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin:-8px 0 16px;">
+      Search by WhatsApp Number isn't available yet — WhatsApp numbers aren't collected by the current activation flow.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Code / Cert. ID</th>
+            <th>School</th>
+            <th>Gender</th>
+            <th>Region</th>
+            <th>District</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTbody">
+          <tr><td colspan="10"><div class="loading"><div class="spinner"></div><br>Loading students…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SCHOOLS PANEL -->
+  <div class="panel" id="panel-schools">
+    <div class="sec-title">🏫 School Rankings</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>School</th>
+            <th>Students</th>
+            <th>Submitted</th>
+            <th>Avg Score</th>
+            <th>Top Student</th>
+          </tr>
+        </thead>
+        <tbody id="schoolsTbody">
+          <tr><td colspan="6"><div class="loading"><div class="spinner"></div><br>Loading schools…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- REGIONS PANEL -->
+  <div class="panel" id="panel-regions">
+    <div class="sec-title">🌍 Regional Breakdown</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Region</th>
+            <th>Students</th>
+            <th>Submitted</th>
+            <th>Completion %</th>
+            <th>Avg Score</th>
+          </tr>
+        </thead>
+        <tbody id="regionsTbody">
+          <tr><td colspan="6"><div class="loading"><div class="spinner"></div><br>Loading regions…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LIVE ACTIVITY PANEL -->
+  <div class="panel" id="panel-live">
+    <div class="sec-title">🟢 Live Activity — Who Is Online Right Now</div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;font-size:12px;">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00e676;margin-right:5px;"></span>Online (last 5 min)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FFD700;margin-right:5px;"></span>Recent (5–30 min)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#888;margin-right:5px;"></span>Offline (&gt;30 min)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4fc3f7;margin-right:5px;"></span>Submitted</span>
+    </div>
+
+    <!-- Auto-refresh countdown -->
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
+      🔄 Auto-refreshes every 30 seconds — <span id="refreshCountdown">30</span>s remaining
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Name</th>
+            <th>School</th>
+            <th>Gender</th>
+            <th>Region</th>
+            <th>Current Page</th>
+            <th>Last Seen</th>
+            <th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody id="liveTbody">
+          <tr><td colspan="8"><div class="loading"><div class="spinner"></div><br>Loading live activity…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary pills -->
+    <div id="liveSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"></div>
+  </div>
+
+  <!-- CHARTS PANEL -->
+  <div class="panel" id="panel-charts">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h4>🏆 Top 10 Students</h4>
+        <div id="chartTopStudents"></div>
+      </div>
+      <div class="chart-card">
+        <h4>🏫 Top 10 Schools</h4>
+        <div id="chartTopSchools"></div>
+      </div>
+      <div class="chart-card">
+        <h4>🌍 Students by Region</h4>
+        <div id="chartRegions"></div>
+      </div>
+      <div class="chart-card">
+        <h4>👥 Gender Split</h4>
+        <div id="chartGender"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT PROFILE MODAL -->
+  <div class="profile-overlay" id="profileOverlay" onclick="if(event.target===this) closeStudentProfile()">
+    <div class="profile-modal">
+      <button class="profile-close" onclick="closeStudentProfile()">✕</button>
+      <div id="profileContent"><!-- filled by JS --></div>
+    </div>
+  </div>
+
+</div><!-- end wrap -->
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+const CERTIFICATE_PAGE_URL = 'https://cadetmediaoffice.github.io/cadetmedia/certificate.html';
+const CODES_URL     = APPS_SCRIPT_URL + '?action=checkStatus&code=ALL';
+const CACHE_KEY     = 'cmgAdminCache';
+const CACHE_TS_KEY  = 'cmgAdminCacheTS';
+const TOKEN_KEY      = 'cmgAdminToken';
+
+var allStudents = [];   // from Codes sheet
+var allResults  = [];   // from Results sheet
+var mergedData  = [];   // combined
+var studentTableRows = []; // last-rendered filtered list, for profile lookups by row index
+
+// Quiz module score fields, in display order — matches the headers written
+// by submitResults()/legacySubmit() in Code.gs.
+var ASSESSMENT_MODULES = [
+  { icon:'🛡️', label:'General Safety',            key:'General Safety Quiz Score' },
+  { icon:'🎓', label:'Student Safety',             key:'Student Safety Quiz Score' },
+  { icon:'🔥', label:'Fire Safety',                key:'Fire Safety Quiz Score' },
+  { icon:'👮', label:'Community Safety (Police)',  key:'Community Safety (Police) Quiz Score' },
+  { icon:'🚑', label:'Health & Ambulance',         key:'Health & Ambulance Quiz Score' },
+  { icon:'⚖️', label:'Prisons Service',            key:'Prisons Service Quiz Score' },
+  { icon:'🌊', label:'Disaster Preparedness (NADMO)', key:'Disaster Preparedness (NADMO) Quiz Score' },
+  { icon:'✈️', label:'Immigration Service',        key:'Immigration Service Quiz Score' },
+  { icon:'🏛️', label:'Customs Division',           key:'Customs Division Quiz Score' },
+  { icon:'🎨', label:'Tourism & Creative Arts',    key:'Tourism & Creative Arts Quiz Score' },
+  { icon:'🌳', label:'Forest Conservation',        key:'Forest Conservation Quiz Score' },
+  { icon:'🪖', label:'National Defence (GAF)',     key:'National Defence (GAF) Quiz Score' },
+  { icon:'💊', label:'Narcotics Control',          key:'Narcotics Control Quiz Score' }
+];
+
+// ── LOGIN (verified server-side by Apps Script — never trust the client) ──
+function doLogin(){
+  var pw  = document.getElementById('pwInput').value;
+  var btn = document.querySelector('.login-box button');
+  var err = document.getElementById('loginErr');
+  err.style.display = 'none';
+  if(!pw){ return; }
+  btn.disabled = true;
+  var origLabel = btn.textContent;
+  btn.textContent = '⏳ Checking…';
+
+  fetch(APPS_SCRIPT_URL + '?action=adminLogin&password=' + encodeURIComponent(pw))
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    btn.disabled = false; btn.textContent = origLabel;
+    if(res && res.ok && res.token){
+      sessionStorage.setItem(TOKEN_KEY, res.token);
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('dashboard').style.display    = 'block';
+      loadData();
+    } else {
+      err.textContent = '❌ Incorrect password. Try again.';
+      err.style.display = 'block';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+    }
+  })
+  .catch(function(){
+    btn.disabled = false; btn.textContent = origLabel;
+    err.textContent = '⚠️ Could not reach server. Check your connection.';
+    err.style.display = 'block';
+  });
+}
+
+function doLogout(){
+  sessionStorage.removeItem(TOKEN_KEY);
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('dashboard').style.display    = 'none';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+}
+
+// If we already have a token from earlier this tab session, skip straight
+// to the dashboard — loadData() will bounce us back to login if it's expired.
+function tryAutoLogin(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(token){
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('dashboard').style.display    = 'block';
+    loadData();
+  }
+}
+
+// Called whenever a data fetch comes back unauthorized (expired/invalid token)
+function forceReLogin(message){
+  sessionStorage.removeItem(TOKEN_KEY);
+  document.getElementById('dashboard').style.display    = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+  var err = document.getElementById('loginErr');
+  err.textContent = message || '⏳ Session expired. Please log in again.';
+  err.style.display = 'block';
+}
+
+// ── TAB SWITCH ─────────────────────────────────────
+function switchTab(name, el){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  if(el) el.classList.add('active');
+  else document.querySelectorAll('.tab')[0].classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  if(name === 'charts') renderCharts();
+  if(name === 'live')   loadLiveActivity();
+}
+
+// ── LIVE ACTIVITY ──────────────────────────────────
+var liveRefreshTimer   = null;
+var countdownTimer     = null;
+var countdownSeconds   = 30;
+
+function loadLiveActivity(){
+  clearInterval(liveRefreshTimer);
+  clearInterval(countdownTimer);
+
+  fetchLiveActivity();
+
+  // Auto-refresh every 30 seconds
+  liveRefreshTimer = setInterval(function(){
+    fetchLiveActivity();
+    countdownSeconds = 30;
+  }, 30000);
+
+  // Countdown display
+  countdownSeconds = 30;
+  countdownTimer = setInterval(function(){
+    countdownSeconds--;
+    var el = document.getElementById('refreshCountdown');
+    if(el) el.textContent = countdownSeconds;
+    if(countdownSeconds <= 0) countdownSeconds = 30;
+  }, 1000);
+}
+
+function fetchLiveActivity(){
+  if(!navigator.onLine){
+    renderLiveActivity([]);
+    return;
+  }
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  fetch(APPS_SCRIPT_URL + '?action=getLiveActivity&token=' + encodeURIComponent(token || ''))
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(rows && rows.error === 'unauthorized'){ forceReLogin(); return; }
+      renderLiveActivity(rows);
+    })
+    .catch(function(){ renderLiveActivity([]); });
+}
+
+function renderLiveActivity(rows){
+  var tbody   = document.getElementById('liveTbody');
+  var summary = document.getElementById('liveSummary');
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty">No activity recorded yet.<br><small>Make sure ping.js is added to your quiz pages.</small></div></td></tr>';
+    return;
+  }
+
+  var now = new Date();
+  var online=0, recent=0, offline=0, submitted=0;
+
+  // Sort: online first, then recent, then offline
+  rows.sort(function(a,b){
+    var ma = minutesAgoFromStr(a['Last Seen']);
+    var mb = minutesAgoFromStr(b['Last Seen']);
+    return ma - mb;
+  });
+
+  tbody.innerHTML = rows.map(function(r){
+    var name      = r['Name']         || '—';
+    var school    = r['School']       || '—';
+    var gender    = r['Gender']       || '—';
+    var region    = r['Region']       || '—';
+    var page      = r['Current Page'] || '—';
+    var lastSeen  = r['Last Seen']    || '';
+    var isSubmit  = (r['Submitted']   || '').toLowerCase() === 'true';
+    var mins      = minutesAgoFromStr(lastSeen);
+
+    var statusDot, statusLabel, rowStyle;
+    if(isSubmit){
+      statusDot   = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#4fc3f7;margin-right:6px;"></span>';
+      statusLabel = '<span style="color:#4fc3f7;font-size:11px;">✅ Submitted</span>';
+      rowStyle    = 'background:rgba(79,195,247,0.04);';
+      submitted++;
+    } else if(mins <= 5){
+      statusDot   = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00e676;box-shadow:0 0 6px #00e676;margin-right:6px;animation:pulse 1.5s infinite;"></span>';
+      statusLabel = '<span style="color:#00e676;font-size:11px;font-weight:700;">🟢 Online</span>';
+      rowStyle    = 'background:rgba(0,230,118,0.05);';
+      online++;
+    } else if(mins <= 30){
+      statusDot   = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FFD700;margin-right:6px;"></span>';
+      statusLabel = '<span style="color:#FFD700;font-size:11px;">🟡 Recent</span>';
+      rowStyle    = 'background:rgba(255,215,0,0.03);';
+      recent++;
+    } else {
+      statusDot   = '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#555;margin-right:6px;"></span>';
+      statusLabel = '<span style="color:#888;font-size:11px;">⚫ Offline</span>';
+      rowStyle    = '';
+      offline++;
+    }
+
+    var gIcon   = gender === 'Female' ? '👩' : '👨';
+    var agoStr  = mins < 1 ? 'Just now' : mins < 60 ? mins + ' min ago' : Math.round(mins/60) + ' hr ago';
+
+    return '<tr style="' + rowStyle + '">' +
+      '<td>' + statusDot + statusLabel + '</td>' +
+      '<td><strong>' + esc(name) + '</strong></td>' +
+      '<td class="muted">' + esc(school) + '</td>' +
+      '<td>' + gIcon + ' ' + esc(gender) + '</td>' +
+      '<td class="muted">' + esc(region) + '</td>' +
+      '<td style="color:var(--gold);">' + esc(page) + '</td>' +
+      '<td class="muted">' + agoStr + '</td>' +
+      '<td>' + (isSubmit ? '<span class="badge-pill pill-submitted">✅ Yes</span>' : '<span class="badge-pill pill-progress">⏳ No</span>') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  // Summary pills
+  summary.innerHTML =
+    '<div class="source-badge online">🟢 ' + online + ' Online now</div>' +
+    '<div class="source-badge hybrid">🟡 ' + recent + ' Recent (5–30 min)</div>' +
+    '<div class="source-badge offline">⚫ ' + offline + ' Offline</div>' +
+    '<div style="background:rgba(79,195,247,0.1);border:1px solid rgba(79,195,247,0.3);color:#4fc3f7;" class="source-badge">✅ ' + submitted + ' Submitted</div>';
+}
+
+function minutesAgoFromStr(str){
+  if(!str) return 9999;
+  try{
+    var d = new Date(str);
+    if(isNaN(d)) return 9999;
+    return (new Date() - d) / 60000;
+  }catch(e){ return 9999; }
+}
+
+// ── LOAD DATA (hybrid: online + localStorage fallback) ─
+function loadData(){
+  setBadge('loading');
+
+  // Always show cached data immediately if available
+  var cached = localStorage.getItem(CACHE_KEY);
+  var cachedTS = localStorage.getItem(CACHE_TS_KEY);
+  if(cached){
+    try{
+      mergedData = JSON.parse(cached);
+      renderAll();
+      setBadge('cached', cachedTS);
+    }catch(e){}
+  }
+
+  if(!navigator.onLine){
+    if(!cached){
+      showEmpty('No internet and no cached data. Connect to internet and refresh.');
+    }
+    setBadge('offline', cachedTS);
+    return;
+  }
+
+  // Fetch live from Google Sheets — submitted results + the Codes sheet
+  // (needed to see students who activated but haven't submitted yet)
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  Promise.all([
+    fetch(APPS_SCRIPT_URL + '?action=adminGetAllData&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); }),
+    fetch(APPS_SCRIPT_URL + '?action=adminGetCodes&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); })
+  ])
+    .then(function(results){
+      var rows  = results[0];
+      var codes = results[1];
+      if(rows && rows.error === 'unauthorized'){ forceReLogin(); return; }
+      if(codes && codes.error === 'unauthorized'){ forceReLogin(); return; }
+      allResults = rows;
+      mergedData = mergeWithCodes(buildMerged(rows), Array.isArray(codes) ? codes : []);
+      // Cache it
+      localStorage.setItem(CACHE_KEY,    JSON.stringify(mergedData));
+      localStorage.setItem(CACHE_TS_KEY, new Date().toISOString());
+      renderAll();
+      setBadge('online');
+    })
+    .catch(function(err){
+      console.error(err);
+      if(!cached){
+        showEmpty('Failed to load data. Check your internet connection.');
+      }
+      setBadge('error', cachedTS);
+    });
+}
+
+// Adds students who activated a code but haven't submitted results yet.
+// They never get a row in Form Responses 1, so buildMerged() alone can't
+// see them — this pulls them in from the Codes sheet instead, skipping
+// any code that's already represented in the submitted results.
+function mergeWithCodes(submittedList, codesList){
+  var codesByCode = {};
+  codesList.forEach(function(c){
+    if(c.code) codesByCode[c.code.toUpperCase()] = c;
+  });
+
+  // Attach photo (and district, if the submitted row didn't already have one)
+  // to already-submitted students by matching their activation code.
+  submittedList.forEach(function(r){
+    var c = r.code ? codesByCode[r.code.toUpperCase()] : null;
+    if(c){
+      r.photo = c.photoUrl || '';
+      if(!r.district) r.district = c.district || '';
+    }
+  });
+
+  var submittedCodes = {};
+  submittedList.forEach(function(r){
+    if(r.code) submittedCodes[r.code.toUpperCase()] = true;
+  });
+
+  var inProgress = codesList
+    .filter(function(c){ return c.activated === 'USED' && !c.submitted; })
+    .filter(function(c){ return !submittedCodes[c.code.toUpperCase()]; })
+    .map(function(c){
+      return {
+        name: c.name, gender: c.gender, school: c.school, region: c.region,
+        district: c.district || '', code: c.code, date: c.actDate, badge: '',
+        total: 0, submitted: false, raw: null, photo: c.photoUrl || ''
+      };
+    })
+    .filter(function(r){ return r.name; });
+
+  return submittedList.concat(inProgress);
+}
+
+// ── BUILD MERGED DATASET ───────────────────────────
+function buildMerged(rows){
+  return rows.map(function(row, idx){
+    var name     = (row['Full Name '] || row['Full Name'] || row['__col2'] || '').trim();
+    var gender   = (row['Gender']     || row['__col3']   || '').trim();
+    var school   = (row['School']     || row['__col4']   || '').trim();
+    var region   = (row['Region']     || row['__col22']  || '').trim();
+    var district = (row['District']   || row['__col23']  || '').trim();
+    var code     = (row['Serial Code']|| row['Column 1'] || row['__col25'] || '').trim();
+    var date     = (row['Timestamp']  || row['__col0']   || '').trim();
+    var badge    = (row['Badge']      || row['__col21']  || '').trim();
+
+    // Total score — try multiple column positions
+    var totalRaw = (row['Total Score'] || row['__col20'] || '').toString().trim();
+    var total    = parseFloat(totalRaw) || 0;
+
+    // Submitted = has a row in results sheet AND total > 0
+    var submitted = total > 0;
+
+    return { name, gender, school, region, district, code, date, badge, total, submitted, raw: row };
+  }).filter(function(r){ return r.name; });
+}
+
+// ── RENDER ALL ─────────────────────────────────────
+function renderAll(){
+  renderStats();
+  renderToday();
+  populateRegionFilter();
+  populateDistrictFilter();
+  populateSchoolFilter();
+  renderStudents();
+  renderSchools();
+  renderRegions();
+}
+
+// ── STATS ──────────────────────────────────────────
+function renderStats(){
+  var total     = mergedData.length;
+  var submitted = mergedData.filter(function(r){ return r.submitted; }).length;
+  var progress  = total - submitted;
+  var schools   = new Set(mergedData.map(function(r){ return r.school; })).size;
+
+  document.getElementById('statTotal').textContent     = total;
+  document.getElementById('statSubmitted').textContent = submitted;
+  document.getElementById('statProgress').textContent  = progress;
+  document.getElementById('statSchools').textContent   = schools;
+
+  // Certificates — a certificate is issued once a student has submitted
+  // results (that's when a total score / badge exists to certify).
+  document.getElementById('statCertIssued').textContent  = submitted;
+  document.getElementById('statCertPending').textContent = progress;
+}
+
+// ── TODAY ──────────────────────────────────────────
+function renderToday(){
+  var today = new Date().toDateString();
+  var todayRows = mergedData.filter(function(r){
+    if(!r.date) return false;
+    try{ return new Date(r.date).toDateString() === today; }catch(e){ return false; }
+  });
+  var todaySub = todayRows.filter(function(r){ return r.submitted; }).length;
+
+  if(todayRows.length > 0){
+    document.getElementById('todayCard').style.display    = 'flex';
+    document.getElementById('todayDate').textContent      =
+      new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('todayActivated').textContent = todayRows.length;
+    document.getElementById('todaySubmitted').textContent = todaySub;
+  }
+}
+
+// ── CASCADING REGION → DISTRICT → SCHOOL FILTERS ───
+function populateRegionFilter(){
+  var sel = document.getElementById('filterRegion');
+  var prevVal = sel.value;
+  var regions = Array.from(new Set(mergedData.map(function(r){ return r.region; }).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="">🌍 All Regions</option>' +
+    regions.map(function(r){ return '<option value="'+esc(r)+'">'+esc(r)+'</option>'; }).join('');
+  if(regions.includes(prevVal)) sel.value = prevVal;
+}
+
+function populateDistrictFilter(){
+  var region = document.getElementById('filterRegion').value;
+  var sel = document.getElementById('filterDistrict');
+  var prevVal = sel.value;
+  var pool = region ? mergedData.filter(function(r){ return r.region === region; }) : mergedData;
+  var districts = Array.from(new Set(pool.map(function(r){ return r.district; }).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="">📍 All Districts</option>' +
+    districts.map(function(d){ return '<option value="'+esc(d)+'">'+esc(d)+'</option>'; }).join('');
+  if(districts.includes(prevVal)) sel.value = prevVal;
+}
+
+function populateSchoolFilter(){
+  var region   = document.getElementById('filterRegion').value;
+  var district = document.getElementById('filterDistrict').value;
+  var sel = document.getElementById('filterSchool');
+  var prevVal = sel.value;
+  var pool = mergedData.filter(function(r){
+    return (!region || r.region === region) && (!district || r.district === district);
+  });
+  var schools = Array.from(new Set(pool.map(function(r){ return r.school; }).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="">🏫 All Schools</option>' +
+    schools.map(function(s){ return '<option value="'+esc(s)+'">'+esc(s)+'</option>'; }).join('');
+  if(schools.includes(prevVal)) sel.value = prevVal;
+}
+
+function onRegionChange(){
+  document.getElementById('filterDistrict').value = '';
+  document.getElementById('filterSchool').value   = '';
+  populateDistrictFilter();
+  populateSchoolFilter();
+  renderStudents();
+}
+
+function onDistrictChange(){
+  document.getElementById('filterSchool').value = '';
+  populateSchoolFilter();
+  renderStudents();
+}
+
+// ── STUDENTS TABLE ─────────────────────────────────
+function renderStudents(){
+  var search    = (document.getElementById('searchInput').value || '').toLowerCase();
+  var fStatus   = document.getElementById('filterStatus').value;
+  var fGender   = document.getElementById('filterGender').value;
+  var fRegion   = document.getElementById('filterRegion').value;
+  var fDistrict = document.getElementById('filterDistrict').value;
+  var fSchool   = document.getElementById('filterSchool').value;
+
+  var filtered = mergedData.filter(function(r){
+    var matchSearch = !search ||
+      r.name.toLowerCase().includes(search) ||
+      r.school.toLowerCase().includes(search) ||
+      r.region.toLowerCase().includes(search) ||
+      r.district.toLowerCase().includes(search) ||
+      r.code.toLowerCase().includes(search);
+    var matchStatus   = !fStatus ||
+      (fStatus === 'submitted' && r.submitted) ||
+      (fStatus === 'progress'  && !r.submitted && r.total === 0) ||
+      (fStatus === 'activated' && !r.submitted);
+    var matchGender   = !fGender   || r.gender   === fGender;
+    var matchRegion   = !fRegion   || r.region   === fRegion;
+    var matchDistrict = !fDistrict || r.district === fDistrict;
+    var matchSchool   = !fSchool   || r.school   === fSchool;
+    return matchSearch && matchStatus && matchGender && matchRegion && matchDistrict && matchSchool;
+  });
+
+  // Sort: submitted first, then by score desc
+  filtered.sort(function(a,b){
+    if(b.submitted !== a.submitted) return b.submitted ? 1 : -1;
+    return b.total - a.total;
+  });
+
+  studentTableRows = filtered;
+
+  var tbody = document.getElementById('studentsTbody');
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty">No students match your filter.</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(r, i){
+    var rank = i + 1;
+    var rankCls = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
+    var statusPill = r.submitted
+      ? '<span class="badge-pill pill-submitted">✅ Submitted</span>'
+      : '<span class="badge-pill pill-progress">⏳ In Progress</span>';
+    var scoreStr = r.total > 0 ? r.total : '—';
+    var dateStr  = r.date ? formatDate(r.date) : '—';
+    var gIcon    = r.gender === 'Female' ? '👩' : '👨';
+    var codeStr  = r.code ? '<code>' + esc(r.code) + '</code>' : '<span class="muted">—</span>';
+    return '<tr class="clickable" onclick="openStudentProfile(' + i + ')">' +
+      '<td><span class="rank-num ' + rankCls + '">' + rank + '</span></td>' +
+      '<td><strong>' + esc(r.name) + '</strong></td>' +
+      '<td class="muted">' + codeStr + '</td>' +
+      '<td class="muted">' + esc(r.school) + '</td>' +
+      '<td>' + gIcon + ' ' + esc(r.gender) + '</td>' +
+      '<td class="muted">' + esc(r.region) + '</td>' +
+      '<td class="muted">' + esc(r.district) + '</td>' +
+      '<td><strong style="color:var(--gold);font-family:\'Orbitron\',monospace;font-size:12px;">' + scoreStr + '</strong></td>' +
+      '<td>' + statusPill + '</td>' +
+      '<td class="muted">' + dateStr + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── SCHOOLS TABLE ──────────────────────────────────
+function renderSchools(){
+  var schoolMap = {};
+  mergedData.forEach(function(r){
+    var s = r.school || 'Unknown';
+    if(!schoolMap[s]) schoolMap[s] = { count:0, submitted:0, totalScore:0, top:null };
+    schoolMap[s].count++;
+    if(r.submitted){
+      schoolMap[s].submitted++;
+      schoolMap[s].totalScore += r.total;
+      if(!schoolMap[s].top || r.total > schoolMap[s].top.total) schoolMap[s].top = r;
+    }
+  });
+
+  var schools = Object.keys(schoolMap).map(function(s){
+    var d = schoolMap[s];
+    return { name:s, count:d.count, submitted:d.submitted,
+      avg: d.submitted > 0 ? Math.round(d.totalScore / d.submitted) : 0,
+      top: d.top };
+  }).sort(function(a,b){ return b.count - a.count; });
+
+  var tbody = document.getElementById('schoolsTbody');
+  if(!schools.length){ tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No data.</div></td></tr>'; return; }
+
+  tbody.innerHTML = schools.map(function(s, i){
+    var topName = s.top ? s.top.name : '—';
+    return '<tr>' +
+      '<td><span class="rank-num">' + (i+1) + '</span></td>' +
+      '<td><strong>' + esc(s.name) + '</strong></td>' +
+      '<td style="color:var(--blue);font-weight:700;">' + s.count + '</td>' +
+      '<td style="color:var(--green);font-weight:700;">' + s.submitted + '</td>' +
+      '<td style="color:var(--gold);font-family:\'Orbitron\',monospace;font-size:12px;">' + (s.avg || '—') + '</td>' +
+      '<td class="muted">' + esc(topName) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── REGIONS TABLE ──────────────────────────────────
+function renderRegions(){
+  var regMap = {};
+  mergedData.forEach(function(r){
+    var reg = r.region || 'Unknown';
+    if(!regMap[reg]) regMap[reg] = { count:0, submitted:0, totalScore:0 };
+    regMap[reg].count++;
+    if(r.submitted){ regMap[reg].submitted++; regMap[reg].totalScore += r.total; }
+  });
+
+  var regions = Object.keys(regMap).map(function(reg){
+    var d = regMap[reg];
+    var pct = Math.round((d.submitted / d.count) * 100);
+    var avg = d.submitted > 0 ? Math.round(d.totalScore / d.submitted) : 0;
+    return { name:reg, count:d.count, submitted:d.submitted, pct, avg };
+  }).sort(function(a,b){ return b.count - a.count; });
+
+  var tbody = document.getElementById('regionsTbody');
+  if(!regions.length){ tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No data.</div></td></tr>'; return; }
+
+  tbody.innerHTML = regions.map(function(r, i){
+    var bar = '<div style="width:80px;display:inline-block;vertical-align:middle;margin-left:6px;">' +
+      '<div class="bar-track"><div class="bar-fill green" style="width:' + r.pct + '%"></div></div></div>';
+    return '<tr>' +
+      '<td><span class="rank-num">' + (i+1) + '</span></td>' +
+      '<td><strong>' + esc(r.name) + '</strong></td>' +
+      '<td style="color:var(--blue);font-weight:700;">' + r.count + '</td>' +
+      '<td style="color:var(--green);font-weight:700;">' + r.submitted + '</td>' +
+      '<td>' + r.pct + '%' + bar + '</td>' +
+      '<td style="color:var(--gold);font-family:\'Orbitron\',monospace;font-size:12px;">' + (r.avg || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── CHARTS ─────────────────────────────────────────
+function renderCharts(){
+  // Top 10 students
+  var top10 = mergedData.filter(function(r){ return r.submitted && r.total > 0; })
+    .sort(function(a,b){ return b.total - a.total; }).slice(0,10);
+  var maxScore = top10.length ? top10[0].total : 1;
+  document.getElementById('chartTopStudents').innerHTML = top10.map(function(r){
+    var pct = Math.round((r.total / maxScore) * 100);
+    return '<div class="bar-item">' +
+      '<div class="bar-label"><span>' + esc(r.name.split(' ')[0] + ' ' + (r.name.split(' ')[1]||'')) + '</span><span>' + r.total + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div></div>';
+  }).join('') || '<div class="empty">No submitted results yet.</div>';
+
+  // Top 10 schools
+  var schoolMap = {};
+  mergedData.forEach(function(r){
+    var s = r.school || 'Unknown';
+    if(!schoolMap[s]) schoolMap[s] = 0;
+    schoolMap[s]++;
+  });
+  var topSchools = Object.keys(schoolMap).map(function(s){ return {name:s,count:schoolMap[s]}; })
+    .sort(function(a,b){ return b.count - a.count; }).slice(0,10);
+  var maxSch = topSchools.length ? topSchools[0].count : 1;
+  document.getElementById('chartTopSchools').innerHTML = topSchools.map(function(s){
+    var pct = Math.round((s.count / maxSch) * 100);
+    return '<div class="bar-item">' +
+      '<div class="bar-label"><span>' + esc(s.name) + '</span><span>' + s.count + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill blue" style="width:' + pct + '%"></div></div></div>';
+  }).join('') || '<div class="empty">No data.</div>';
+
+  // Regions
+  var regMap = {};
+  mergedData.forEach(function(r){ var reg = r.region||'Unknown'; if(!regMap[reg]) regMap[reg]=0; regMap[reg]++; });
+  var regs = Object.keys(regMap).map(function(r){ return {name:r,count:regMap[r]}; })
+    .sort(function(a,b){ return b.count-a.count; });
+  var maxReg = regs.length ? regs[0].count : 1;
+  document.getElementById('chartRegions').innerHTML = regs.map(function(r){
+    var pct = Math.round((r.count / maxReg) * 100);
+    return '<div class="bar-item">' +
+      '<div class="bar-label"><span>' + esc(r.name) + '</span><span>' + r.count + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill green" style="width:' + pct + '%"></div></div></div>';
+  }).join('') || '<div class="empty">No data.</div>';
+
+  // Gender
+  var males   = mergedData.filter(function(r){ return r.gender === 'Male'; }).length;
+  var females = mergedData.filter(function(r){ return r.gender === 'Female'; }).length;
+  var total   = males + females || 1;
+  document.getElementById('chartGender').innerHTML =
+    '<div class="bar-item">' +
+    '<div class="bar-label"><span>👨 Male</span><span>' + males + ' (' + Math.round(males/total*100) + '%)</span></div>' +
+    '<div class="bar-track"><div class="bar-fill blue" style="width:' + Math.round(males/total*100) + '%"></div></div></div>' +
+    '<div class="bar-item" style="margin-top:14px;">' +
+    '<div class="bar-label"><span>👩 Female</span><span>' + females + ' (' + Math.round(females/total*100) + '%)</span></div>' +
+    '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(females/total*100) + '%;background:linear-gradient(90deg,#f48fb1,#e91e8c)"></div></div></div>';
+}
+
+// ── STUDENT PROFILE MODAL ───────────────────────────
+// Finds the highest- and lowest-scoring module for a student, ignoring
+// modules with no recorded score (e.g. "" or "0/0"). Ties go to whichever
+// module comes first in ASSESSMENT_MODULES order.
+function computeStrengthWeakness(raw){
+  var scored = ASSESSMENT_MODULES.map(function(m){
+    var val   = (raw[m.key] || '').toString().trim();
+    var parts = val.split('/');
+    var got   = parseInt(parts[0], 10);
+    var tot   = parseInt(parts[1], 10);
+    if(isNaN(got) || isNaN(tot) || tot <= 0) return null;
+    return { key: m.key, label: m.label, icon: m.icon, pct: Math.round((got / tot) * 100) };
+  }).filter(Boolean);
+
+  if(!scored.length) return null;
+
+  var strongest = scored[0], weakest = scored[0];
+  scored.forEach(function(s){
+    if(s.pct > strongest.pct) strongest = s;
+    if(s.pct < weakest.pct)   weakest   = s;
+  });
+  return { strongest: strongest, weakest: weakest };
+}
+
+function openStudentProfile(idx){
+  var r = studentTableRows[idx];
+  if(!r) return;
+
+  var raw = r.raw || {};
+  var certId = r.code || '—';
+  var sw = r.submitted ? computeStrengthWeakness(raw) : null;
+
+  var moduleRowsHtml = ASSESSMENT_MODULES.map(function(m){
+    var val = (raw[m.key] || '').toString().trim();
+    var cls = 'module-row';
+    if(sw){
+      if(m.key === sw.strongest.key) cls += ' mod-strong';
+      else if(m.key === sw.weakest.key) cls += ' mod-weak';
+    }
+    return '<div class="' + cls + '"><span>' + m.icon + ' ' + m.label + '</span>' +
+      '<span class="score">' + (val || '—') + '</span></div>';
+  }).join('');
+
+  var swCallout = sw ?
+    '<div class="sw-callout">' +
+      '<div class="sw-item strong"><span class="sw-label">💪 Strongest Area</span>' +
+        '<span class="sw-val">' + sw.strongest.icon + ' ' + esc(sw.strongest.label) + ' — ' + sw.strongest.pct + '%</span></div>' +
+      '<div class="sw-item weak"><span class="sw-label">⚠️ Weakest Area</span>' +
+        '<span class="sw-val">' + sw.weakest.icon + ' ' + esc(sw.weakest.label) + ' — ' + sw.weakest.pct + '%</span></div>' +
+    '</div>' : '';
+
+  var assessmentSection = r.submitted
+    ? swCallout + '<div class="module-grid">' + moduleRowsHtml + '</div>'
+    : '<div class="empty" style="padding:14px 0;">This student hasn\'t submitted results yet.</div>';
+
+  var certSection;
+  if(r.submitted){
+    var certUrl = buildCertificateUrl(r);
+    certSection =
+      '<div class="cert-preview-box">' +
+        '<iframe src="' + certUrl + '" title="Certificate preview" loading="lazy"></iframe>' +
+      '</div>' +
+      '<a class="profile-cert-link" href="' + certUrl + '" target="_blank" rel="noopener">' +
+        '🔗 Open Full Certificate (View / Print / Download)' +
+      '</a>';
+  } else {
+    certSection =
+      '<div class="profile-photo-box" style="aspect-ratio:auto;padding:24px 12px;">' +
+        '<div class="icon">🎖️</div>' +
+        '<div>Certificate not yet available<br><span style="opacity:.7;">Student hasn\'t completed the assessment</span></div>' +
+      '</div>';
+  }
+
+  var photoBox = r.photo
+    ? '<div class="profile-photo-box" style="padding:0;overflow:hidden;">' +
+        '<img src="' + esc(toDrivePreviewUrl_(r.photo)) + '" alt="' + esc(r.name) + '" ' +
+          'style="width:100%;height:100%;object-fit:cover;" ' +
+          'onerror="this.parentNode.innerHTML=\'<div class=&quot;icon&quot;>📷</div><div>Photo failed to load</div>\';">' +
+      '</div>'
+    : '<div class="profile-photo-box">' +
+        '<div class="icon">📷</div>' +
+        '<div>No photograph on file</div>' +
+      '</div>';
+
+  var html =
+    '<div class="profile-grid">' +
+      '<div>' +
+        photoBox +
+        certSection +
+      '</div>' +
+      '<div>' +
+        '<div class="profile-section-title">👤 Personal Details</div>' +
+        '<div class="profile-field"><span class="k">Name</span><span class="v">' + esc(r.name) + '</span></div>' +
+        '<div class="profile-field"><span class="k">Activation Code</span><span class="v">' + esc(certId) + '</span></div>' +
+        '<div class="profile-field"><span class="k">Certificate ID</span><span class="v">' + esc(certId) + '</span></div>' +
+        '<div class="profile-field"><span class="k">School</span><span class="v">' + esc(r.school || '—') + '</span></div>' +
+        '<div class="profile-field"><span class="k">Region</span><span class="v">' + esc(r.region || '—') + '</span></div>' +
+        '<div class="profile-field"><span class="k">District</span><span class="v">' + esc(r.district || '—') + '</span></div>' +
+        '<div class="profile-field"><span class="k">WhatsApp Number</span><span class="v" style="color:var(--muted);font-weight:400;">Not collected yet</span></div>' +
+        '<div class="profile-section-title">📝 Assessment Results — ' + (r.submitted ? r.total + '%' : 'Pending') + '</div>' +
+        assessmentSection +
+        '<div class="profile-section-title">🎓 Academic Results</div>' +
+        '<div class="empty" style="padding:14px 0;">Academic Edition not yet integrated.</div>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('profileContent').innerHTML = html;
+  document.getElementById('profileOverlay').classList.add('open');
+}
+
+function closeStudentProfile(){
+  document.getElementById('profileOverlay').classList.remove('open');
+}
+
+// ── REAL CERTIFICATE URL (uses your actual certificate.html template) ──
+// Module param order MUST match MODULE_DEFS in certificate.html exactly:
+// general, student, fire, police, health, prisons, nadmo, immigration,
+// customs, tourism, forest, gaf, narcotics — ASSESSMENT_MODULES above is
+// already in that same order.
+function buildCertificateUrl(r){
+  var raw = r.raw || {};
+  var modStr = ASSESSMENT_MODULES.map(function(m){
+    return (raw[m.key] || '0/30').toString().trim();
+  }).join(',');
+
+  var badgeText = (r.badge || '').toLowerCase();
+  var badgeKey  = 'participant';
+  if(badgeText.indexOf('gold')   > -1) badgeKey = 'gold';
+  else if(badgeText.indexOf('silver') > -1) badgeKey = 'silver';
+  else if(badgeText.indexOf('bronze') > -1) badgeKey = 'bronze';
+
+  var dateStr = '';
+  if(r.date){
+    try{
+      var d = new Date(r.date);
+      if(!isNaN(d)) dateStr = d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    }catch(e){}
+  }
+
+  var params = new URLSearchParams({
+    name:    r.name   || '',
+    gender:  r.gender || '',
+    school:  r.school || '',
+    region:  r.region || '',
+    pct:     r.total  || 0,
+    badge:   badgeKey,
+    date:    dateStr,
+    serial:  r.code   || 'N/A',
+    modules: modStr
+  });
+  return CERTIFICATE_PAGE_URL + '?' + params.toString();
+}
+
+
+function setBadge(state, ts){
+  var badge = document.getElementById('sourceBadge');
+  var txt   = document.getElementById('sourceText');
+  var lu    = document.getElementById('lastUpdated');
+  badge.className = 'source-badge';
+  if(state === 'online'){
+    badge.classList.add('online');
+    txt.textContent = '🟢 Live data from Google Sheets';
+    lu.textContent  = 'Last updated: ' + new Date().toLocaleTimeString();
+  } else if(state === 'offline'){
+    badge.classList.add('offline');
+    txt.textContent = '🔴 Offline — showing cached data';
+    lu.textContent  = ts ? 'Cached at: ' + formatDate(ts) : '';
+  } else if(state === 'cached'){
+    badge.classList.add('hybrid');
+    txt.textContent = '⚡ Showing cached data — fetching live…';
+    lu.textContent  = ts ? 'Cached at: ' + formatDate(ts) : '';
+  } else if(state === 'error'){
+    badge.classList.add('offline');
+    txt.textContent = '⚠️ Failed to fetch — showing cached data';
+    lu.textContent  = ts ? 'Cached at: ' + formatDate(ts) : '';
+  } else {
+    badge.classList.add('hybrid');
+    txt.textContent = '⏳ Loading…';
+    lu.textContent  = '';
+  }
+}
+
+function showEmpty(msg){
+  document.getElementById('studentsTbody').innerHTML =
+    '<tr><td colspan="8"><div class="empty">' + msg + '</div></td></tr>';
+}
+
+// ── HELPERS ────────────────────────────────────────
+function esc(str){ return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Converts an old-format Drive "uc?export=view&id=..." URL (which Google
+// often blocks from rendering in <img> tags) into the reliable thumbnail
+// endpoint. Leaves already-correct or non-Drive URLs untouched.
+function toDrivePreviewUrl_(url){
+  if (!url) return url;
+  var m = url.match(/[?&]id=([^&]+)/);
+  if (!m) return url;
+  return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w1000';
+}
+function formatDate(str){
+  try{
+    var d = new Date(str);
+    if(isNaN(d)) return str;
+    return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  }catch(e){ return str; }
+}
+
+// ── OFFLINE DETECTION ──────────────────────────────
+(function(){
+  var banner = document.getElementById('offlineBanner');
+  var icon   = document.getElementById('offlineIcon');
+  var msg    = document.getElementById('offlineMsg');
+  var timer  = null;
+  function showOffline(){
+    banner.classList.remove('online');
+    icon.textContent = '📵'; msg.textContent = ' You are offline — showing cached data';
+    banner.style.display = 'block';
+    if(timer){ clearTimeout(timer); timer = null; }
+  }
+  function showOnline(){
+    banner.classList.add('online');
+    icon.textContent = '✅'; msg.textContent = ' Back online — syncing data now…';
+    banner.style.display = 'block';
+    timer = setTimeout(function(){ banner.style.display='none'; }, 3500);
+    loadData();
+  }
+  if(!navigator.onLine) showOffline();
+  window.addEventListener('offline', showOffline);
+  window.addEventListener('online',  showOnline);
+})();
+
+// ── KEYBOARD SHORTCUT: Enter on password ───────────
+document.getElementById('pwInput').focus();
+
+// ── AUTO-LOGIN if this tab already has a valid session token ─
+tryAutoLogin();
+</script>
+</body>
+</html>
