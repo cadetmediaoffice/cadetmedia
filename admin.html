@@ -372,7 +372,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   <div class="panel active" id="panel-students">
     <div class="sec-title">👤 Student Database</div>
     <div class="filter-bar">
-      <input type="text" id="searchInput" placeholder="🔍 Search by name, activation code / certificate ID, or school…" oninput="renderStudents()">
+      <input type="text" id="searchInput" placeholder="🔍 Search by name, activation code / certificate ID, school, phone, or email…" oninput="renderStudents()">
       <select id="filterStatus" onchange="renderStudents()">
         <option value="">All Status</option>
         <option value="submitted">✅ Submitted</option>
@@ -395,9 +395,6 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
       <select id="filterSchool" onchange="renderStudents()">
         <option value="">🏫 All Schools</option>
       </select>
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin:-8px 0 16px;">
-      Search by WhatsApp Number isn't available yet — WhatsApp numbers aren't collected by the current activation flow.
     </div>
     <div class="tbl-wrap">
       <table>
@@ -567,7 +564,8 @@ var ASSESSMENT_MODULES = [
   { icon:'🎨', label:'Tourism & Creative Arts',    key:'Tourism & Creative Arts Quiz Score' },
   { icon:'🌳', label:'Forest Conservation',        key:'Forest Conservation Quiz Score' },
   { icon:'🪖', label:'National Defence (GAF)',     key:'National Defence (GAF) Quiz Score' },
-  { icon:'💊', label:'Narcotics Control',          key:'Narcotics Control Quiz Score' }
+  { icon:'💊', label:'Narcotics Control',          key:'Narcotics Control Quiz Score' },
+  { icon:'🧠', label:'Academic Aptitude',          key:'Academic Aptitude Quiz Score' }
 ];
 
 // ── LOGIN (verified server-side by Apps Script — never trust the client) ──
@@ -997,7 +995,9 @@ function renderStudents(){
       r.school.toLowerCase().includes(search) ||
       r.region.toLowerCase().includes(search) ||
       r.district.toLowerCase().includes(search) ||
-      r.code.toLowerCase().includes(search);
+      r.code.toLowerCase().includes(search) ||
+      (r.raw && (r.raw['Phone number']  || '').toLowerCase().includes(search)) ||
+      (r.raw && (r.raw['Email Address'] || '').toLowerCase().includes(search));
     var matchStatus   = !fStatus ||
       (fStatus === 'submitted' && r.submitted) ||
       (fStatus === 'progress'  && !r.submitted && r.total === 0) ||
@@ -1273,7 +1273,8 @@ function openStudentProfile(idx){
         '<div class="profile-field"><span class="k">School</span><span class="v">' + esc(r.school || '—') + '</span></div>' +
         '<div class="profile-field"><span class="k">Region</span><span class="v">' + esc(r.region || '—') + '</span></div>' +
         '<div class="profile-field"><span class="k">District</span><span class="v">' + esc(r.district || '—') + '</span></div>' +
-        '<div class="profile-field"><span class="k">WhatsApp Number</span><span class="v" style="color:var(--muted);font-weight:400;">Not collected yet</span></div>' +
+        '<div class="profile-field"><span class="k">Phone Number</span><span class="v">' + esc((r.raw && r.raw['Phone number']) || '—') + '</span></div>' +
+        '<div class="profile-field"><span class="k">Email Address</span><span class="v">' + esc((r.raw && r.raw['Email Address']) || '—') + '</span></div>' +
         '<div class="profile-section-title">📝 Assessment Results — ' + (r.submitted ? r.total + '%' : 'Pending') + '</div>' +
         assessmentSection +
         '<div class="profile-section-title">🎓 Academic Results</div>' +
@@ -1292,8 +1293,8 @@ function closeStudentProfile(){
 // ── REAL CERTIFICATE URL (uses your actual certificate.html template) ──
 // Module param order MUST match MODULE_DEFS in certificate.html exactly:
 // general, student, fire, police, health, prisons, nadmo, immigration,
-// customs, tourism, forest, gaf, narcotics — ASSESSMENT_MODULES above is
-// already in that same order.
+// customs, tourism, forest, gaf, narcotics, academic — ASSESSMENT_MODULES
+// above is already in that same order.
 function buildCertificateUrl(r){
   var raw = r.raw || {};
   var modStr = ASSESSMENT_MODULES.map(function(m){
