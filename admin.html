@@ -26,7 +26,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
 
 /* LOGIN OVERLAY */
 #loginOverlay{position:fixed;inset:0;z-index:9999;
-  background:rgba(4,9,15,0.97);display:flex;align-items:center;justify-content:center;}
+  background:linear-gradient(rgba(4,9,15,0.88),rgba(4,9,15,0.88)), url('MEDIA/splash.png') center/cover no-repeat;
+  display:flex;align-items:center;justify-content:center;}
 .login-box{background:rgba(255,215,0,0.06);border:1.5px solid rgba(255,215,0,0.25);
   border-radius:20px;padding:40px 36px;width:90%;max-width:380px;
   display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;}
@@ -125,6 +126,7 @@ thead th{background:rgba(255,215,0,0.07);padding:12px 14px;text-align:left;
   white-space:nowrap;}
 tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background .15s;}
 tbody tr:hover{background:rgba(255,215,0,0.04);}
+.clickable-row{cursor:pointer;}
 tbody tr:last-child{border-bottom:none;}
 td{padding:11px 14px;color:var(--text);vertical-align:middle;}
 td.muted{color:var(--muted);font-size:12px;}
@@ -227,6 +229,16 @@ td.muted{color:var(--muted);font-size:12px;}
 .sw-item.weak{border-color:rgba(255,82,82,0.35);background:rgba(255,82,82,0.06);}
 .sw-label{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
 .sw-val{font-size:13px;font-weight:700;color:var(--text);}
+.capability-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.capability-item{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(255,215,0,0.05);font-size:12.5px;}
+.capability-item .pct{font-weight:700;color:var(--gold);}
+.opportunity-callout{display:flex;gap:10px;align-items:flex-start;
+  padding:12px 14px;border-radius:10px;margin-bottom:14px;
+  border:1.5px solid rgba(255,215,0,0.4);background:rgba(255,215,0,0.08);
+  font-size:12.5px;line-height:1.5;color:var(--text);}
+.opp-icon{font-size:16px;flex-shrink:0;}
 /* Real certificate.html preview — shown scaled down inside a fixed box */
 .cert-preview-box{width:100%;aspect-ratio:960/1245;overflow:hidden;border-radius:10px;
   border:1px solid var(--border);background:#e8e0d0;position:relative;}
@@ -433,10 +445,11 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
             <th>Submitted</th>
             <th>Avg Score</th>
             <th>Top Student</th>
+            <th>🎯 Top Aptitude</th>
           </tr>
         </thead>
         <tbody id="schoolsTbody">
-          <tr><td colspan="6"><div class="loading"><div class="spinner"></div><br>Loading schools…</div></td></tr>
+          <tr><td colspan="7"><div class="loading"><div class="spinner"></div><br>Loading schools…</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -620,6 +633,45 @@ var ASSESSMENT_MODULES = [
   { icon:'💊', label:'Narcotics Control',          key:'Narcotics Control Quiz Score' },
   { icon:'🧠', label:'Academic Aptitude',          key:'Academic Aptitude Quiz Score' }
 ];
+
+// Maps a module's ASSESSMENT_MODULES key to the real Ghanaian institution
+// it represents, so a strong score can be flagged as relevant to that
+// institution's own recruitment quotas or scholarship programmes.
+// General Safety, Student Safety and Academic Aptitude aren't tied to a
+// single institution, so they're left out and handled as a general
+// academic/civic strength instead.
+var MODULE_INSTITUTION_MAP = {
+  'Fire Safety Quiz Score':                  'the Ghana National Fire Service (GNFS)',
+  'Community Safety (Police) Quiz Score':    'the Ghana Police Service',
+  'Health & Ambulance Quiz Score':           'the National Ambulance Service',
+  'Prisons Service Quiz Score':              'the Ghana Prisons Service',
+  'Disaster Preparedness (NADMO) Quiz Score':'the National Disaster Management Organisation (NADMO)',
+  'Immigration Service Quiz Score':          'the Ghana Immigration Service',
+  'Customs Division Quiz Score':             'the Ghana Revenue Authority (Customs Division)',
+  'Tourism & Creative Arts Quiz Score':      'the Ministry of Tourism, Arts and Culture',
+  'Forest Conservation Quiz Score':          'the Forestry Commission',
+  'National Defence (GAF) Quiz Score':       'the Ghana Armed Forces (GAF)',
+  'Narcotics Control Quiz Score':            'the Narcotics Control Commission (NACOC)'
+};
+
+// Generates a plain-language recruitment/scholarship-relevance comment
+// from a student's strongest module. Only fires at Silver level (70%+)
+// or above, since flagging a mediocre score as a "strength" would be
+// misleading to an institution reviewing candidates.
+function generateOpportunityComment(sw){
+  if(!sw || !sw.strongest || sw.strongest.pct < 70) return null;
+  var top = sw.strongest;
+  var institution = MODULE_INSTITUTION_MAP[top.key];
+  if(institution){
+    return 'This cadet demonstrates strong aptitude aligned with areas relevant to ' + institution +
+      ' (' + top.pct + '% in ' + top.label + '). The cadet may be considered for appropriate ' +
+      'opportunities — including mentorship, scholarships, apprenticeships, or recruitment pathways — ' +
+      'subject to the institution\'s own eligibility and selection requirements.';
+  }
+  return 'This cadet demonstrates strong overall aptitude in ' + top.label + ' (' + top.pct + '%). ' +
+    'The cadet may be considered for relevant academic scholarship, mentorship, or recognition ' +
+    'opportunities, subject to each programme\'s own eligibility requirements.';
+}
 
 // ── LOGIN (verified server-side by Apps Script — never trust the client) ──
 function doLogin(){
@@ -1147,12 +1199,85 @@ function renderStudents(){
 }
 
 // ── SCHOOLS TABLE ──────────────────────────────────
+// Shared tier labels for any module or overall percentage — aligned to
+// the same 85/70/50 cutoffs already used for Gold/Silver/Bronze badges,
+// just phrased for aptitude-profile narratives (school/district/region).
+function classifyPct(pct){
+  if(pct >= 85) return 'Exceptional';
+  if(pct >= 70) return 'Very Strong';
+  if(pct >= 50) return 'Strong';
+  return 'Developing';
+}
+
+// Computes a full aptitude profile for a group of students (e.g. every
+// student at one school): per-module averages, tier classification,
+// top aptitude areas, and Exceptional/Very Strong counts — the same
+// building blocks used at Student level, aggregated up.
+function computeGroupAptitudeProfile(rows){
+  var submitted = rows.filter(function(r){ return r.submitted; });
+  var moduleSums = {}, moduleCounts = {};
+  ASSESSMENT_MODULES.forEach(function(m){ moduleSums[m.key] = 0; moduleCounts[m.key] = 0; });
+
+  var exceptionalCount = 0, veryStrongCount = 0;
+  submitted.forEach(function(r){
+    if(r.total >= 85) exceptionalCount++;
+    else if(r.total >= 70) veryStrongCount++;
+    var raw = r.raw || {};
+    ASSESSMENT_MODULES.forEach(function(m){
+      var val = (raw[m.key] || '').toString().trim();
+      var parts = val.split('/');
+      var got = parseInt(parts[0], 10), tot = parseInt(parts[1], 10);
+      if(!isNaN(got) && !isNaN(tot) && tot > 0){
+        moduleSums[m.key]   += (got / tot) * 100;
+        moduleCounts[m.key] += 1;
+      }
+    });
+  });
+
+  var moduleAverages = ASSESSMENT_MODULES.map(function(m){
+    var n = moduleCounts[m.key];
+    if(!n) return null;
+    var avg = Math.round(moduleSums[m.key] / n);
+    return { label: m.label, icon: m.icon, avg: avg, classification: classifyPct(avg) };
+  }).filter(Boolean).sort(function(a,b){ return b.avg - a.avg; });
+
+  var avgScore = submitted.length
+    ? Math.round(submitted.reduce(function(sum,r){ return sum + r.total; }, 0) / submitted.length)
+    : 0;
+
+  return {
+    totalStudents: rows.length,
+    submittedCount: submitted.length,
+    avgScore: avgScore,
+    exceptionalCount: exceptionalCount,
+    veryStrongCount: veryStrongCount,
+    moduleAverages: moduleAverages,
+    topAreas: moduleAverages.filter(function(m){ return m.avg >= 70; }).slice(0, 5)
+  };
+}
+
+// Builds the "Priority Aptitude Areas" + "Potential Opportunity Alignment"
+// narrative for a group profile (school/district/region), phrased as
+// aptitude-alignment rather than any admission/recruitment guarantee.
+function buildGroupOpportunityNarrative(profile, groupLabel){
+  if(!profile.topAreas.length) return null;
+  var areaNames = profile.topAreas.map(function(a){ return a.label; }).join(', ');
+  return {
+    priority: 'Priority Aptitude Areas: ' + areaNames + '.',
+    opportunity: groupLabel + ' demonstrates aptitude aligned with areas relevant to ' + areaNames +
+      '. Students here may be considered for relevant mentorship, scholarships, apprenticeships, ' +
+      'youth-development, or career-exposure opportunities offered by appropriate institutions, ' +
+      'subject to each institution\'s own eligibility and selection requirements.'
+  };
+}
+
 function renderSchools(){
   var schoolMap = {};
   mergedData.forEach(function(r){
     var s = r.school || 'Unknown';
-    if(!schoolMap[s]) schoolMap[s] = { count:0, submitted:0, totalScore:0, top:null };
+    if(!schoolMap[s]) schoolMap[s] = { count:0, submitted:0, totalScore:0, top:null, rows:[] };
     schoolMap[s].count++;
+    schoolMap[s].rows.push(r);
     if(r.submitted){
       schoolMap[s].submitted++;
       schoolMap[s].totalScore += r.total;
@@ -1162,23 +1287,26 @@ function renderSchools(){
 
   var schools = Object.keys(schoolMap).map(function(s){
     var d = schoolMap[s];
+    var profile = computeGroupAptitudeProfile(d.rows);
     return { name:s, count:d.count, submitted:d.submitted,
       avg: d.submitted > 0 ? Math.round(d.totalScore / d.submitted) : 0,
-      top: d.top };
+      top: d.top, topAptitude: profile.moduleAverages[0] || null };
   }).sort(function(a,b){ return b.count - a.count; });
 
   var tbody = document.getElementById('schoolsTbody');
-  if(!schools.length){ tbody.innerHTML = '<tr><td colspan="6"><div class="empty">No data.</div></td></tr>'; return; }
+  if(!schools.length){ tbody.innerHTML = '<tr><td colspan="7"><div class="empty">No data.</div></td></tr>'; return; }
 
   tbody.innerHTML = schools.map(function(s, i){
     var topName = s.top ? s.top.name : '—';
-    return '<tr>' +
+    var topApt = s.topAptitude ? (s.topAptitude.icon + ' ' + s.topAptitude.label + ' — ' + s.topAptitude.avg + '%') : '—';
+    return '<tr class="clickable-row" onclick="openSchoolProfile(' + JSON.stringify(s.name).replace(/"/g,'&quot;') + ')">' +
       '<td><span class="rank-num">' + (i+1) + '</span></td>' +
       '<td><strong>' + esc(s.name) + '</strong></td>' +
       '<td style="color:var(--blue);font-weight:700;">' + s.count + '</td>' +
       '<td style="color:var(--green);font-weight:700;">' + s.submitted + '</td>' +
       '<td style="color:var(--gold);font-family:\'Orbitron\',monospace;font-size:12px;">' + (s.avg || '—') + '</td>' +
       '<td class="muted">' + esc(topName) + '</td>' +
+      '<td class="muted" style="font-size:11px;">' + esc(topApt) + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -1275,8 +1403,10 @@ function renderCharts(){
 
 // ── STUDENT PROFILE MODAL ───────────────────────────
 // Finds the highest- and lowest-scoring module for a student, ignoring
-// modules with no recorded score (e.g. "" or "0/0"). Ties go to whichever
-// module comes first in ASSESSMENT_MODULES order.
+// modules with no recorded score (e.g. "" or "0/0"), plus the top 3
+// modules by score — used as a data-grounded "capability & interest
+// areas" list (not a psychological claim, just where they scored best).
+// Ties go to whichever module comes first in ASSESSMENT_MODULES order.
 function computeStrengthWeakness(raw){
   var scored = ASSESSMENT_MODULES.map(function(m){
     var val   = (raw[m.key] || '').toString().trim();
@@ -1294,7 +1424,8 @@ function computeStrengthWeakness(raw){
     if(s.pct > strongest.pct) strongest = s;
     if(s.pct < weakest.pct)   weakest   = s;
   });
-  return { strongest: strongest, weakest: weakest };
+  var topAreas = scored.slice().sort(function(a,b){ return b.pct - a.pct; }).slice(0, 3);
+  return { strongest: strongest, weakest: weakest, topAreas: topAreas };
 }
 
 function openStudentProfile(idx){
@@ -1316,6 +1447,21 @@ function openStudentProfile(idx){
       '<span class="score">' + (val || '—') + '</span></div>';
   }).join('');
 
+  var opportunityComment = sw ? generateOpportunityComment(sw) : null;
+  var opportunityCallout = opportunityComment
+    ? '<div class="opportunity-callout"><span class="opp-icon">💼</span><span>' + esc(opportunityComment) + '</span></div>'
+    : '';
+
+  var capabilityList = (sw && sw.topAreas && sw.topAreas.length)
+    ? '<div class="profile-section-title">🎯 Capability &amp; Interest Areas</div>' +
+      '<div class="empty" style="font-size:11px;color:var(--muted);padding:0 0 8px;">Based on strongest quiz performance — not a formal assessment.</div>' +
+      '<div class="capability-list">' +
+        sw.topAreas.map(function(a){
+          return '<div class="capability-item"><span>' + a.icon + ' ' + esc(a.label) + '</span><span class="pct">' + a.pct + '%</span></div>';
+        }).join('') +
+      '</div>'
+    : '';
+
   var swCallout = sw ?
     '<div class="sw-callout">' +
       '<div class="sw-item strong"><span class="sw-label">💪 Strongest Area</span>' +
@@ -1325,7 +1471,7 @@ function openStudentProfile(idx){
     '</div>' : '';
 
   var assessmentSection = r.submitted
-    ? swCallout + '<div class="module-grid">' + moduleRowsHtml + '</div>'
+    ? opportunityCallout + capabilityList + swCallout + '<div class="module-grid">' + moduleRowsHtml + '</div>'
     : '<div class="empty" style="padding:14px 0;">This student hasn\'t submitted results yet.</div>';
 
   var certSection;
@@ -1375,8 +1521,6 @@ function openStudentProfile(idx){
         '<div class="profile-field"><span class="k">Email Address</span><span class="v">' + esc((r.raw && r.raw['Email Address']) || '—') + '</span></div>' +
         '<div class="profile-section-title">📝 Assessment Results — ' + (r.submitted ? r.total + '%' : 'Pending') + '</div>' +
         assessmentSection +
-        '<div class="profile-section-title">🎓 Academic Results</div>' +
-        '<div class="empty" style="padding:14px 0;">Academic Edition not yet integrated.</div>' +
       '</div>' +
     '</div>';
 
@@ -1386,6 +1530,46 @@ function openStudentProfile(idx){
 
 function closeStudentProfile(){
   document.getElementById('profileOverlay').classList.remove('open');
+}
+
+// ── SCHOOL-LEVEL APTITUDE PROFILE ───────────────────────────────────────
+function openSchoolProfile(schoolName){
+  var rows = mergedData.filter(function(r){ return (r.school || 'Unknown') === schoolName; });
+  if(!rows.length) return;
+
+  var profile  = computeGroupAptitudeProfile(rows);
+  var narrative = buildGroupOpportunityNarrative(profile, schoolName);
+
+  var moduleRows = profile.moduleAverages.map(function(m){
+    var cls = m.classification === 'Exceptional' ? 'mod-strong' :
+              m.classification === 'Developing'  ? 'mod-weak'   : '';
+    return '<div class="module-row ' + cls + '"><span>' + m.icon + ' ' + esc(m.label) + '</span>' +
+      '<span class="score">' + m.avg + '% — ' + m.classification + '</span></div>';
+  }).join('');
+
+  var narrativeHtml = narrative
+    ? '<div class="opportunity-callout"><span class="opp-icon">🎯</span><span>' + esc(narrative.priority) + '</span></div>' +
+      '<div class="opportunity-callout"><span class="opp-icon">💼</span><span>' + esc(narrative.opportunity) + '</span></div>'
+    : '<div class="empty" style="padding:10px 0;">Not enough submitted results yet to identify aptitude patterns.</div>';
+
+  document.getElementById('profileContent').innerHTML =
+    '<div class="profile-section-title">🏫 ' + esc(schoolName) + '</div>' +
+    '<div class="profile-field"><span class="k">Students</span><span class="v">' + profile.totalStudents + '</span></div>' +
+    '<div class="profile-field"><span class="k">Submitted</span><span class="v">' + profile.submittedCount + '</span></div>' +
+    '<div class="profile-field"><span class="k">Average Score</span><span class="v">' + profile.avgScore + '%</span></div>' +
+    '<div class="profile-section-title">📊 Performer Breakdown</div>' +
+    '<div class="sw-callout">' +
+      '<div class="sw-item strong"><span class="sw-label">⭐ Exceptional (85%+)</span>' +
+        '<span class="sw-val">' + profile.exceptionalCount + ' students</span></div>' +
+      '<div class="sw-item"><span class="sw-label">💪 Very Strong (70–84%)</span>' +
+        '<span class="sw-val">' + profile.veryStrongCount + ' students</span></div>' +
+    '</div>' +
+    '<div class="profile-section-title">🎯 Aptitude Profile</div>' +
+    narrativeHtml +
+    '<div class="profile-section-title">📝 Module Averages</div>' +
+    '<div class="module-grid">' + (moduleRows || '<div class="empty" style="padding:10px 0;">No submitted results yet.</div>') + '</div>';
+
+  document.getElementById('profileOverlay').classList.add('open');
 }
 
 // ── REAL CERTIFICATE URL (uses your actual certificate.html template) ──
