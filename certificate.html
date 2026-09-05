@@ -611,7 +611,7 @@ body {
         <div class="logo-flag-bar">
           <div class="r"></div><div class="y"></div><div class="g"></div>
         </div>
-        <div class="org-name">NATIONAL ASSESSMENT<br>ACADEMIC DRIVE</div>
+        <div class="org-name">NATIONAL ACADEMIC<br>ASSESSMENT DRIVE</div>
       </div>
 
       <div class="cert-id-box">
@@ -646,7 +646,8 @@ body {
         <div class="cert-body-text">
           has successfully completed the NAAD Safety Assessment Program<br>
           demonstrating knowledge and readiness in national safety protocols,<br>
-          emergency response, and public protection services.
+          emergency response, and public protection services — complemented<br>
+          by a general academic aptitude assessment.
         </div>
 
         <!-- Modules Covered -->
@@ -704,7 +705,7 @@ body {
           <div style="display:flex;gap:18px;align-items:flex-end;">
             <!-- Director Signature -->
             <div class="sig-block">
-              <div class="sig-line" style="font-family:'Playfair Display',serif;font-style:italic;font-size:28px;color:#333;">Cgmd</div>
+              <div class="sig-line" style="font-family:'Playfair Display',serif;font-style:italic;font-size:28px;color:#333;">&nbsp;</div>
               <div style="width:120px;height:1px;background:#888;margin:4px 0;"></div>
               <div class="sig-title">DIRECTOR, NAAD SAFETY EDITION<br>AUTHORIZED SIGNATURE</div>
             </div>
@@ -719,7 +720,7 @@ body {
                 </svg>
                 <span style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:#CE1126;letter-spacing:1.5px;">GNFS</span>
               </div>
-              <div class="sig-line" style="font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#555;letter-spacing:1px;">Daniella Mawusi Ntow Sarpong</div>
+              <div class="sig-line" style="font-family:'Playfair Display',serif;font-style:italic;font-size:22px;color:#555;letter-spacing:1px;">&nbsp;</div>
               <div style="width:120px;height:1px;background:#888;margin:4px 0;"></div>
               <div class="sig-title">CHIEF FIRE OFFICER (CFO)<br>GHANA NATIONAL FIRE SERVICE</div>
             </div>
@@ -871,12 +872,11 @@ window.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ── Issued line with school ────────────────────────────────────────────────
+  // ── Issued line ──────────────────────────────────────────────────────────
   var issuedEl = document.querySelector('.issued-line');
-  if (issuedEl && school) {
+  if (issuedEl) {
     issuedEl.innerHTML = 'Issued under the National Academic Assessment Drive (NAAD)<br>' +
-      'in collaboration with National Safety and Emergency Institutions.<br>' +
-      '<span style="font-size:11px;opacity:0.7;">' + school + (region ? ' &nbsp;·&nbsp; ' + region : '') + '</span>';
+      'in collaboration with National Safety and Emergency Institutions.';
   }
 
   // ── QR Code ────────────────────────────────────────────────────────────────
