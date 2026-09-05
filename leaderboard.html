@@ -406,6 +406,7 @@ body{
 .cd-total .lbl{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
 .cd-modules-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;
   color:var(--muted);margin-bottom:12px;}
+
 .cd-modules{display:flex;flex-direction:column;gap:8px;}
 .cd-mod{display:flex;align-items:center;gap:10px;
   background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
@@ -636,7 +637,7 @@ function connectData(){
 // ── Auto-load on page open ──
 window.addEventListener('DOMContentLoaded', ()=>{
   // URL is hardcoded — loads automatically on any browser
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEkb-1Y1pjTRTgxNSDMXWSb9JfgL36Gi5yAiYhxNrDstifi4swIaF/exec';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzMu6XM_zeUR9q1_U__IlXNde4pYjhSaIbd4m2kv3FbxMJbwzedtijCCWTQLEXB1oLH/exec';
   document.getElementById('appsScriptUrl').value = SHEET_URL;
   document.getElementById('setupBox').style.display = 'none';
   loadData(SHEET_URL);
@@ -680,7 +681,7 @@ async function loadData(url){
 
 // ── Debug: fetch raw and show in console ──
 async function debugRaw(){
-  const url = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEkb-1Y1pjTRTgxNSDMXWSb9JfgL36Gi5yAiYhxNrDstifi4swIaF/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbzMu6XM_zeUR9q1_U__IlXNde4pYjhSaIbd4m2kv3FbxMJbwzedtijCCWTQLEXB1oLH/exec';
   try {
     const res = await fetch(url, {mode:'cors'});
     const text = await res.text();
@@ -773,6 +774,7 @@ const MOD_KEYS = [
   ['forest conservation','forest'],
   ['national defence','armed forces','gaf'],
   ['narcotics','nacoc','drug'],
+  ['academic','aptitude'],
 ];
 
 const GHANA_REGIONS = ['Greater Accra','Ashanti','Western','Eastern','Central',
@@ -1276,6 +1278,7 @@ function renderLevels(ranked){
 <script>
 const MODULES = [
   {name:"General Safety",   icon:"🛡️"},
+  {name:"Student Safety",   icon:"🎓"},
   {name:"Fire Safety",      icon:"🔥"},
   {name:"Police/Community", icon:"👮"},
   {name:"Health & Ambulance",icon:"🚑"},
@@ -1287,6 +1290,7 @@ const MODULES = [
   {name:"Forest",           icon:"🌿"},
   {name:"Armed Forces",     icon:"🎖️"},
   {name:"NACOC",            icon:"🚫"},
+  {name:"Academic Aptitude",icon:"🧠"},
 ];
 
 function getModuleScores(row){
@@ -1358,9 +1362,10 @@ function getBadgeKey(pct){
   return pct>=85?'GOLD':pct>=70?'SILVER':pct>=50?'BRONZE':'PARTICIPANT';
 }
 
-function downloadCertFromModal(){
-  if(!_currentCertRow) return;
-  const row    = _currentCertRow;
+// ── Shared certificate URL builder — used by the "Download Certificate"
+// button, kept separate so it can't drift out of sync with the sheet-based
+// module scoring above. ──
+function buildCertificateUrl(row){
   const name   = getField(row,['full name','name'])||'Unknown';
   const gender = getField(row,['sex','gender']);
   const school = getField(row,['school','institution'])||'—';
@@ -1371,17 +1376,6 @@ function downloadCertFromModal(){
   const modScores = getModuleScores(row);
   const modStr = modScores.map(ms => ms ? ms.got+'/'+ms.tot : '0/30').join(',');
 
-  function openCert(certSerial) {
-    const params = new URLSearchParams({
-      name, gender, school, region,
-      pct: pct.toString(),
-      badge, date,
-      serial: certSerial || '',
-      modules: modStr
-    });
-    window.open('certificate.html?' + params.toString(), '_blank');
-  }
-
   // Scan ALL columns for CMG- pattern — works regardless of column position
   var serial = '';
   for (var ci = 0; ci <= 50; ci++) {
@@ -1391,14 +1385,24 @@ function downloadCertFromModal(){
       break;
     }
   }
-  // Also try named fields as backup
   if (!serial) {
     var named = getField(row, ['serial code','code','serial','Code','CODE','certificate id']);
     if (named && named.toUpperCase().startsWith('CMG-')) serial = named.toUpperCase();
   }
 
-  // Open certificate immediately — serial shows if found, blank if not
-  openCert(serial);
+  const params = new URLSearchParams({
+    name, gender, school, region,
+    pct: pct.toString(),
+    badge, date,
+    serial: serial || '',
+    modules: modStr
+  });
+  return 'certificate.html?' + params.toString();
+}
+
+function downloadCertFromModal(){
+  if(!_currentCertRow) return;
+  window.open(buildCertificateUrl(_currentCertRow), '_blank');
 }
 
 function _doDownloadCert_LEGACY(_bannerImg){
