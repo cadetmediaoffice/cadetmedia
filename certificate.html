@@ -797,7 +797,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var gender  = params.get('gender') || 'Male';
   var school  = params.get('school') || '';
   var region  = params.get('region') || '';
-  var pct     = parseFloat(params.get('pct') || '0');
+  var pct     = Math.max(0, Math.min(100, parseFloat(params.get('pct') || '0') || 0));
   var badge   = params.get('badge')  || 'PARTICIPANT';
   var date    = params.get('date')   || new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
   var serial  = params.get('serial') || params.get('code') || 'N/A';
@@ -851,10 +851,17 @@ window.addEventListener('DOMContentLoaded', function() {
   if (gridEl && modScores.length > 0) {
     gridEl.innerHTML = '';
     MODULE_DEFS.forEach(function(mod, i) {
-      var score = modScores[i] || '0/30';
-      var got   = parseInt(score.split('/')[0]) || 0;
-      var tot   = parseInt(score.split('/')[1]) || 30;
-      var pctMod = tot > 0 ? Math.round((got/tot)*100) : 0;
+      var raw = modScores[i] || '0/30';
+      // Only trust a value that actually matches "number/number" — anything
+      // else (a stray percentage, blank cell, typo) falls back to 0/30
+      // rather than being displayed as-is or mis-parsed into a bogus score.
+      var m = raw.match(/^(\d+)\s*\/\s*(\d+)$/);
+      var tot = m ? parseInt(m[2], 10) : 30;
+      if (!tot || tot <= 0) tot = 30;
+      var got = m ? parseInt(m[1], 10) : 0;
+      got = Math.max(0, Math.min(got, tot)); // a score can never exceed its own max
+      var score = got + '/' + tot;
+      var pctMod = Math.round((got/tot)*100);
       var color = pctMod >= 70 ? '#2ecc71' : pctMod >= 50 ? '#f2c300' : '#e74c3c';
       gridEl.innerHTML += '<div class="module-item">' +
         '<div class="module-name">' + mod.name + '</div>' +
