@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student Portal Login — Cadet Media Ghana</title>
+<link rel="icon" type="image/x-icon" href="MEDIA/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+  min-height:100vh;color:#fff;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:20px;
+}
+.logo{width:90px;height:90px;border-radius:50%;
+  border:3px solid rgba(255,215,0,0.5);margin-bottom:16px;
+  box-shadow:0 0 30px rgba(255,215,0,0.3);}
+.card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:28px 24px;
+  width:100%;max-width:420px;
+  display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+.card h2{font-size:20px;text-align:center;color:#FFD700;}
+.card p{font-size:13px;opacity:.75;text-align:center;line-height:1.7;}
+label{font-size:13px;font-weight:bold;opacity:.85;}
+input{
+  width:100%;padding:12px 14px;border-radius:10px;
+  border:2px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-size:14px;outline:none;transition:border .2s;
+}
+input:focus{border-color:#FFD700;}
+.btn{
+  padding:14px;font-size:16px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;transition:all .2s;
+  box-shadow:0 4px 18px rgba(255,215,0,0.4);
+}
+.btn:hover{transform:scale(1.02);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.err{background:rgba(220,50,50,0.15);border:1px solid rgba(220,50,50,0.4);
+  border-radius:8px;padding:10px 14px;font-size:13px;color:#ff9090;text-align:center;display:none;}
+.tabs{display:flex;gap:6px;margin-bottom:2px;}
+.tab-btn{
+  flex:1;padding:9px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.15);
+  background:transparent;color:rgba(255,255,255,0.6);font-size:12px;font-weight:bold;
+  cursor:pointer;transition:all .2s;
+}
+.tab-btn.active{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,0.08);}
+.footer-link{font-size:12px;text-align:center;opacity:.7;margin-top:4px;}
+.footer-link a{color:#FFD700;text-decoration:none;}
+.footer-link a:hover{text-decoration:underline;}
+.spinner{display:none;text-align:center;font-size:13px;opacity:.7;}
+</style>
+</head>
+<body>
+
+<img src="MEDIA/logo_quiz.png" alt="Cadet Media Ghana" class="logo" onerror="this.style.display='none'">
+
+<div class="card">
+  <h2>🎓 Student Portal</h2>
+  <p>View your report, download your certificate, and manage your profile.</p>
+
+  <div>
+    <label>Full Name</label>
+    <input type="text" id="inName" placeholder="Exactly as used at activation">
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="tab-btn active" id="tabCode" onclick="switchLoginMode('code')">Login with Code</button>
+    <button type="button" class="tab-btn" id="tabPin" onclick="switchLoginMode('pin')">Login with PIN</button>
+  </div>
+
+  <div id="codeField">
+    <label>Activation Code</label>
+    <input type="text" id="inCode" placeholder="e.g. CMG-2026-GH-00029-LNKZ" style="font-family:monospace;text-transform:uppercase;">
+  </div>
+
+  <div id="pinField" style="display:none;">
+    <label>PIN</label>
+    <input type="password" id="inPin" placeholder="Your PIN" inputmode="numeric">
+  </div>
+
+  <div class="err" id="loginErr"></div>
+  <div class="spinner" id="spinner">⏳ Checking…</div>
+
+  <button class="btn" id="loginBtn" onclick="doStudentLogin()">Log In</button>
+
+  <p class="footer-link">
+    New here? <a href="activate.html">Activate your code first</a>
+  </p>
+</div>
+
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+
+function switchLoginMode(mode){
+  document.getElementById('tabCode').classList.toggle('active', mode === 'code');
+  document.getElementById('tabPin').classList.toggle('active', mode === 'pin');
+  document.getElementById('codeField').style.display = mode === 'code' ? 'block' : 'none';
+  document.getElementById('pinField').style.display   = mode === 'pin'  ? 'block' : 'none';
+}
+
+function doStudentLogin(){
+  var name = document.getElementById('inName').value.trim();
+  var code = document.getElementById('inCode').value.trim();
+  var pin  = document.getElementById('inPin').value.trim();
+  var errEl = document.getElementById('loginErr');
+  var btn   = document.getElementById('loginBtn');
+  errEl.style.display = 'none';
+
+  if(!name){
+    errEl.textContent = 'Please enter your name.';
+    errEl.style.display = 'block';
+    return;
+  }
+  var usingPin = document.getElementById('pinField').style.display !== 'none';
+  if(usingPin && !pin){
+    errEl.textContent = 'Please enter your PIN.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!usingPin && !code){
+    errEl.textContent = 'Please enter your activation code.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+
+  var params = new URLSearchParams({ action: 'studentLogin', name: name });
+  if(usingPin) params.set('pin', pin); else params.set('code', code);
+
+  fetch(APPS_SCRIPT_URL + '?' + params.toString())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      btn.disabled = false;
+      document.getElementById('spinner').style.display = 'none';
+      if(res && res.ok){
+        sessionStorage.setItem('cmgStudentToken', res.token);
+        sessionStorage.setItem('cmgStudentProfile', JSON.stringify(res.profile));
+        window.location.href = 'student_portal.html';
+      } else {
+        errEl.textContent = (res && res.error) ? res.error : 'Login failed. Please try again.';
+        errEl.style.display = 'block';
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      document.getElementById('spinner').style.display = 'none';
+      errEl.textContent = 'Could not reach the server. Check your connection.';
+      errEl.style.display = 'block';
+    });
+}
+
+document.getElementById('inName').focus();
+</script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Portal — Cadet Media Ghana</title>
+<link rel="icon" type="image/x-icon" href="MEDIA/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+  min-height:100vh;color:#fff;
+  padding:20px;
+}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px;}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header h1{font-size:20px;color:#FFD700;}
+.header p{font-size:12px;opacity:.7;}
+.logout-btn{
+  padding:9px 16px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.2);
+  background:transparent;color:#fff;font-size:12px;cursor:pointer;
+}
+.logout-btn:hover{background:rgba(255,255,255,0.08);}
+.card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:22px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.35);
+}
+.card h2{font-size:15px;color:#FFD700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+label{font-size:12px;font-weight:bold;opacity:.8;display:block;margin-bottom:5px;}
+input{
+  width:100%;padding:10px 12px;border-radius:9px;
+  border:2px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-size:13px;outline:none;transition:border .2s;
+}
+input:focus{border-color:#FFD700;}
+input:disabled{opacity:.6;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px;}
+@media(max-width:560px){.field-grid{grid-template-columns:1fr;}}
+.btn{
+  padding:10px 18px;font-size:13px;font-weight:bold;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;transition:all .2s;
+}
+.btn:hover{transform:scale(1.02);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-outline{
+  padding:10px 18px;font-size:13px;font-weight:bold;border-radius:10px;cursor:pointer;
+  background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,0.25);
+}
+.btn-outline:hover{background:rgba(255,255,255,0.08);}
+.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.msg{font-size:12px;padding:9px 12px;border-radius:8px;margin-top:10px;display:none;}
+.msg.ok{background:rgba(0,200,80,0.12);border:1px solid rgba(0,200,80,0.35);color:#80ffb0;}
+.msg.err{background:rgba(220,50,50,0.15);border:1px solid rgba(220,50,50,0.4);color:#ff9090;}
+.code-card{
+  border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px 16px;
+  margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+}
+.code-card .cc-left{font-size:13px;}
+.code-card .cc-code{font-family:monospace;color:#FFD700;font-size:12px;}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:bold;}
+.pill.submitted{background:rgba(0,200,80,0.15);color:#80ffb0;border:1px solid rgba(0,200,80,0.35);}
+.pill.pending{background:rgba(255,215,0,0.12);color:#FFD700;border:1px solid rgba(255,215,0,0.3);}
+.empty{font-size:13px;opacity:.6;text-align:center;padding:16px 0;}
+.loading{text-align:center;padding:40px;font-size:14px;opacity:.7;}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="portalWrap" style="display:none;">
+  <div class="header">
+    <div>
+      <h1>🎓 My NAAD Portal</h1>
+      <p id="welcomeText">Welcome back</p>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="card">
+    <h2>👤 My Profile</h2>
+    <div style="display:flex;align-items:center;margin-bottom:18px;">
+      <img id="pPhoto" src="" alt="" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #FFD700;">
+      <div id="pPhotoPlaceholder" style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.06);
+        border:2px dashed rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;
+        font-size:26px;flex-shrink:0;">📷</div>
+      <div style="font-size:11.5px;opacity:.6;margin-left:14px;">
+        Your photo from activation.<br>To change it, contact your school coordinator.
+      </div>
+    </div>
+    <div class="field-grid">
+      <div><label>Name</label><input type="text" id="pName" disabled></div>
+      <div><label>Phone / WhatsApp</label><input type="text" id="pPhone" disabled placeholder="Not set"></div>
+      <div><label>Email</label><input type="text" id="pEmail" disabled placeholder="Not set"></div>
+      <div><label>School</label><input type="text" id="pSchool" disabled></div>
+      <div><label>Region</label>
+        <select id="pRegion" disabled onchange="populatePortalDistrictOptions()">
+          <option value="">— Select Region —</option>
+          <option>Greater Accra</option><option>Ashanti</option><option>Western</option>
+          <option>Central</option><option>Eastern</option><option>Volta</option>
+          <option>Northern</option><option>Upper East</option><option>Upper West</option>
+          <option>Oti</option><option>Bono</option>
+          <option>Bono East</option><option>Ahafo</option><option>Savannah</option>
+          <option>North East</option><option>Western North</option>
+        </select>
+      </div>
+      <div><label>District</label>
+        <select id="pDistrict" disabled>
+          <option value="">— Select Region first —</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-outline" id="editProfileBtn" onclick="toggleProfileEdit()">✏️ Edit Profile</button>
+      <button class="btn" id="saveProfileBtn" onclick="saveProfile()" style="display:none;">💾 Save Changes</button>
+    </div>
+    <p style="font-size:11px;opacity:.6;margin-top:10px;">
+      Editing here only updates your profile — results you've already submitted keep the school/region you were at when you took them.
+    </p>
+    <div class="msg" id="profileMsg"></div>
+  </div>
+
+  <!-- MY RESULTS -->
+  <div class="card">
+    <h2>📊 My Results & Certificates</h2>
+    <div id="codesList"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- LINK NEW CODE -->
+  <div class="card">
+    <h2>🔗 Link a New Activation Code</h2>
+    <p style="font-size:12px;opacity:.7;margin-bottom:12px;">
+      Got a new pendrive code (e.g. for a new edition)? Add it here — it'll join this same account, no need to register again.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <input type="text" id="newCodeInput" placeholder="e.g. CMG-2026-GH-00099-XXXX" style="flex:1;min-width:200px;font-family:monospace;text-transform:uppercase;">
+      <button class="btn" onclick="linkNewCode()">Link Code</button>
+    </div>
+    <div class="msg" id="linkMsg"></div>
+  </div>
+
+  <!-- SET PIN -->
+  <div class="card">
+    <h2>🔒 Login PIN</h2>
+    <p style="font-size:12px;opacity:.7;margin-bottom:12px;" id="pinDescription">
+      Set a PIN so you can log in next time without your activation code.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <input type="password" id="newPinInput" placeholder="New PIN (4+ digits)" inputmode="numeric" style="flex:1;min-width:160px;">
+      <button class="btn" onclick="setPin()">Set PIN</button>
+    </div>
+    <div class="msg" id="pinMsg"></div>
+  </div>
+</div>
+
+<div class="loading" id="loadingState">⏳ Loading your portal…</div>
+
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+
+// Same verified Region -> District data used on activate.html
+var REGION_DISTRICTS = {
+  "Greater Accra": [
+    "Ablekuma Central Municipal","Ablekuma North Municipal","Ablekuma West Municipal",
+    "Accra Metropolitan","Ada East District","Ada West District","Adenta Municipal",
+    "Ashaiman Municipal","Ayawaso Central Municipal","Ayawaso East Municipal",
+    "Ayawaso North Municipal","Ayawaso West Municipal","Ga Central Municipal",
+    "Ga East Municipal","Ga North Municipal","Ga South Municipal","Ga West Municipal",
+    "Korle-Klottey Municipal","Kpone-Katamanso Municipal","Krowor Municipal",
+    "La-Dade-Kotopon Municipal","La-Nkwantanang-Madina Municipal","Ledzokuku Municipal",
+    "Ningo-Prampram District","Okaikwei North Municipal","Shai-Osudoku District",
+    "Tema Metropolitan","Tema West Municipal","Weija Gbawe Municipal"
+  ],
+  "Ashanti": [
+    "Adansi Asokwa District","Adansi North District","Adansi South District",
+    "Afigya-Kwabre North District","Afigya-Kwabre South District","Ahafo-Ano North Municipal",
+    "Ahafo-Ano South East District","Ahafo-Ano South West District","Akrofuom District",
+    "Amansie Central District","Amansie West District","Amansie South District",
+    "Asante-Akim Central Municipal","Asante-Akim North District","Asante-Akim South Municipal",
+    "Asokore-Mampong Municipal","Asokwa Municipal","Atwima-Kwanwoma District",
+    "Atwima-Mponua District","Atwima-Nwabiagya Municipal","Atwima-Nwabiagya North District",
+    "Bekwai Municipal","Bosome Freho District","Bosomtwe District","Ejisu Municipal",
+    "Ejura/Sekyedumase Municipal","Juaben Municipal","Kumasi Metropolitan",
+    "Kwabre East Municipal","Kwadaso Municipal","Mampong Municipal","Obuasi East Municipal",
+    "Obuasi Municipal","Offinso Municipal","Offinso North District","Oforikrom Municipal",
+    "Old Tafo Municipal","Sekyere Afram Plains District","Sekyere Central District",
+    "Sekyere East District","Sekyere Kumawu District","Sekyere South District","Suame Municipal"
+  ],
+  "Western": [
+    "Ahanta West Municipal","Amenfi Central District","Amenfi West Municipal",
+    "Effia Kwesimintsim Municipal","Ellembelle District","Jomoro Municipal","Mpohor District",
+    "Nzema East Municipal","Prestea-Huni Valley Municipal","Sekondi Takoradi Metropolitan",
+    "Shama District","Tarkwa-Nsuaem Municipal","Wassa Amenfi East Municipal","Wassa East District"
+  ],
+  "Western North": [
+    "Aowin Municipal","Bia East District","Bia West District",
+    "Bibiani Anhwiaso Bekwai Municipal","Bodi District","Juaboso District",
+    "Sefwi Akontombra District","Sefwi-Wiawso Municipal","Suaman District"
+  ],
+  "Central": [
+    "Abura/Asebu/Kwamankese District","Agona East District","Agona West Municipal",
+    "Ajumako/Enyan/Essiam District","Asikuma Odoben Brakwa District","Assin Central Municipal",
+    "Assin North District","Assin South District","Awutu Senya East Municipal",
+    "Awutu Senya West District","Cape Coast Metropolitan","Effutu Municipal","Ekumfi District",
+    "Gomoa East District","Gomoa Central District","Gomoa West District",
+    "Komenda/Edina/Eguafo/Abirem Municipal","Mfantsiman Municipal","Twifo Atti Morkwa District",
+    "Twifo/Hemang/Lower Denkyira District","Upper Denkyira East Municipal",
+    "Upper Denkyira West District"
+  ],
+  "Eastern": [
+    "Abuakwa North Municipal","Abuakwa South Municipal","Achiase District",
+    "Akuapim North Municipal","Akuapim South District","Akyemansa District",
+    "Asene Manso Akroso District","Asuogyaman District","Atiwa East District",
+    "Atiwa West District","Ayensuano District","Birim Central Municipal","Birim North District",
+    "Birim South District","Denkyembour District","Fanteakwa North District",
+    "Fanteakwa South District","Kwaebibirem Municipal","Kwahu Afram Plains North District",
+    "Kwahu Afram Plains South District","Kwahu East District","Kwahu South District",
+    "Kwahu West Municipal","Lower Manya Krobo Municipal","New Juaben North Municipal",
+    "New Juaben South Municipal","Nsawam Adoagyire Municipal","Okere District","Suhum Municipal",
+    "Upper Manya Krobo District","Upper West Akim District","West Akim Municipal",
+    "Yilo-Krobo Municipal"
+  ],
+  "Volta": [
+    "Adaklu District","Afadzato South District","Agotime Ziope District","Akatsi North District",
+    "Akatsi South District","Anloga District","Central Tongu District","Ho Municipal",
+    "Ho West District","Hohoe Municipal","Keta Municipal","Ketu North Municipal",
+    "Ketu South Municipal","Kpando Municipal","North Dayi District","North Tongu District",
+    "South Dayi District","South Tongu District"
+  ],
+  "Oti": [
+    "Biakoye District","Guan District","Jasikan Municipal","Kadjebi District",
+    "Krachi East Municipal","Krachi Nchumuru District","Krachi West Municipal",
+    "Nkwanta North District","Nkwanta South Municipal"
+  ],
+  "Northern": [
+    "Gushegu Municipal","Karaga District","Kpandai District","Kumbungu District",
+    "Mion District","Nanton District","Nanumba North Municipal","Nanumba South District",
+    "Saboba District","Sagnarigu Municipal","Savelugu Municipal","Tamale Metropolitan",
+    "Tatale Sanguli District","Tolon District","Yendi Municipal","Zabzugu District"
+  ],
+  "North East": [
+    "Bunkpurugu Nyankpanduri District","Chereponi District","East Mamprusi Municipal",
+    "Mamprugu Moagduri District","West Mamprusi Municipal","Yunyoo-Nasuan District"
+  ],
+  "Savannah": [
+    "Bole District","Central Gonja District","East Gonja Municipal","North Gonja District",
+    "North East Gonja District","Sawla-Tuna-Kalba District","West Gonja Municipal"
+  ],
+  "Upper East": [
+    "Bawku Municipal","Bawku West District","Binduri District","Bolgatanga East District",
+    "Bolgatanga Municipal","Bongo District","Builsa North Municipal","Builsa South District",
+    "Garu District","Kassena-Nankana Municipal","Kassena-Nankana West District",
+    "Nabdam District","Pusiga District","Talensi District","Tempane District"
+  ],
+  "Upper West": [
+    "Daffiama Bussie Issa District","Jirapa Municipal","Lambussie Karni District",
+    "Lawra Municipal","Nadowli-Kaleo District","Nandom Municipal","Sissala East Municipal",
+    "Sissala West District","Wa East District","Wa Municipal","Wa West District"
+  ],
+  "Bono": [
+    "Banda District","Berekum East Municipal","Berekum West District","Dormaa Central Municipal",
+    "Dormaa East District","Dormaa West District","Jaman North District","Jaman South Municipal",
+    "Sunyani Municipal","Sunyani West District","Tain District","Wenchi Municipal"
+  ],
+  "Bono East": [
+    "Atebubu-Amantin Municipal","Kintampo North Municipal","Kintampo South District",
+    "Nkoranza North District","Nkoranza South Municipal","Pru East District","Pru West District",
+    "Sene East District","Sene West District","Techiman Municipal","Techiman North District"
+  ],
+  "Ahafo": [
+    "Asunafo North Municipal","Asunafo South District","Asutifi North District",
+    "Asutifi South District","Tano North Municipal","Tano South Municipal"
+  ]
+};
+var CERTIFICATE_PAGE_URL = 'https://cadetmediaoffice.github.io/cadetmedia/certificate.html';
+
+// Same module order/keys as admin.html's ASSESSMENT_MODULES, needed to
+// build a correct certificate URL from a student's own raw result row.
+var ASSESSMENT_MODULES = [
+  { key:'General Safety Quiz Score' }, { key:'Student Safety Quiz Score' },
+  { key:'Fire Safety Quiz Score' }, { key:'Community Safety (Police) Quiz Score' },
+  { key:'Health & Ambulance Quiz Score' }, { key:'Prisons Service Quiz Score' },
+  { key:'Disaster Preparedness (NADMO) Quiz Score' }, { key:'Immigration Service Quiz Score' },
+  { key:'Customs Division Quiz Score' }, { key:'Tourism & Creative Arts Quiz Score' },
+  { key:'Forest Conservation Quiz Score' }, { key:'National Defence (GAF) Quiz Score' },
+  { key:'Narcotics Control Quiz Score' }, { key:'Academic Aptitude Quiz Score' }
+];
+
+var token = sessionStorage.getItem('cmgStudentToken');
+if(!token){
+  window.location.replace('student_login.html');
+}
+
+var currentReport = null;
+
+function esc(str){ return (str||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function doLogout(){
+  sessionStorage.removeItem('cmgStudentToken');
+  sessionStorage.removeItem('cmgStudentProfile');
+  window.location.replace('student_login.html');
+}
+
+function loadReport(){
+  fetch(APPS_SCRIPT_URL + '?action=studentGetReport&token=' + encodeURIComponent(token))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.error === 'unauthorized'){
+        doLogout();
+        return;
+      }
+      if(!res || res.status !== 'ok'){
+        document.getElementById('loadingState').textContent = '❌ Could not load your portal. Please log in again.';
+        return;
+      }
+      currentReport = res;
+      renderProfile(res.profile);
+      renderCodes(res.codes);
+      document.getElementById('welcomeText').textContent = 'Welcome back, ' + res.profile.name;
+      document.getElementById('pinDescription').textContent = res.profile.hasPin
+        ? 'You already have a PIN set. Enter a new one below to change it.'
+        : 'Set a PIN so you can log in next time without your activation code.';
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('portalWrap').style.display = 'flex';
+    })
+    .catch(function(){
+      document.getElementById('loadingState').textContent = '❌ Could not reach the server. Check your connection and refresh.';
+    });
+}
+
+function populatePortalDistrictOptions(){
+  var region = document.getElementById('pRegion').value;
+  var sel = document.getElementById('pDistrict');
+  var prevVal = sel.value;
+  var districts = REGION_DISTRICTS[region];
+
+  if(!districts){
+    sel.innerHTML = '<option value="">— Select Region first —</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">— Select District —</option>' +
+    districts.map(function(d){ return '<option>' + d + '</option>'; }).join('');
+  if(districts.indexOf(prevVal) > -1) sel.value = prevVal;
+}
+
+function renderProfile(p){
+  document.getElementById('pName').value     = p.name || '';
+  document.getElementById('pPhone').value    = p.phone || '';
+  document.getElementById('pEmail').value    = p.email || '';
+  document.getElementById('pSchool').value   = p.school || '';
+  document.getElementById('pRegion').value   = p.region || '';
+  populatePortalDistrictOptions();
+  document.getElementById('pDistrict').value = p.district || '';
+
+  var photoImg = document.getElementById('pPhoto');
+  var photoPlaceholder = document.getElementById('pPhotoPlaceholder');
+  if(p.photoUrl){
+    photoImg.src = p.photoUrl;
+    photoImg.style.display = 'block';
+    photoPlaceholder.style.display = 'none';
+  } else {
+    photoImg.style.display = 'none';
+    photoPlaceholder.style.display = 'flex';
+  }
+}
+
+function toggleProfileEdit(){
+  ['pName','pPhone','pEmail','pSchool','pRegion','pDistrict'].forEach(function(id){
+    document.getElementById(id).disabled = false;
+  });
+  document.getElementById('editProfileBtn').style.display = 'none';
+  document.getElementById('saveProfileBtn').style.display = 'inline-block';
+}
+
+function saveProfile(){
+  var msg = document.getElementById('profileMsg');
+  var body = {
+    action: 'studentUpdateProfile',
+    token: token,
+    name:     document.getElementById('pName').value.trim(),
+    phone:    document.getElementById('pPhone').value.trim(),
+    email:    document.getElementById('pEmail').value.trim(),
+    school:   document.getElementById('pSchool').value.trim(),
+    region:   document.getElementById('pRegion').value.trim(),
+    district: document.getElementById('pDistrict').value.trim()
+  };
+  var params = new URLSearchParams(body);
+
+  fetch(APPS_SCRIPT_URL + '?' + params.toString())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      msg.className = 'msg ' + (res && res.status === 'ok' ? 'ok' : 'err');
+      msg.textContent = (res && res.message) ? res.message : 'Something went wrong.';
+      msg.style.display = 'block';
+      if(res && res.status === 'ok'){
+        ['pName','pPhone','pEmail','pSchool','pRegion','pDistrict'].forEach(function(id){
+          document.getElementById(id).disabled = true;
+        });
+        document.getElementById('editProfileBtn').style.display = 'inline-block';
+        document.getElementById('saveProfileBtn').style.display = 'none';
+        document.getElementById('welcomeText').textContent = 'Welcome back, ' + body.name;
+      }
+    })
+    .catch(function(){
+      msg.className = 'msg err';
+      msg.textContent = 'Could not reach the server.';
+      msg.style.display = 'block';
+    });
+}
+
+function renderCodes(codes){
+  var el = document.getElementById('codesList');
+  if(!codes || !codes.length){
+    el.innerHTML = '<div class="empty">No activation codes linked yet.</div>';
+    return;
+  }
+  el.innerHTML = codes.map(function(c, idx){
+    var pill = c.submitted
+      ? '<span class="pill submitted">✅ Submitted — ' + esc(c.totalScore) + '%</span>'
+      : '<span class="pill pending">⏳ In Progress</span>';
+    var certBtn = c.submitted
+      ? '<a class="btn" style="text-decoration:none;display:inline-block;" href="' + buildCertificateUrl(c) + '" target="_blank" rel="noopener">🏆 View Certificate</a>'
+      : '';
+    return '<div class="code-card">' +
+      '<div class="cc-left">' +
+        '<div class="cc-code">' + esc(c.code) + '</div>' +
+        '<div style="opacity:.7;margin-top:2px;">' + esc(c.school) + ' · ' + esc(c.region) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' + pill + certBtn + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function buildCertificateUrl(c){
+  var raw = c.raw || {};
+  var modStr = ASSESSMENT_MODULES.map(function(m){
+    return (raw[m.key] || '0/30').toString().trim();
+  }).join(',');
+
+  var badgeText = (c.badge || '').toLowerCase();
+  var badgeKey  = 'participant';
+  if(badgeText.indexOf('gold') > -1) badgeKey = 'gold';
+  else if(badgeText.indexOf('silver') > -1) badgeKey = 'silver';
+  else if(badgeText.indexOf('bronze') > -1) badgeKey = 'bronze';
+
+  var dateStr = '';
+  if(c.actDate){
+    try{
+      var d = new Date(c.actDate);
+      if(!isNaN(d)) dateStr = d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    }catch(e){}
+  }
+
+  var params = new URLSearchParams({
+    name:    currentReport.profile.name || '',
+    gender:  '',
+    school:  c.school || '',
+    region:  c.region || '',
+    pct:     c.totalScore || 0,
+    badge:   badgeKey,
+    date:    dateStr,
+    serial:  c.code || 'N/A',
+    modules: modStr
+  });
+  return CERTIFICATE_PAGE_URL + '?' + params.toString();
+}
+
+function linkNewCode(){
+  var newCode = document.getElementById('newCodeInput').value.trim();
+  var msg = document.getElementById('linkMsg');
+  if(!newCode){
+    msg.className = 'msg err';
+    msg.textContent = 'Enter a code first.';
+    msg.style.display = 'block';
+    return;
+  }
+  var params = new URLSearchParams({ action: 'studentLinkCode', token: token, newCode: newCode });
+  fetch(APPS_SCRIPT_URL + '?' + params.toString())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      msg.className = 'msg ' + (res && res.status === 'ok' ? 'ok' : 'err');
+      msg.textContent = (res && res.message) ? res.message : 'Something went wrong.';
+      msg.style.display = 'block';
+      if(res && res.status === 'ok'){
+        document.getElementById('newCodeInput').value = '';
+        loadReport(); // refresh the list to show the newly linked code
+      }
+    })
+    .catch(function(){
+      msg.className = 'msg err';
+      msg.textContent = 'Could not reach the server.';
+      msg.style.display = 'block';
+    });
+}
+
+function setPin(){
+  var newPin = document.getElementById('newPinInput').value.trim();
+  var msg = document.getElementById('pinMsg');
+  if(newPin.length < 4){
+    msg.className = 'msg err';
+    msg.textContent = 'PIN must be at least 4 digits.';
+    msg.style.display = 'block';
+    return;
+  }
+  var params = new URLSearchParams({ action: 'studentSetPin', token: token, newPin: newPin });
+  fetch(APPS_SCRIPT_URL + '?' + params.toString())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      msg.className = 'msg ' + (res && res.status === 'ok' ? 'ok' : 'err');
+      msg.textContent = (res && res.message) ? res.message : 'Something went wrong.';
+      msg.style.display = 'block';
+      if(res && res.status === 'ok'){
+        document.getElementById('newPinInput').value = '';
+        document.getElementById('pinDescription').textContent = 'You already have a PIN set. Enter a new one below to change it.';
+      }
+    })
+    .catch(function(){
+      msg.className = 'msg err';
+      msg.textContent = 'Could not reach the server.';
+      msg.style.display = 'block';
+    });
+}
+
+if(token) loadReport();
+</script>
+<script src="ping.js"></script>
+</body>
+</html>
