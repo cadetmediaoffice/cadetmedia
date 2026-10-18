@@ -500,7 +500,7 @@ function speak(text, rate, pitch){
 //  CONFIG
 // ══════════════════════════════════════════════
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSeoq-jlMZXUgBscE5YrUb2Nkc19rLDOoCeR_GLABuG5aY2I-g/formResponse";
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMu6XM_zeUR9q1_U__IlXNde4pYjhSaIbd4m2kv3FbxMJbwzedtijCCWTQLEXB1oLH/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
 
 const SERVICES = [
   {key:"general",       name:"General Safety",      logo:"../MEDIA/logo_quiz.png",        entry:"entry.1152731764"},
@@ -941,12 +941,21 @@ function submitResults(){
     total:`${window.pct}%`,badge:badgeText,date:dateStr,
     ...Object.fromEntries(SERVICES.map(s=>[s.key,`${window.scoreMap[s.key]}/${MAX_PER_QUIZ}`]))
   });
-  fetch(SCRIPT_URL+'?'+params.toString(),{mode:'no-cors'}).catch(()=>{});
+  // Save first, then send. If the device is offline the saved copy is uploaded automatically
+  // the next time it is online (see cmgSyncNow). It is only removed after the server confirms.
+  try{localStorage.setItem('cmgPendingResults',SCRIPT_URL+'?'+params.toString());}catch(e){}
+  if(window.cmgSyncNow) window.cmgSyncNow();
 
   showSuccess();
 }
 
 function showSuccess(){
+  if(!navigator.onLine){
+    var n=document.createElement('div');
+    n.style.cssText='margin:12px auto;max-width:420px;padding:10px 14px;border-radius:10px;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.4);color:#FFD700;font-size:13px;text-align:center;';
+    n.textContent='📶 No internet right now. Your results are saved on this device and will upload by themselves when you connect.';
+    document.getElementById('successScreen').prepend(n);
+  }
   // Mark this student as fully submitted — quiz_questions will use this
   localStorage.setItem('cmgResultsSubmitted', 'true');
 
@@ -1001,6 +1010,46 @@ iframe.name='hiddenFrame'; iframe.style.display='none';
 document.body.appendChild(iframe);
 
 // AudioContext is resumed inside the tap overlay handler
+</script>
+
+<!-- CMG background sync: uploads saved progress and any unsent final results whenever the device is online -->
+<script>
+(function(){
+  var URL='https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+  var KEYS=['general','studentSafety','fire','police','ambulance','prisons','nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+  var busy=false;
+  function ls(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function lset(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function ldel(k){try{localStorage.removeItem(k);}catch(e){}}
+  window.cmgSyncNow=function(){
+    if(busy||!navigator.onLine) return;
+    busy=true; setTimeout(function(){busy=false;},15000);
+    try{
+      var pr=ls('cmgPendingResults');
+      if(pr){
+        fetch(pr,{keepalive:true}).then(function(r){return r.json();}).then(function(d){
+          if(d&&(d.status==='ok'||d.status==='already_submitted'||d.status==='code_mismatch')) ldel('cmgPendingResults');
+        }).catch(function(){});
+      }
+      var code=ls('cmgCode');
+      if(code&&ls('cmgActivated')==='true'){
+        var scores={}; KEYS.forEach(function(k){var v=ls(k+'Score'); if(v) scores[k]=v;});
+        var q='&code='+encodeURIComponent(code)+'&name='+encodeURIComponent(ls('cadetName')||'')+
+          '&school='+encodeURIComponent(ls('cadetSchool')||'')+'&level='+encodeURIComponent(ls('cadetLevel')||'')+
+          '&region='+encodeURIComponent(ls('cadetRegion')||'')+'&scores='+encodeURIComponent(JSON.stringify(scores))+
+          '&submitted='+encodeURIComponent(ls('cmgResultsSubmitted')||'false')+'&lastSeen='+encodeURIComponent(new Date().toISOString());
+        var sig=JSON.stringify(scores)+'|'+(ls('cmgResultsSubmitted')||'');
+        if(ls('cmgSyncSig')!==sig){
+          fetch(URL+'?action=syncProgress'+q).then(function(r){return r.json();}).then(function(d){
+            if(d&&d.status==='ok') lset('cmgSyncSig',sig);
+          }).catch(function(){});
+        }
+      }
+    }catch(e){}
+  };
+  window.addEventListener('online',function(){setTimeout(window.cmgSyncNow,800);});
+  setTimeout(window.cmgSyncNow,2500);
+})();
 </script>
 </body>
 </html>

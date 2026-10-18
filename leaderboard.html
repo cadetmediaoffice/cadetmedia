@@ -406,7 +406,6 @@ body{
 .cd-total .lbl{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
 .cd-modules-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;
   color:var(--muted);margin-bottom:12px;}
-
 .cd-modules{display:flex;flex-direction:column;gap:8px;}
 .cd-mod{display:flex;align-items:center;gap:10px;
   background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
@@ -637,7 +636,7 @@ function connectData(){
 // ── Auto-load on page open ──
 window.addEventListener('DOMContentLoaded', ()=>{
   // URL is hardcoded — loads automatically on any browser
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzMu6XM_zeUR9q1_U__IlXNde4pYjhSaIbd4m2kv3FbxMJbwzedtijCCWTQLEXB1oLH/exec';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEkb-1Y1pjTRTgxNSDMXWSb9JfgL36Gi5yAiYhxNrDstifi4swIaF/exec';
   document.getElementById('appsScriptUrl').value = SHEET_URL;
   document.getElementById('setupBox').style.display = 'none';
   loadData(SHEET_URL);
@@ -681,7 +680,7 @@ async function loadData(url){
 
 // ── Debug: fetch raw and show in console ──
 async function debugRaw(){
-  const url = 'https://script.google.com/macros/s/AKfycbzMu6XM_zeUR9q1_U__IlXNde4pYjhSaIbd4m2kv3FbxMJbwzedtijCCWTQLEXB1oLH/exec';
+  const url = 'https://script.google.com/macros/s/AKfycbxL0J3tpxZWnUHKEkb-1Y1pjTRTgxNSDMXWSb9JfgL36Gi5yAiYhxNrDstifi4swIaF/exec';
   try {
     const res = await fetch(url, {mode:'cors'});
     const text = await res.text();
@@ -774,7 +773,6 @@ const MOD_KEYS = [
   ['forest conservation','forest'],
   ['national defence','armed forces','gaf'],
   ['narcotics','nacoc','drug'],
-  ['academic','aptitude'],
 ];
 
 const GHANA_REGIONS = ['Greater Accra','Ashanti','Western','Eastern','Central',
@@ -1278,7 +1276,6 @@ function renderLevels(ranked){
 <script>
 const MODULES = [
   {name:"General Safety",   icon:"🛡️"},
-  {name:"Student Safety",   icon:"🎓"},
   {name:"Fire Safety",      icon:"🔥"},
   {name:"Police/Community", icon:"👮"},
   {name:"Health & Ambulance",icon:"🚑"},
@@ -1290,7 +1287,6 @@ const MODULES = [
   {name:"Forest",           icon:"🌿"},
   {name:"Armed Forces",     icon:"🎖️"},
   {name:"NACOC",            icon:"🚫"},
-  {name:"Academic Aptitude",icon:"🧠"},
 ];
 
 function getModuleScores(row){
@@ -1362,10 +1358,9 @@ function getBadgeKey(pct){
   return pct>=85?'GOLD':pct>=70?'SILVER':pct>=50?'BRONZE':'PARTICIPANT';
 }
 
-// ── Shared certificate URL builder — used by the "Download Certificate"
-// button, kept separate so it can't drift out of sync with the sheet-based
-// module scoring above. ──
-function buildCertificateUrl(row){
+function downloadCertFromModal(){
+  if(!_currentCertRow) return;
+  const row    = _currentCertRow;
   const name   = getField(row,['full name','name'])||'Unknown';
   const gender = getField(row,['sex','gender']);
   const school = getField(row,['school','institution'])||'—';
@@ -1376,6 +1371,17 @@ function buildCertificateUrl(row){
   const modScores = getModuleScores(row);
   const modStr = modScores.map(ms => ms ? ms.got+'/'+ms.tot : '0/30').join(',');
 
+  function openCert(certSerial) {
+    const params = new URLSearchParams({
+      name, gender, school, region,
+      pct: pct.toString(),
+      badge, date,
+      serial: certSerial || '',
+      modules: modStr
+    });
+    window.open('https://cadetmediaoffice.github.io/NAAD-ADMIN/certificate.html?' + params.toString(), '_blank');
+  }
+
   // Scan ALL columns for CMG- pattern — works regardless of column position
   var serial = '';
   for (var ci = 0; ci <= 50; ci++) {
@@ -1385,24 +1391,14 @@ function buildCertificateUrl(row){
       break;
     }
   }
+  // Also try named fields as backup
   if (!serial) {
     var named = getField(row, ['serial code','code','serial','Code','CODE','certificate id']);
     if (named && named.toUpperCase().startsWith('CMG-')) serial = named.toUpperCase();
   }
 
-  const params = new URLSearchParams({
-    name, gender, school, region,
-    pct: pct.toString(),
-    badge, date,
-    serial: serial || '',
-    modules: modStr
-  });
-  return 'certificate.html?' + params.toString();
-}
-
-function downloadCertFromModal(){
-  if(!_currentCertRow) return;
-  window.open(buildCertificateUrl(_currentCertRow), '_blank');
+  // Open certificate immediately — serial shows if found, blank if not
+  openCert(serial);
 }
 
 function _doDownloadCert_LEGACY(_bannerImg){
@@ -1685,6 +1681,54 @@ const _origRenderIndividuals = renderIndividuals;
   if(!navigator.onLine) showOffline();
   window.addEventListener('offline', showOffline);
   window.addEventListener('online',  showOnline);
+})();
+</script>
+<script>
+/* CMG visitor counter: anonymous ID + page name only */
+(function(){try{var URL='https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';var vid=localStorage.getItem('cmgVisitorId');
+if(!vid){vid='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem('cmgVisitorId',vid);}
+var page=(location.pathname.split('/').pop()||'index.html');var key='cmgVisit_'+page;
+if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');if(!navigator.onLine)return;
+fetch(URL+'?action=logVisit&vid='+encodeURIComponent(vid)+'&page='+encodeURIComponent(page),{mode:'no-cors',keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+
+<!-- CMG background sync: uploads saved progress and any unsent final results whenever the device is online -->
+<script>
+(function(){
+  var URL='https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+  var KEYS=['general','studentSafety','fire','police','ambulance','prisons','nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+  var busy=false;
+  function ls(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function lset(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function ldel(k){try{localStorage.removeItem(k);}catch(e){}}
+  window.cmgSyncNow=function(){
+    if(busy||!navigator.onLine) return;
+    busy=true; setTimeout(function(){busy=false;},15000);
+    try{
+      var pr=ls('cmgPendingResults');
+      if(pr){
+        fetch(pr,{keepalive:true}).then(function(r){return r.json();}).then(function(d){
+          if(d&&(d.status==='ok'||d.status==='already_submitted'||d.status==='code_mismatch')) ldel('cmgPendingResults');
+        }).catch(function(){});
+      }
+      var code=ls('cmgCode');
+      if(code&&ls('cmgActivated')==='true'){
+        var scores={}; KEYS.forEach(function(k){var v=ls(k+'Score'); if(v) scores[k]=v;});
+        var q='&code='+encodeURIComponent(code)+'&name='+encodeURIComponent(ls('cadetName')||'')+
+          '&school='+encodeURIComponent(ls('cadetSchool')||'')+'&level='+encodeURIComponent(ls('cadetLevel')||'')+
+          '&region='+encodeURIComponent(ls('cadetRegion')||'')+'&scores='+encodeURIComponent(JSON.stringify(scores))+
+          '&submitted='+encodeURIComponent(ls('cmgResultsSubmitted')||'false')+'&lastSeen='+encodeURIComponent(new Date().toISOString());
+        var sig=JSON.stringify(scores)+'|'+(ls('cmgResultsSubmitted')||'');
+        if(ls('cmgSyncSig')!==sig){
+          fetch(URL+'?action=syncProgress'+q).then(function(r){return r.json();}).then(function(d){
+            if(d&&d.status==='ok') lset('cmgSyncSig',sig);
+          }).catch(function(){});
+        }
+      }
+    }catch(e){}
+  };
+  window.addEventListener('online',function(){setTimeout(window.cmgSyncNow,800);});
+  setTimeout(window.cmgSyncNow,2500);
 })();
 </script>
 </body>
