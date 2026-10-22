@@ -1688,7 +1688,7 @@ const _origRenderIndividuals = renderIndividuals;
 (function(){try{var URL='https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';var vid=localStorage.getItem('cmgVisitorId');
 if(!vid){vid='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem('cmgVisitorId',vid);}
 var page=(location.pathname.split('/').pop()||'index.html');var key='cmgVisit_'+page;
-if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');if(!navigator.onLine)return;
+if(/[?&]admin=1/.test(location.search))return;if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');if(!navigator.onLine)return;
 fetch(URL+'?action=logVisit&vid='+encodeURIComponent(vid)+'&page='+encodeURIComponent(page),{mode:'no-cors',keepalive:true}).catch(function(){});}catch(e){}})();
 </script>
 
