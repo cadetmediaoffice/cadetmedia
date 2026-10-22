@@ -3,8 +3,8 @@
 // fast and shows its screen even with a weak connection. Student data and
 // every call to the CMG server (Apps Script) always go to the network and are
 // never stored here.
-var CACHE = 'naad-admin-v4';
-var SW_VERSION = 'push-5';
+var CACHE = 'naad-admin-v5';
+var SW_VERSION = 'push-6';
 var SHELL = [
   './', 'admin.html', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png',
